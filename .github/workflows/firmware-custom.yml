@@ -311,7 +311,7 @@ jobs:
       - name: Fetch buildroot-dl-cache release
         id: find_release
         run: |
-          REPO="${{ github.repository }}"
+          REPO="themactep/thingino-firmware"
           RELEASE_TAG=$(gh release list --repo "$REPO" --json name,tagName | jq -r '.[] | select(.name=="buildroot-dl-cache") | .tagName' | sort -r | head -1 || echo "")
           if [ -z "$RELEASE_TAG" ]; then
             echo "Could not find release with name 'buildroot-dl-cache', trying tags starting with 'update_cache'"
@@ -330,7 +330,7 @@ jobs:
         id: download_cache
         if: steps.find_release.outputs.release_found == 'true'
         run: |
-          REPO="${{ github.repository }}"
+          REPO="themactep/thingino-firmware"
           RELEASE_TAG="${{ steps.find_release.outputs.release_tag }}"
           mkdir -p /tmp/dl-cache
           echo "Downloading files from release with tag: $RELEASE_TAG"
