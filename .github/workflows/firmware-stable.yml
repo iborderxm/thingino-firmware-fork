@@ -1,7 +1,5 @@
 name: firmware-stable
 on:
-  schedule:
-    - cron:  '30 8 * * 1'
   workflow_dispatch:
     inputs:
       branch:
@@ -12,16 +10,8 @@ on:
         options:
           - stable
           - master
-      tg_disabled:
-        type: boolean
-        description: 'Disable Telegram notifications'
-        required: false
-        default: false
-      tg_scratch:
-        type: boolean
-        description: 'Use TG scratch channel'
-        required: false
-        default: false
+          - iborder
+
       graph_enabled:
         type: boolean
         description: 'Enable build time graph'
@@ -48,10 +38,7 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TAG_NAME: firmware
   TERM: linux
-  TG_TOKEN: ${{secrets.TELEGRAM_TOKEN_BOT_THINGINO}}
-  TG_CHANNEL: ${{secrets.TELEGRAM_CHANNEL_THINGINO_MULTI}}
-  TG_TOPIC: ${{secrets.TELEGRAM_CHANNEL_THINGINO_MULTI_TOPIC_FIRMWARE}}
-  TG_CHANNEL_SCRATCH: ${{secrets.TELEGRAM_CHANNEL_THINGINO_SCRATCH}}
+
   TZ: UTC
 
 jobs:
@@ -127,7 +114,8 @@ jobs:
       - name: Configure TAG_NAME
         id: set_tag
         run: |
-          TAG_NAME="$TAG_NAME-$(TZ=UTC date +'%Y-%m-%d')"
+          BRANCH=${{ github.event.inputs.branch || 'stable' }}
+          TAG_NAME="$TAG_NAME-$BRANCH-$(TZ=UTC date +'%Y-%m-%d-%H-%M')"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
@@ -165,7 +153,6 @@ jobs:
     if: needs.check-updates.outputs.should_build == 'true'
     outputs:
       start_time: ${{ steps.set_output.outputs.time }}
-      tg_disabled: ${{ steps.set_env.outputs.tg_disabled }}
     steps:
       - name: Set timezone
         run: |
@@ -178,8 +165,6 @@ jobs:
       - name: Configure Environment Variables
         id: set_env
         run: |
-          echo "TG_DISABLED=${{ github.event.inputs.tg_disabled || 'false' }}" >> $GITHUB_ENV
-          echo "tg_disabled=${{ github.event.inputs.tg_disabled || 'false' }}" >> $GITHUB_OUTPUT
           echo "TAG_NAME=${{ needs.prepare-release.outputs.tag_name }}" >> $GITHUB_ENV
 
       - name: Checkout repository
@@ -188,14 +173,7 @@ jobs:
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "1"
 
-      - name: Send build start notification via Telegram
-        if: env.TG_DISABLED == 'false'
-        run: |
-          if [[ "${{ github.event.inputs.tg_scratch }}" == 'true' ]]; then
-            TG_CHANNEL=${{ env.TG_CHANNEL_SCRATCH }}
-            export TG_TOPIC=""
-          fi
-          .github/scripts/tg-notify.sh -s $TG_TOKEN $TG_CHANNEL $TG_TOPIC start $TAG_NAME ${{ github.run_id }} ${{ github.repository }}
+
 
   generate-matrix:
     runs-on: ubuntu-24.04
@@ -307,7 +285,6 @@ jobs:
           echo "CURRENT_YEAR=$(date +%Y)" >> $GITHUB_ENV
           echo "GIT_HASH=$(git rev-parse --short ${GITHUB_SHA})" >> $GITHUB_ENV
           echo "GIT_BRANCH=$(git branch --show-current)" >> $GITHUB_ENV
-          echo "TG_DISABLED=${{ github.event.inputs.tg_disabled || 'false' }}" >> $GITHUB_ENV
           echo "TAG_NAME=${{ needs.prepare-release.outputs.tag_name }}" >> $GITHUB_ENV
 
           echo "GIT_HASH=$(git rev-parse --short ${GITHUB_SHA})" >> $GITHUB_OUTPUT
@@ -331,7 +308,7 @@ jobs:
       - name: Fetch buildroot-dl-cache release
         id: find_release
         run: |
-          REPO="${{ github.repository }}"
+          REPO="themactep/thingino-firmware"
           RELEASE_TAG=$(gh release list --repo "$REPO" --json name,tagName | jq -r '.[] | select(.name=="buildroot-dl-cache") | .tagName' | sort -r | head -1 || echo "")
           if [ -z "$RELEASE_TAG" ]; then
             echo "Could not find release with name 'buildroot-dl-cache', trying tags starting with 'update_cache'"
@@ -350,7 +327,7 @@ jobs:
         id: download_cache
         if: steps.find_release.outputs.release_found == 'true'
         run: |
-          REPO="${{ github.repository }}"
+          REPO="themactep/thingino-firmware"
           RELEASE_TAG="${{ steps.find_release.outputs.release_tag }}"
           mkdir -p /tmp/dl-cache
           echo "Downloading files from release with tag: $RELEASE_TAG"
@@ -488,29 +465,7 @@ jobs:
             ${{ env.FULL_FW_SHA }}
             ${{ env.UPDATE_FW_SHA }}
 
-      - name: Package binaries for notification
-        run: |
-          7z a -t7z -mx=9 -mmt=on /tmp/thingino-${{ matrix.thingino-version }}.7z ${{ env.FULL_FW }} ${{ env.FULL_FW_SHA }}
 
-      - name: Send firmware completion notifications with attachment
-        if: ${{ env.TG_DISABLED == 'false' && (env.FULL_FW) }}
-        run: |
-          if [[ "${{ github.event.inputs.tg_scratch }}" == 'true' ]]; then
-            TG_CHANNEL=${{ env.TG_CHANNEL_SCRATCH }}
-            export TG_TOPIC=""
-          fi
-          if [ -n "${{ env.FULL_FW }}" ]; then
-          .github/scripts/tg-notify.sh -s $TG_TOKEN $TG_CHANNEL $TG_TOPIC completed $TAG_NAME ${{ github.run_id }} ${{ github.repository }} ${GIT_HASH} ${GIT_BRANCH} ${TAG_NAME} ${TIME} ${{ matrix.thingino-version }} /tmp/thingino-${{ matrix.thingino-version }}.7z
-          fi
-
-      - name: Send error notification
-        if: ${{ env.TG_DISABLED == 'false' && failure() }}
-        run: |
-          if [[ "${{ github.event.inputs.tg_scratch }}" == 'true' ]]; then
-            TG_CHANNEL=${{ env.TG_CHANNEL_SCRATCH }}
-            export TG_TOPIC=""
-          fi
-          .github/scripts/tg-notify.sh -s $TG_TOKEN $TG_CHANNEL $TG_TOPIC error $TAG_NAME "Github CI build failed!" ${{ github.run_id }} ${{ matrix.thingino-version }} ${{ github.repository }}
 
   finalize-release:
     needs: [buildroot, prepare-release, check-updates]
@@ -593,35 +548,4 @@ jobs:
             echo "Release not found, skipping latest release update"
           fi
 
-  notify-completion:
-    needs: [finalize-release, notify-begin]
-    runs-on: ubuntu-24.04
-    if: always() && needs.check-updates.outputs.should_build == 'true'
-    steps:
-      - name: Set timezone
-        run: |
-          sudo timedatectl set-timezone ${{ env.TZ }}
 
-      - name: Configure Environment
-        run: |
-          echo "TG_DISABLED=${{ github.event.inputs.tg_disabled || 'false' }}" >> $GITHUB_ENV
-
-      - name: Checkout repository source
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.branch || 'stable' }}
-          fetch-depth: "1"
-
-      - name: Send notify completion summary
-        if: ${{ env.TG_DISABLED == 'false' }}
-        run: |
-          if [[ "${{ github.event.inputs.tg_scratch }}" == 'true' ]]; then
-            TG_CHANNEL=${{ env.TG_CHANNEL_SCRATCH }}
-            export TG_TOPIC=""
-          fi
-          START_TIME=${{ needs.notify-begin.outputs.start_time }}
-          END_TIME=$(date -u +%s)
-          ELAPSED=$((END_TIME - START_TIME))
-          ELAPSED_MIN=$((ELAPSED / 60))
-          ELAPSED_SEC=$((ELAPSED % 60))
-          .github/scripts/tg-notify.sh -s $TG_TOKEN $TG_CHANNEL $TG_TOPIC finish ${{ github.workflow }} "${ELAPSED_MIN}m ${ELAPSED_SEC}s" ${{ github.run_id }} ${{ github.repository }}

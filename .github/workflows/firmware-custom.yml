@@ -31,9 +31,6 @@ on:
         type: string
         description: 'Comma-separated list of boards to build (e.g. board1,board2)'
         required: false
-  push:  # 添加此行临时注册工作流程
-    branches:
-      - iborder
 
 env:
   BR2_DL_DIR: ~/dl
