@@ -39,7 +39,7 @@ env:
   TAG_NAME: firmware
   TERM: linux
 
-  TZ: UTC
+  TZ: Asia/Shanghai
 
 jobs:
   check-updates:
@@ -115,7 +115,7 @@ jobs:
         id: set_tag
         run: |
           BRANCH=${{ github.event.inputs.branch || 'stable' }}
-          TAG_NAME="$TAG_NAME-$BRANCH-$(TZ=UTC date +'%Y-%m-%d-%H-%M')"
+          TAG_NAME="$TAG_NAME-$BRANCH-$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
