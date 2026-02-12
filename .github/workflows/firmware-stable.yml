@@ -125,16 +125,6 @@ jobs:
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "1"
 
-      - name: Update prudynt-t.mk configuration
-        run: |
-          # Update prudynt-t.mk file with correct repository information
-          sed -i '3c PRUDYNT_T_SITE = https://github.com/iborderxm/prudynt-t-fork' package/prudynt-t/prudynt-t.mk
-          sed -i '4c PRUDYNT_T_SITE_BRANCH = iborder' package/prudynt-t/prudynt-t.mk
-          sed -i '5c PRUDYNT_T_VERSION = $(shell git ls-remote $(ADPCM_XQ_SITE) $(ADPCM_XQ_SITE_BRANCH) | head -1 | cut -f1)' package/prudynt-t/prudynt-t.mk
-          # Verify the changes
-          echo "Updated prudynt-t.mk file:"
-          cat package/prudynt-t/prudynt-t.mk | head -10
-
       - name: Create release tag
         continue-on-error: true
         run: |
@@ -387,6 +377,17 @@ jobs:
           echo "Buildroot DL cache not available, downloading sources..."
           BOARD=${{ matrix.thingino-version }} make source WORKFLOW=1
           echo "Source download completed"
+
+      - name: Update prudynt-t.mk configuration
+        run: |
+          # Update prudynt-t.mk file with correct repository information
+          sed -i '3c PRUDYNT_T_SITE = https://github.com/iborderxm/prudynt-t-fork' package/prudynt-t/prudynt-t.mk
+          sed -i '4c PRUDYNT_T_SITE_BRANCH = iborder' package/prudynt-t/prudynt-t.mk
+          sed -i '5c PRUDYNT_T_VERSION = $(shell git ls-remote $(PRUDYNT_T_SITE) $(PRUDYNT_T_SITE_BRANCH) | head -1 | cut -f1)' package/prudynt-t/prudynt-t.mk
+          # Verify the changes
+          echo "Updated prudynt-t.mk file:"
+          pwd
+          cat package/prudynt-t/prudynt-t.mk | head -10
 
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}
