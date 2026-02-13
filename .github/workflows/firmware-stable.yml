@@ -28,6 +28,7 @@ env:
   FORCE_UNSAFE_CONFIGURE: 1
   TERM: linux
   TZ: Asia/Shanghai
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   generate-matrix:
