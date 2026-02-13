@@ -237,16 +237,14 @@ jobs:
           pwd
           cat package/prudynt-t/prudynt-t.mk | head -10
 
-      - name: Configure debug build
-        if: ${{ github.event.inputs.debug_enabled == 'true' }}
-        run: |
-          echo "Enabling debug build with sanitizers..."
-          sed -i 's/BR2_PACKAGE_PRUDYNT_T_DEBUG=.*/BR2_PACKAGE_PRUDYNT_T_DEBUG=y/' configs/cameras/${{ matrix.thingino-version }}_defconfig
-
       - name: Build prudynt-t only
         run: |
           echo "Building prudynt-t for ${{ matrix.thingino-version }}..."
-          BOARD=${{ matrix.thingino-version }} make prudynt-t-rebuild WORKFLOW=1
+          if [ "${{ github.event.inputs.debug_enabled }}" == "true" ]; then
+            BOARD=${{ matrix.thingino-version }} make prudynt-t-rebuild DEBUG=1 WORKFLOW=1
+          else
+            BOARD=${{ matrix.thingino-version }} make prudynt-t-rebuild WORKFLOW=1
+          fi
           echo "prudynt-t build completed"
 
       - name: Verify prudynt-t binary
