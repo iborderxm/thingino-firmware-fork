@@ -23,6 +23,12 @@ on:
         required: false
         default: false
 
+      update_prudynt_config:
+        type: boolean
+        description: 'Update prudynt-t.mk configuration'
+        required: false
+        default: true
+
 env:
   BR2_DL_DIR: ~/dl
   FORCE_UNSAFE_CONFIGURE: 1
@@ -227,6 +233,7 @@ jobs:
           echo "Source download completed"
 
       - name: Update prudynt-t.mk configuration
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
           # Update prudynt-t.mk file with correct repository information
           sed -i '3c PRUDYNT_T_SITE = https://github.com/iborderxm/prudynt-t-fork' package/prudynt-t/prudynt-t.mk
