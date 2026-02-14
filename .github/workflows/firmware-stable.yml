@@ -232,6 +232,20 @@ jobs:
           BOARD=${{ matrix.thingino-version }} make source WORKFLOW=1
           echo "Source download completed"
 
+      - name: Clone libimp-samples-musl repository
+        run: |
+          echo "Cloning libimp-samples-musl repository..."
+          git clone --recurse-submodules https://github.com/gtxaspec/libimp-samples-musl.git /tmp/libimp-samples-musl
+          echo "Clone completed"
+
+      - name: Copy ivs include directory
+        run: |
+          echo "Copying ivs include directory..."
+          mkdir -p include
+          cp -r /tmp/libimp-samples-musl/T31/include/ivs include/
+          echo "ivs directory copied successfully"
+          ls -ltr include/*
+
       - name: Update prudynt-t.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
