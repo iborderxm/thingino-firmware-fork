@@ -241,10 +241,12 @@ jobs:
       - name: Copy ivs include directory
         run: |
           echo "Copying ivs include directory..."
-          mkdir -p include
-          cp -r /tmp/libimp-samples-musl/T31/include/ivs include/
+          echo "current directory: $(pwd)"
+          ls -ltr /tmp/libimp-samples-musl/T31/include/ivs
+          cp -r /tmp/libimp-samples-musl/T31/include/ivs include/ivs
           echo "ivs directory copied successfully"
           ls -ltr include/*
+          ls -ltr include/ivs/*
 
       - name: Update prudynt-t.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
