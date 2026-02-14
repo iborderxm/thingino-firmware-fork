@@ -268,6 +268,9 @@ jobs:
           echo "Found prudynt binary: $PRUDYNT_BIN"
           ls -lh "$PRUDYNT_BIN"
           file "$PRUDYNT_BIN"
+          mkdir -p output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin
+          cp -a "$(dirname "$PRUDYNT_BIN")/"* output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/
+          ls -ltr output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/
 
       - name: Upload prudynt-t binary as artifact
         uses: actions/upload-artifact@v4
