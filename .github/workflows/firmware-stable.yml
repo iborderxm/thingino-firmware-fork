@@ -237,7 +237,6 @@ jobs:
           echo "update .gitmodules"
           echo "current directory: $(pwd)"
           sed -i 's/gtxaspec/iborderxm/g' .gitmodules
-          ls -ltr include/*
           cat .gitmodules
 
       - name: Update prudynt-t.mk configuration
