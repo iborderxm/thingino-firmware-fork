@@ -232,22 +232,13 @@ jobs:
           BOARD=${{ matrix.thingino-version }} make source WORKFLOW=1
           echo "Source download completed"
 
-      - name: Clone libimp-samples-musl repository
+      - name: Update .gitmodules
         run: |
-          echo "Cloning libimp-samples-musl repository..."
-          git clone --recurse-submodules https://github.com/gtxaspec/libimp-samples-musl.git /tmp/libimp-samples-musl
-          echo "Clone completed"
-
-      - name: Copy ivs include directory
-        run: |
-          echo "Copying ivs include directory..."
+          echo "update .gitmodules"
           echo "current directory: $(pwd)"
-          ls -ltr /tmp/libimp-samples-musl/T31/include/ivs
-          mkdir -p ./include/ivs
-          cp -r /tmp/libimp-samples-musl/T31/include/ivs/* ./include/ivs/
-          echo "ivs directory copied successfully"
+          sed -i 's/gtxaspec/iborderxm/g' .gitmodules
           ls -ltr include/*
-          ls -ltr include/ivs/*
+          cat .gitmodules
 
       - name: Update prudynt-t.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
