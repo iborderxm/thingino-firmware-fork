@@ -243,7 +243,7 @@ jobs:
           echo "Copying ivs include directory..."
           echo "current directory: $(pwd)"
           ls -ltr /tmp/libimp-samples-musl/T31/include/ivs
-          cp -r /tmp/libimp-samples-musl/T31/include/ivs include/ivs
+          cp -r /tmp/libimp-samples-musl/T31/include/ivs ./include/
           echo "ivs directory copied successfully"
           ls -ltr include/*
           ls -ltr include/ivs/*
