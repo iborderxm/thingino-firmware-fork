@@ -258,8 +258,8 @@ jobs:
       - name: Verify prudynt-t binary
         run: |
           echo "Verifying prudynt-t binary..."
-          ls -ltr output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin
-          PRUDYNT_BIN=$(find output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin -name "prudynt" 2>/dev/null | head -n 1)
+          echo "current directory: $(pwd)"
+          PRUDYNT_BIN=$(find ./output -name "prudynt" 2>/dev/null | head -n 1)
           echo "1-----------------------"
           if [ -z "$PRUDYNT_BIN" ]; then
             echo "ERROR: prudynt binary not found"
