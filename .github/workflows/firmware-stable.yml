@@ -259,18 +259,13 @@ jobs:
         run: |
           echo "Verifying prudynt-t binary..."
           echo "current directory: $(pwd)"
-          echo "--------------------------------------------------------------------"
+          echo "1--------------------------------------------------------------------"
           find . -name "libwebsockets.h"
           find . -name "json.h"
-          echo "--------------------------------------------------------------------"
+          echo "2--------------------------------------------------------------------"
           find /github/home/ -name "libwebsockets.h"
           find /github/home/ -name "json.h"
-          echo "--------------------------------------------------------------------"
-          updatedb
-          apt-get install -y plocate
-          locate libwebsockets.h
-          locate json.h
-          echo "--------------------------------------------------------------------"
+          echo "3--------------------------------------------------------------------"
           ls -ltr /github/home/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/prudynt-t/target/usr/bin/
           PRUDYNT_BIN=$(find /github/home/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/prudynt-t/target/usr/bin/ -name "prudynt" 2>/dev/null | head -n 1)
           if [ -z "$PRUDYNT_BIN" ]; then
