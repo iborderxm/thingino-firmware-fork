@@ -262,10 +262,12 @@ jobs:
           echo "--------------------------------------------------------------------"
           find . -name "libwebsockets.h"
           find . -name "json.h"
+          echo "--------------------------------------------------------------------"
           find /github/home/ -name "libwebsockets.h"
           find /github/home/ -name "json.h"
-          sudo updatedb
-          sudo apt-get install -y plocate
+          echo "--------------------------------------------------------------------"
+          updatedb
+          apt-get install -y plocate
           locate libwebsockets.h
           locate json.h
           echo "--------------------------------------------------------------------"
