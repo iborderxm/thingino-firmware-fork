@@ -225,6 +225,20 @@ jobs:
           find ~/dl -type f | wc -l
           echo "DL cache restored successfully"
 
+      - name: download libimp-samples-musl
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        run: |
+          gh repo clone gtxaspec/libimp-samples-musl /tmp/libimp-samples-musl
+          echo "libimp-samples-musl cloned successfully"
+          echo "libimp-samples-musl files:"
+          ls -la /tmp/libimp-samples-musl/
+          # /tmp/libimp-samples-musl/T31/lib/uclibc/*.so 覆盖到 /tmp/dl-cache/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
+          ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
+          ls -la /tmp/dl-cache/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so /tmp/dl-cache/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so /tmp/dl-cache/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
+          echo "libimp-samples-musl files copied successfully"
+
       - name: Download buildroot sources if cache missing
         if: steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true'
         run: |
@@ -239,7 +253,6 @@ jobs:
           sed -i '3c PRUDYNT_T_SITE = https://github.com/iborderxm/prudynt-t-fork' package/prudynt-t/prudynt-t.mk
           sed -i '4c PRUDYNT_T_SITE_BRANCH = iborder' package/prudynt-t/prudynt-t.mk
           sed -i '5c PRUDYNT_T_VERSION = $(shell git ls-remote $(PRUDYNT_T_SITE) $(PRUDYNT_T_SITE_BRANCH) | head -1 | cut -f1)' package/prudynt-t/prudynt-t.mk
-          sed -i '17i PRUDYNT_T_DEPENDENCIES += openimp' package/prudynt-t/prudynt-t.mk
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
@@ -258,16 +271,6 @@ jobs:
       - name: Verify prudynt-t binary
         run: |
           echo "Verifying prudynt-t binary..."
-          echo "current directory: $(pwd)"
-          echo "1--------------------------------------------------------------------"
-          find . -name "websockets"
-          find . -name "libwebsockets.h"
-          find . -name "json.h"
-          echo "2--------------------------------------------------------------------"
-          find /github/home/ -name "websockets"
-          find /github/home/ -name "libwebsockets.h"
-          find /github/home/ -name "json.h"
-          echo "3--------------------------------------------------------------------"
           ls -ltr /github/home/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/prudynt-t/target/usr/bin/
           PRUDYNT_BIN=$(find /github/home/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/prudynt-t/target/usr/bin/ -name "prudynt" 2>/dev/null | head -n 1)
           if [ -z "$PRUDYNT_BIN" ]; then
