@@ -239,7 +239,7 @@ jobs:
           sed -i '3c PRUDYNT_T_SITE = https://github.com/iborderxm/prudynt-t-fork' package/prudynt-t/prudynt-t.mk
           sed -i '4c PRUDYNT_T_SITE_BRANCH = iborder' package/prudynt-t/prudynt-t.mk
           sed -i '5c PRUDYNT_T_VERSION = $(shell git ls-remote $(PRUDYNT_T_SITE) $(PRUDYNT_T_SITE_BRANCH) | head -1 | cut -f1)' package/prudynt-t/prudynt-t.mk
-          # sed -i '17i PRUDYNT_T_DEPENDENCIES += json-c' package/prudynt-t/prudynt-t.mk
+          sed -i '17i PRUDYNT_T_DEPENDENCIES += openimp' package/prudynt-t/prudynt-t.mk
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
