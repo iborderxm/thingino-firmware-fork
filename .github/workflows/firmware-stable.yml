@@ -239,7 +239,7 @@ jobs:
           sed -i '3c PRUDYNT_T_SITE = https://github.com/iborderxm/prudynt-t-fork' package/prudynt-t/prudynt-t.mk
           sed -i '4c PRUDYNT_T_SITE_BRANCH = newiborder' package/prudynt-t/prudynt-t.mk
           sed -i '5c PRUDYNT_T_VERSION = $(shell git ls-remote $(PRUDYNT_T_SITE) $(PRUDYNT_T_SITE_BRANCH) | head -1 | cut -f1)' package/prudynt-t/prudynt-t.mk
-          sed -i '17i PRUDYNT_T_DEPENDENCIES += json-c' package/prudynt-t/prudynt-t.mk
+          # sed -i '17i PRUDYNT_T_DEPENDENCIES += json-c' package/prudynt-t/prudynt-t.mk
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
@@ -259,6 +259,16 @@ jobs:
         run: |
           echo "Verifying prudynt-t binary..."
           echo "current directory: $(pwd)"
+          echo "--------------------------------------------------------------------"
+          find . -name "libwebsockets.h"
+          find . -name "json.h"
+          find /github/home/ -name "libwebsockets.h"
+          find /github/home/ -name "json.h"
+          sudo updatedb
+          sudo apt-get install -y plocate
+          locate libwebsockets.h
+          locate json.h
+          echo "--------------------------------------------------------------------"
           ls -ltr /github/home/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/prudynt-t/target/usr/bin/
           PRUDYNT_BIN=$(find /github/home/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/prudynt-t/target/usr/bin/ -name "prudynt" 2>/dev/null | head -n 1)
           if [ -z "$PRUDYNT_BIN" ]; then
