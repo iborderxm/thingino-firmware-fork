@@ -111,7 +111,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget
+          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget plocate
       - name: Set timezone
         run: |
           ln -sf /usr/share/zoneinfo/${{ env.TZ }} /etc/localtime
@@ -260,12 +260,18 @@ jobs:
           echo "Verifying prudynt-t binary..."
           echo "current directory: $(pwd)"
           echo "1--------------------------------------------------------------------"
+          find . -name "libwebsockets"
           find . -name "libwebsockets.h"
           find . -name "json.h"
           echo "2--------------------------------------------------------------------"
+          find /github/home/ -name "libwebsockets"
           find /github/home/ -name "libwebsockets.h"
           find /github/home/ -name "json.h"
           echo "3--------------------------------------------------------------------"
+          
+          locate libwebsockets
+          locate json.h
+          echo "4--------------------------------------------------------------------"
           ls -ltr /github/home/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/prudynt-t/target/usr/bin/
           PRUDYNT_BIN=$(find /github/home/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/prudynt-t/target/usr/bin/ -name "prudynt" 2>/dev/null | head -n 1)
           if [ -z "$PRUDYNT_BIN" ]; then
