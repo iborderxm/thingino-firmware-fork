@@ -232,11 +232,11 @@ jobs:
           echo "libimp-samples-musl cloned successfully"
           echo "libimp-samples-musl files:"
           ls -la /tmp/libimp-samples-musl/
-          # /tmp/libimp-samples-musl/T31/lib/uclibc/*.so 覆盖到 /tmp/dl-cache/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
+          # /tmp/libimp-samples-musl/T31/lib/uclibc/*.so 覆盖到 /tmp/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
           ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
-          ls -la /tmp/dl-cache/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
-          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so /tmp/dl-cache/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
-          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so /tmp/dl-cache/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
+          ls -la /tmp/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so /tmp/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so /tmp/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
           echo "libimp-samples-musl files copied successfully"
 
       - name: Download buildroot sources if cache missing
