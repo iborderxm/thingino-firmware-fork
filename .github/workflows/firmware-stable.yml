@@ -261,8 +261,12 @@ jobs:
           ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           
           ls -la ~/dl/ingenic-lib/
-          tar -czf ~/dl/ingenic-lib/$targzFileName -C ~/dl/ingenic-lib/${dirName}
+          currPath=`pwd`
+          cd ~/dl/ingenic-lib/
+          tar -czf ./$targzFileName ./${dirName}
+          ls -ltr
           echo "$targzFileName compressed successfully"
+          cd $currPath
 
 
       - name: Download buildroot sources if cache missing
