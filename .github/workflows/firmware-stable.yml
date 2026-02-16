@@ -232,18 +232,27 @@ jobs:
           echo "libimp-samples-musl cloned successfully"
           echo "libimp-samples-musl files:"
           ls -la /tmp/libimp-samples-musl/
-          # /tmp/libimp-samples-musl/T31/lib/uclibc/*.so 覆盖到 ~/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
+
           ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
-          ls -la ~/dl/
+ 
           ls -la ~/dl/ingenic-lib/
-          ls -la ~/dl/ingenic-lib/T31/
-          ls -la ~/dl/ingenic-lib/T31/lib/
-          ls -la ~/dl/ingenic-lib/T31/lib/1.1.6/
-          ls -la ~/dl/ingenic-lib/T31/lib/1.1.6/uclibc/
-          ls -la ~/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
-          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
-          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
+          if [ ! -f ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz ]; then
+            echo "Warning: ingenic-lib-${hashcode}-git4.tar.gz not found in ~/dl/ingenic-lib/"
+            exit 1
+          fi
+          hashcode=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz | cut -d '-' -f 2)
+          echo "hashcode: $hashcode"
+
+          tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4.tar.gz -C ~/dl/ingenic-lib/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/5.4.0/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/5.4.0/
           echo "libimp-samples-musl files copied successfully"
+          ls -la ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/5.4.0/
+          rm -f ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4.tar.gz
+          ls -la ~/dl/ingenic-lib/
+          tar -czf ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4.tar.gz -C ~/dl/ingenic-lib/ ingenic-lib-${hashcode}-git4/
+          echo "ingenic-lib-${hashcode}-git4.tar.gz compressed successfully"
+
 
       - name: Download buildroot sources if cache missing
         if: steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true'
