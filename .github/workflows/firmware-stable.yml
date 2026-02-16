@@ -245,19 +245,19 @@ jobs:
 
           tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4.tar.gz -C ~/dl/ingenic-lib/
           ls -la ~/dl/ingenic-lib/
-          ls -la ~/dl/ingenic-lib/ingenic-lib/ingenic-lib-${hashcode}-git4/
-          ls -la ~/dl/ingenic-lib/ingenic-lib/ingenic-lib-${hashcode}-git4/T31
-          ls -la ~/dl/ingenic-lib/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/
-          ls -la ~/dl/ingenic-lib/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/
-          ls -la ~/dl/ingenic-lib/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/
-          ls -la ~/dl/ingenic-lib/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/5.4.0/
+          ls -la ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/
+          ls -la ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31
+          ls -la ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/
+          ls -la ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/
+          ls -la ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/
+          ls -la ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/5.4.0/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/5.4.0/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/5.4.0/
           echo "libimp-samples-musl files copied successfully"
           ls -la ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/5.4.0/
           rm -f ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4.tar.gz
           ls -la ~/dl/ingenic-lib/
-          tar -czf ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4.tar.gz -C ~/dl/ingenic-lib/ ingenic-lib-${hashcode}-git4/
+          tar -czf ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4.tar.gz -C ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/
           echo "ingenic-lib-${hashcode}-git4.tar.gz compressed successfully"
 
 
