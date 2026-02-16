@@ -240,7 +240,7 @@ jobs:
             echo "Warning: ingenic-lib-${hashcode}-git4.tar.gz not found in ~/dl/ingenic-lib/"
             exit 1
           fi
-          hashcode=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz | cut -d '-' -f 2)
+          hashcode=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz | cut -d '-' -f 3)
           echo "hashcode: $hashcode"
 
           tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4.tar.gz -C ~/dl/ingenic-lib/
