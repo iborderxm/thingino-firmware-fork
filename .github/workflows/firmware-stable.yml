@@ -258,6 +258,9 @@ jobs:
           rm -rf ./${dirName}
           ls -ltr
           echo "$targzFileName compressed successfully"
+          gzip -d -c ~/dl/ingenic-lib/$targzFileName | tar --strip-components=1 -C ~/${dirName}   -xf -
+          ls -ltr
+          ls -ltr ${dirName}/
           cd $currPath
 
       - name: Download buildroot sources if cache missing
