@@ -244,6 +244,8 @@ jobs:
           echo "hashcode: $hashcode"
 
           tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4.tar.gz -C ~/dl/ingenic-lib/
+          ls -la ~/dl/ingenic-lib/
+          ls -la ~/dl/ingenic-lib/*/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/5.4.0/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/ingenic-lib-${hashcode}-git4/T31/lib/1.1.6/uclibc/5.4.0/
           echo "libimp-samples-musl files copied successfully"
