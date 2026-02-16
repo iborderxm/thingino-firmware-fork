@@ -260,6 +260,7 @@ jobs:
           rm -rf ./${dirName}
           ls -ltr
           echo "$targzFileName compressed successfully"
+          mkdir ~/${dirName}
           gzip -d -c ~/dl/ingenic-lib/$targzFileName | tar --strip-components=1 -C ~/${dirName}   -xf -
           ls -ltr
           ls -ltr ${dirName}/
