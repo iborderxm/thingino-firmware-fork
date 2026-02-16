@@ -248,26 +248,17 @@ jobs:
           tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}*.tar.gz -C ~/dl/ingenic-lib/
           rm -f ~/dl/ingenic-lib/$targzFileName
           dirName=$(basename ~/dl/ingenic-lib/ingenic-lib-*)
-          ls -la ~/dl/ingenic-lib/
-          ls -la ~/dl/ingenic-lib/${dirName}/
-          ls -la ~/dl/ingenic-lib/${dirName}/T31
-          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/
-          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/
-          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/
-          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           echo "libimp-samples-musl files copied successfully"
           ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
-          
-          ls -la ~/dl/ingenic-lib/
           currPath=`pwd`
           cd ~/dl/ingenic-lib/
           tar -czf ./$targzFileName ./${dirName}
+          rm -rf ./${dirName}
           ls -ltr
           echo "$targzFileName compressed successfully"
           cd $currPath
-
 
       - name: Download buildroot sources if cache missing
         if: steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true'
