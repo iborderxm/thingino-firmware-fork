@@ -234,6 +234,12 @@ jobs:
           ls -la /tmp/libimp-samples-musl/
           # /tmp/libimp-samples-musl/T31/lib/uclibc/*.so 覆盖到 /tmp/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
           ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
+          ls -la /tmp/dl/
+          ls -la /tmp/dl/ingenic-lib/
+          ls -la /tmp/dl/ingenic-lib/T31/
+          ls -la /tmp/dl/ingenic-lib/T31/lib/
+          ls -la /tmp/dl/ingenic-lib/T31/lib/1.1.6/
+          ls -la /tmp/dl/ingenic-lib/T31/lib/1.1.6/uclibc/
           ls -la /tmp/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so /tmp/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so /tmp/dl/ingenic-lib/T31/lib/1.1.6/uclibc/5.4.0/
