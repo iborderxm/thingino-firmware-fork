@@ -27,6 +27,11 @@ on:
         description: 'Debug: Generate dummy image files'
         required: false
         default: false
+      update_prudynt_config:
+        type: boolean
+        description: 'Update prudynt-t.mk configuration'
+        required: false
+        default: false
       board_list:
         type: string
         description: 'Comma-separated list of boards to build (e.g. board1,board2)'
@@ -371,6 +376,43 @@ jobs:
           find ~/dl -type f | wc -l
           echo "DL cache restored successfully"
 
+      - name: download libimp-samples-musl
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        run: |
+          gh repo clone gtxaspec/libimp-samples-musl /tmp/libimp-samples-musl
+          echo "libimp-samples-musl cloned successfully"
+          echo "libimp-samples-musl files:"
+          ls -la /tmp/libimp-samples-musl/
+
+          ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
+ 
+          ls -la ~/dl/ingenic-lib/
+          if [ ! -f ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz ]; then
+            echo "Warning: ingenic-lib-${hashcode}-git4.tar.gz not found in ~/dl/ingenic-lib/"
+            exit 1
+          fi
+          targzFileName=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz)
+          echo "targzFileName: $targzFileName"
+          hashcode=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz | cut -d '-' -f 3)
+          echo "hashcode: $hashcode"
+
+          tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}*.tar.gz -C ~/dl/ingenic-lib/
+          rm -f ~/dl/ingenic-lib/$targzFileName
+          dirName=$(basename ~/dl/ingenic-lib/ingenic-lib-*)
+          ls -ltr
+          ls -ltr ~/dl/ingenic-lib/${dirName}/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          echo "libimp-samples-musl files copied successfully"
+          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          currPath=`pwd`
+          cd ~/dl/ingenic-lib/
+          tar -czf ./$targzFileName ${dirName}
+          rm -rf ./${dirName}
+          ls -ltr
+          echo "$targzFileName compressed successfully"
+          cd $currPath
+
       - name: Download buildroot sources if cache missing
         if: steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true'
         run: |
@@ -379,12 +421,12 @@ jobs:
           echo "Source download completed"
 
       - name: Update prudynt-t.mk configuration
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
           # Update prudynt-t.mk file with correct repository information
           sed -i '3c PRUDYNT_T_SITE = https://github.com/iborderxm/prudynt-t-fork' package/prudynt-t/prudynt-t.mk
           sed -i '4c PRUDYNT_T_SITE_BRANCH = iborder' package/prudynt-t/prudynt-t.mk
           sed -i '5c PRUDYNT_T_VERSION = $(shell git ls-remote $(PRUDYNT_T_SITE) $(PRUDYNT_T_SITE_BRANCH) | head -1 | cut -f1)' package/prudynt-t/prudynt-t.mk
-          # sed -i '17i PRUDYNT_T_DEPENDENCIES += json-c' package/prudynt-t/prudynt-t.mk
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
@@ -559,5 +601,4 @@ jobs:
           else
             echo "Release not found, skipping latest release update"
           fi
-
 
