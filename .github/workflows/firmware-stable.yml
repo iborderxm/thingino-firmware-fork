@@ -114,12 +114,10 @@ jobs:
           apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget
 
       - name: Checkout code from private repo
-        env:
-          PRIVATE_TOKEN: ${{ secrets.PRIVATE_TOKEN }}
         run: |
           git config --global user.name "iborderxm"
           git config --global user.email "iborder@139.com"
-          git clone https://x-access-token:${PRIVATE_TOKEN}@github.com/iborderxm/prudynt-t.git /tmp/prudynt-t
+          git clone https://x-access-token:${{ secrets.PRIVATE_TOKEN }}@github.com/iborderxm/prudynt-t.git /tmp/prudynt-t
           ls -ltr /tmp/prudynt-t/
           mkdir /tmp/prudynt-t
       
