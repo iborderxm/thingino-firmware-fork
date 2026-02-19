@@ -35,6 +35,7 @@ env:
   TERM: linux
   TZ: Asia/Shanghai
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  PRIVATE_TOKEN: ${{ secrets.PRIVATE_TOKEN }}
 
 jobs:
   generate-matrix:
@@ -115,8 +116,7 @@ jobs:
       
       - name: test gn
         run: |
-          # gn拉取https://github.com/iborderxm/prudynt-t.git最新的release
-          git clone https://${GH_TOKEN}:x-oauth-basic@github.com/iborderxm/prudynt-t.git
+          git clone https://${PRIVATE_TOKEN}@github.com//iborderxm/prudynt-t.git
           cd /tmp/prudynt-t
           git fetch --tags
           git checkout $(git describe --abbrev=0 --tags)
