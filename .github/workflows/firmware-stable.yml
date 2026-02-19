@@ -117,7 +117,7 @@ jobs:
         env:
           PRIVATE_TOKEN: ${{ secrets.PRIVATE_TOKEN }}
         run: |
-          git config --global user.name "iborder"
+          git config --global user.name "iborderxm"
           git config --global user.email "iborder@139.com"
           git clone https://x-access-token:${PRIVATE_TOKEN}@github.com/iborderxm/prudynt-t.git /tmp/prudynt-t
           ls -ltr /tmp/prudynt-t/
