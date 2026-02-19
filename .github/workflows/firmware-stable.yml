@@ -113,14 +113,17 @@ jobs:
       - name: Install build dependencies
         run: |
           apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget
-      
-      - name: test gn
+
+      - name: Checkout code from private repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PRIVATE_TOKEN }}
+          repository: iborderxm/prudynt-t.git
+          path: /tmp/prudynt-t
+
+      - name: check prudynt-t
         run: |
-          git clone https://${PRIVATE_TOKEN}@github.com//iborderxm/prudynt-t.git
-          cd /tmp/prudynt-t
-          git fetch --tags
-          git checkout $(git describe --abbrev=0 --tags)
-          ls -ltr
+          ls -ltr /tmp/prudynt-t/
           mkdir /tmp/prudynt-t
       
       - name: Set timezone
