@@ -116,41 +116,12 @@ jobs:
       - name: test gn
         run: |
           # gn拉取https://github.com/iborderxm/prudynt-t.git最新的release
-          REPO="iborderxm/prudynt-t"
-          echo "Fetching latest release from $REPO..."
-          
-          # Get the latest release tag
-          LATEST_RELEASE=$(gh release view --repo "$REPO" --json tagName,name --jq '.tagName' 2>/dev/null || echo "")
-          
-          if [ -z "$LATEST_RELEASE" ]; then
-            echo "No releases found for $REPO"
-            exit 0
-          fi
-          
-          echo "Latest release tag: $LATEST_RELEASE"
-          
-          # Create directory for release files
-          mkdir -p /tmp/prudynt-t-release
-          
-          # Download release assets
-          echo "Downloading release assets..."
-          gh release download "$LATEST_RELEASE" --repo "$REPO" --dir "/tmp/prudynt-t-release" || {
-            echo "Warning: Failed to download release assets"
-            exit 0
-          }
-          
-          echo "Downloaded files:"
-          ls -la /tmp/prudynt-t-release/
-          
-          # Extract if it's a zip file
-          if ls /tmp/prudynt-t-release/*.zip &>/dev/null; then
-            echo "Extracting release files..."
-            cd /tmp/prudynt-t-release
-            7z x "*.zip" -y || unzip -o "*.zip"
-            echo "Extraction completed"
-          fi
-          
-          echo "Latest release from $REPO fetched successfully"
+          git clone https://github.com/iborderxm/prudynt-t.git /tmp/prudynt-t
+          cd /tmp/prudynt-t
+          git fetch --tags
+          git checkout $(git describe --abbrev=0 --tags)
+          ls -ltr
+          mkdir /tmp/prudynt-t
       
       - name: Set timezone
         run: |
