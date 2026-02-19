@@ -114,10 +114,6 @@ jobs:
           # apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget
           apt-get install -y git gh
 
-      - run:
-          name: Authenticate GitHub CLI
-          command: echo "${{ secrets.PRIVATE_TOKEN }}" | gh auth login --with-token
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -132,6 +128,7 @@ jobs:
           # 获取历史release
           # RELEASES=$(curl -H "Authorization: Bearer ${{ secrets.PRIVATE_TOKEN }}" https://api.github.com/repos/iborderxm/prudynt-t/releases)
           # echo $RELEASES
+          echo "${{ secrets.PRIVATE_TOKEN }}" | gh auth login --with-token
           gh auth status
           gh release list -R iborderxm/prudynt-t
       
