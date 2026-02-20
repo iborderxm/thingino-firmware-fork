@@ -146,13 +146,16 @@ jobs:
           mv ./prudynt-t-${TAG}.tar.gz ./webdir/
           cd ./webdir/
           python3 -m http.server 8000 &
+          HTTP_PID=$!
+          sleep 5
+          echo "1-------------------------------------"
+          echo "download prudynt-t-${TAG}.tar.gz"
+          wget http://localhost:8000/prudynt-t-${TAG}.tar.gz -O new-prudynt-t-${TAG}.tar.gz
+          ls -ltr
           echo "1-------------------------------------"
           # http://localhost:8000/prudynt-t-${TAG}.tar.gz
           # 设置TAG为全局变量，方便后续其他步骤使用
           echo "PRUDYNT_T_TAG=${TAG}" >> $GITHUB_ENV
-          echo "download prudynt-t-${TAG}.tar.gz"
-          wget http://localhost:8000/prudynt-t-${TAG}.tar.gz -O new-prudynt-t-${TAG}.tar.gz
-          ls -ltr
           cd $GITHUB_WORKSPACE
       
       - name: Set timezone
