@@ -468,6 +468,7 @@ jobs:
           git checkout iborder
 
           cd $GITHUB_WORKSPACE
+          cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S37checkuenv overlay/lower/etc/init.d/S37checkuenv
           rm -rf package/thingino-portal-simple/files
           cp -r /tmp/$REPO_NAME/package/thingino-portal-simple/files package/thingino-portal-simple/files
           rm -rf package/thingino-webui/files/www
