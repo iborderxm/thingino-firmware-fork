@@ -258,6 +258,41 @@ jobs:
       - name: Install build dependencies
         run: |
           apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget
+
+      - name: Checkout prudynt-t
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PRIVATE_TOKEN }}
+          repository: iborderxm/prudynt-t
+          path: ./prudynt-t
+
+      - name: Prepare prudynt-t
+        run: |
+          ls -ltr ./prudynt-t/
+          mv ./prudynt-t /tmp/prudynt-t
+          cd /tmp/prudynt-t
+          git fetch --all
+
+          TAG=$(git tag --sort=-v:refname | head -1)
+          echo "Latest Tag: $TAG"
+          
+          if [ -z "$TAG" ]; then
+            echo "ERROR: No tags found in repository"
+            exit 1
+          fi
+          
+          git checkout $TAG
+          cd /tmp
+          ls -ltr prudynt-t/include/
+          mv prudynt-t prudynt-t-${TAG}
+          tar -czf ./prudynt-t-${TAG}.tar.gz prudynt-t-${TAG}
+          ls -ltr
+          mkdir webdir
+          mv ./prudynt-t-${TAG}.tar.gz ./webdir/
+
+          echo "PRUDYNT_T_TAG=${TAG}" >> $GITHUB_ENV
+          cd $GITHUB_WORKSPACE
+      
       - name: Set timezone
         run: |
           ln -sf /usr/share/zoneinfo/${{ env.TZ }} /etc/localtime
@@ -382,11 +417,9 @@ jobs:
           gh repo clone gtxaspec/libimp-samples-musl /tmp/libimp-samples-musl
           echo "libimp-samples-musl cloned successfully"
           echo "libimp-samples-musl files:"
-          ls -la /tmp/libimp-samples-musl/
-
-          ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
- 
-          ls -la ~/dl/ingenic-lib/
+          # ls -la /tmp/libimp-samples-musl/
+          # ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
+          # ls -la ~/dl/ingenic-lib/
           if [ ! -f ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz ]; then
             echo "Warning: ingenic-lib-${hashcode}-git4.tar.gz not found in ~/dl/ingenic-lib/"
             exit 1
@@ -399,12 +432,12 @@ jobs:
           tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}*.tar.gz -C ~/dl/ingenic-lib/
           rm -f ~/dl/ingenic-lib/$targzFileName
           dirName=$(basename ~/dl/ingenic-lib/ingenic-lib-*)
-          ls -ltr
+          # ls -ltr
           ls -ltr ~/dl/ingenic-lib/${dirName}/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           echo "libimp-samples-musl files copied successfully"
-          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          # ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           currPath=`pwd`
           cd ~/dl/ingenic-lib/
           tar -czf ./$targzFileName ${dirName}
@@ -424,17 +457,28 @@ jobs:
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
           # Update prudynt-t.mk file with correct repository information
-          sed -i '3c PRUDYNT_T_SITE = https://github.com/iborderxm/prudynt-t-fork' package/prudynt-t/prudynt-t.mk
-          sed -i '4c PRUDYNT_T_SITE_BRANCH = iborder' package/prudynt-t/prudynt-t.mk
-          sed -i '5c PRUDYNT_T_VERSION = $(shell git ls-remote $(PRUDYNT_T_SITE) $(PRUDYNT_T_SITE_BRANCH) | head -1 | cut -f1)' package/prudynt-t/prudynt-t.mk
+          sed -i 's/^PRUDYNT_T_SITE/# PRUDYNT_T_SITE/' package/prudynt-t/prudynt-t.mk
+          sed -i 's/^PRUDYNT_T_VERSION/# PRUDYNT_T_VERSION/' package/prudynt-t/prudynt-t.mk
+          sed -i 's/^PRUDYNT_T_GIT_SUBMODULES/# PRUDYNT_T_GIT_SUBMODULES/' package/prudynt-t/prudynt-t.mk
+          sed -i '1i\PRUDYNT_T_VERSION = ${{ env.PRUDYNT_T_TAG }}' package/prudynt-t/prudynt-t.mk
+          sed -i '2i\PRUDYNT_T_SOURCE = prudynt-t-$(PRUDYNT_T_VERSION).tar.gz' package/prudynt-t/prudynt-t.mk
+          sed -i '3i\PRUDYNT_T_SITE = http://127.0.0.1:8000' package/prudynt-t/prudynt-t.mk
+          sed -i 's/\$(shell git show -s --format=%h)/${{ env.PRUDYNT_T_TAG }}/' package/prudynt-t/prudynt-t.mk
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
-          cat package/prudynt-t/prudynt-t.mk | head -10
+          cat package/prudynt-t/prudynt-t.mk | head -200
 
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}
         run: |
+          ls -ltr /tmp/webdir/
+          cd /tmp/webdir/
+          python3 -m http.server 8000 &
+          sleep 5
+          ps -ef | grep python
+          cd $GITHUB_WORKSPACE
+          ls -ltr
           BOARD=${{ matrix.thingino-version }} make fast WORKFLOW=1
           TIME=$(date -d @${SECONDS} +%M:%S)
           echo "TIME=${TIME}" >> ${GITHUB_ENV}
