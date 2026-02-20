@@ -263,7 +263,7 @@ jobs:
           echo "DL cache restored successfully"
 
       - name: download libimp-samples-musl
-        if: ${{ github.event.inputs.update_prudynt_config == 'false' }}
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
           gh repo clone gtxaspec/libimp-samples-musl /tmp/libimp-samples-musl
           echo "libimp-samples-musl cloned successfully"
@@ -331,7 +331,6 @@ jobs:
           sleep 5
           ps -ef | grep python
           cd $GITHUB_WORKSPACE
-          wget http://127.0.0.1:8000/prudynt-t-v1.0.0.tar.gz
           ls -ltr
           echo "Building prudynt-t for ${{ matrix.thingino-version }}..."
           if [ "${{ github.event.inputs.debug_enabled }}" == "true" ]; then
