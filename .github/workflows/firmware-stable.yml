@@ -269,7 +269,7 @@ jobs:
           echo "DL cache restored successfully"
 
       - name: download libimp-samples-musl
-        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        if: ${{ github.event.inputs.update_prudynt_config == 'false' }}
         run: |
           gh repo clone gtxaspec/libimp-samples-musl /tmp/libimp-samples-musl
           echo "libimp-samples-musl cloned successfully"
@@ -331,6 +331,7 @@ jobs:
 
       - name: Build prudynt-t only
         run: |
+          ls -ltr /tmp/webdir/
           ps -ef | grep python
           wget http://localhost:8000/prudynt-t-v1.0.0.tar.gz
           ls -ltr
