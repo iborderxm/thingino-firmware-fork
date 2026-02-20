@@ -150,12 +150,18 @@ jobs:
           # http://localhost:8000/prudynt-t-${TAG}.tar.gz
           # 设置TAG为全局变量，方便后续其他步骤使用
           echo "PRUDYNT_T_TAG=${TAG}" >> $GITHUB_ENV
+          netstat -an | grep 8000
       
       - name: Set timezone
         run: |
           ln -sf /usr/share/zoneinfo/${{ env.TZ }} /etc/localtime
           echo ${{ env.TZ }} > /etc/timezone
           DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive tzdata
+          netstat -an | grep 8000
+          if [ $? -ne 0 ]; then
+            echo "Error: Port 8000 is not open"
+            exit 1
+          fi
 
       - name: Setup gh workspace to container
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
