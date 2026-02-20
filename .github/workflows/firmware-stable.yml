@@ -35,7 +35,7 @@ on:
       board_list:
         type: string
         description: 'Comma-separated list of boards to build (e.g. board1,board2)'
-        required: false
+        required: true
 
 env:
   BR2_DL_DIR: ~/dl
@@ -66,6 +66,12 @@ jobs:
           git rev-parse HEAD
           echo "Last commit:"
           git log --oneline -1
+          echo "copied repository to /tmp/${{ github.repository }}"
+          cd ../
+          cp -r ${{ github.repository }} /tmp/${{ github.repository }}
+          ls -ltr /tmp/${{ github.repository }}
+          cd /tmp/${{ github.repository }}
+          git checkout iborder
 
       - name: Check for updates since last release
         id: check
@@ -468,6 +474,14 @@ jobs:
           echo "Updated prudynt-t.mk file:"
           pwd
           cat package/prudynt-t/prudynt-t.mk | head -200
+
+      - name: Update webui files
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        run: |
+          rm -rf package/thingino-portal-simple/files
+          cp -r /tmp/${{ github.repository }}/package/thingino-portal-simple/files package/thingino-portal-simple/files
+          rm -rf package/thingino-webui/files/www
+          cp -r /tmp/${{ github.repository }}/package/thingino-webui/files/www package/thingino-webui/files/www
 
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}
