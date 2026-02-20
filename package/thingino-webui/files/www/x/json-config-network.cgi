@@ -571,6 +571,7 @@ handle_post() {
   command -v update_caminfo >/dev/null 2>&1 && update_caminfo
 
   emit_json "" '{"status":"ok"}'
+  /etc/init.d/S38wpa_supplicant restart
 }
 
 case "${REQUEST_METHOD:-GET}" in
