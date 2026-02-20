@@ -151,8 +151,6 @@ jobs:
           # 设置TAG为全局变量，方便后续其他步骤使用
           echo "PRUDYNT_T_TAG=${TAG}" >> $GITHUB_ENV
           echo "2-------------------------------------"
-          netstat -an | grep 8000
-          echo "3-------------------------------------"
           ps -ef | grep python
       
       - name: Set timezone
@@ -160,11 +158,8 @@ jobs:
           ln -sf /usr/share/zoneinfo/${{ env.TZ }} /etc/localtime
           echo ${{ env.TZ }} > /etc/timezone
           DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive tzdata
-          netstat -an | grep 8000
-          if [ $? -ne 0 ]; then
-            echo "Error: Port 8000 is not open"
-            exit 1
-          fi
+          ps -ef | grep python
+
 
       - name: Setup gh workspace to container
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -336,11 +331,7 @@ jobs:
 
       - name: Build prudynt-t only
         run: |
-          netstat -an | grep 8000
-          if [ $? -ne 0 ]; then
-            echo "Error: Port 8000 is not open"
-            exit 1
-          fi
+          ps -ef | grep python
           echo "Building prudynt-t for ${{ matrix.thingino-version }}..."
           if [ "${{ github.event.inputs.debug_enabled }}" == "true" ]; then
             BOARD=${{ matrix.thingino-version }} make rebuild-prudynt-t DEBUG=1 WORKFLOW=1
