@@ -150,16 +150,12 @@ jobs:
           # http://localhost:8000/prudynt-t-${TAG}.tar.gz
           # 设置TAG为全局变量，方便后续其他步骤使用
           echo "PRUDYNT_T_TAG=${TAG}" >> $GITHUB_ENV
-          echo "2-------------------------------------"
-          ps -ef | grep python
       
       - name: Set timezone
         run: |
           ln -sf /usr/share/zoneinfo/${{ env.TZ }} /etc/localtime
           echo ${{ env.TZ }} > /etc/timezone
           DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive tzdata
-          ps -ef | grep python
-
 
       - name: Setup gh workspace to container
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
@@ -327,11 +323,13 @@ jobs:
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
-          cat package/prudynt-t/prudynt-t.mk | head -10
+          cat package/prudynt-t/prudynt-t.mk | head -200
 
       - name: Build prudynt-t only
         run: |
           ps -ef | grep python
+          wget http://localhost:8000/prudynt-t-${PRUDYNT_T_TAG}.tar.gz
+          ls -ltr
           echo "Building prudynt-t for ${{ matrix.thingino-version }}..."
           if [ "${{ github.event.inputs.debug_enabled }}" == "true" ]; then
             BOARD=${{ matrix.thingino-version }} make rebuild-prudynt-t DEBUG=1 WORKFLOW=1
