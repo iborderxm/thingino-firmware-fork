@@ -57,6 +57,7 @@ start() {
                 # Restart network service
                 echo "Restarting network service..."
                 /etc/init.d/S38wpa_supplicant restart
+                sleep 5
                 
                 echo "WiFi configured successfully from uenv.txt"
             else
@@ -67,6 +68,25 @@ start() {
         fi
     else
         echo "No uenv.txt found on SD card, skipping WiFi configuration"
+    fi
+
+    is_need_reboot="false"
+    if [ "$(cat /etc/hostname)" != "insight" ]; then
+        echo "Hostname is not insight, correcting..."
+        echo "insight" > /etc/hostname
+        is_need_reboot="true"
+    fi
+
+    # 检查/etc/timezone是不是Asia/Shanghai,不是就需要更正
+    if [ "$(cat /etc/timezone)" != "Asia/Shanghai" ]; then
+        echo "Timezone is not Asia/Shanghai, correcting..."
+        echo "Asia/Shanghai" > /etc/timezone
+        is_need_reboot="true"
+    fi
+
+    if [ "$is_need_reboot" = "true" ]; then
+        echo "Need to reboot to apply changes"
+        reboot
     fi
 }
 
