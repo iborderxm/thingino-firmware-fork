@@ -36,52 +36,52 @@ configured_channel=$(jct "/etc/prudynt.json" get "recorder.channel" 2>/dev/null 
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-      <img alt="Image: thingino logo" width="150" src="/a/logo.svg">
+      <img alt="图片：thingino logo" width="150" src="/a/logo.svg">
       <%= $page_title %>
     </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nbMain"
-      aria-controls="nbMain" aria-label="Toggle navigation">
+      aria-controls="nbMain" aria-label="切换导航">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse justify-content-end" id="nbMain">
       <ul class="navbar-nav">
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="ddInfo" role="button">Information</a>
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="ddInfo" role="button">信息</a>
           <ul aria-labelledby="ddInfo" class="dropdown-menu">
-            <li><a class="dropdown-item" href="/info.html">Commands and logs</a></li>
-            <li><a class="dropdown-item" href="info-diagnostic.cgi">Share diagnostic info</a></li>
+            <li><a class="dropdown-item" href="/info.html">命令和日志</a></li>
+            <li><a class="dropdown-item" href="info-diagnostic.cgi">分享诊断信息</a></li>
           </ul>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="ddSettings" role="button">Settings</a>
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="ddSettings" role="button">设置</a>
           <ul aria-labelledby="ddSettings" class="dropdown-menu">
             <% menu "config" %>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="reset.cgi">Reset...</a></li>
+            <li><a class="dropdown-item" href="reset.cgi">重置...</a></li>
           </ul>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="ddTools" role="button">Tools</a>
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="ddTools" role="button">工具</a>
           <ul aria-labelledby="ddTools" class="dropdown-menu">
             <% menu "tool" %>
-            <li><a href="reboot.cgi" class="dropdown-item bg-danger confirm">⏼ Reboot</a></li>
+            <li><a href="reboot.cgi" class="dropdown-item bg-danger confirm">⏼ 重启</a></li>
           </ul>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="ddServices" role="button">Services</a>
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="ddServices" role="button">服务</a>
           <ul aria-labelledby="ddServices" class="dropdown-menu">
             <% menu "service" %>
           </ul>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="preview.cgi">Preview</a>
+          <a class="nav-link" href="preview.cgi">预览</a>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="ddHelp" role="button">Help</a>
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" id="ddHelp" role="button">帮助</a>
           <ul aria-labelledby="ddHelp" class="dropdown-menu dropdown-menu-lg-end">
-            <li><a class="dropdown-item" href="https://thingino.com/">About thingino</a></li>
+            <li><a class="dropdown-item" href="https://thingino.com/">关于 thingino</a></li>
           </ul>
         </li>
       </ul>
@@ -95,57 +95,57 @@ configured_channel=$(jct "/etc/prudynt.json" get "recorder.channel" 2>/dev/null 
 
       <div class="col-11 col-lg-6">
         <div id="button-bar" class="d-flex align-items-center gap-1 mb-2 flex-wrap">
-          <button type="button" class="btn btn-secondary" id="motion" title="Motion Guard">
+          <button type="button" class="btn btn-secondary" id="motion" title="移动侦测">
             <i class="bi bi-person-walking"></i>
           </button>
-          <button type="button" class="btn btn-secondary" id="privacy" title="Privacy mode">
+          <button type="button" class="btn btn-secondary" id="privacy" title="隐私模式">
             <i class="bi bi-eye-slash"></i>
           </button>
           <div class="btn-group" role="group">
-            <button type="button" class="btn btn-secondary" id="daynight" title="Night mode">
+            <button type="button" class="btn btn-secondary" id="daynight" title="夜间模式">
               <i class="bi bi-moon-stars"></i>
             </button>
             <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
               <span class="visually-hidden">Toggle Dropdown</span>
             </button>
             <ul class="dropdown-menu">
-              <li><button class="dropdown-item btn btn-secondary" type="button" id="color" title="Color mode">
-                <i class="bi bi-palette"></i> Color mode
+              <li><button class="dropdown-item btn btn-secondary" type="button" id="color" title="彩色模式">
+                <i class="bi bi-palette"></i> 彩色模式
               </button></li>
-              <li><button class="dropdown-item btn btn-secondary" type="button" id="ircut" title="IR filter">
-                <i class="bi bi-transparency"></i> IR filter
+              <li><button class="dropdown-item btn btn-secondary" type="button" id="ircut" title="红外滤镜">
+                <i class="bi bi-transparency"></i> 红外滤镜
               </button></li>
-              <li><button class="dropdown-item btn btn-secondary" type="button" id="ir850" title="IR LED 850 nm">
-                <i class="bi bi-lightbulb"></i> IR LED 850 nm
+              <li><button class="dropdown-item btn btn-secondary" type="button" id="ir850" title="红外 LED 850 nm">
+                <i class="bi bi-lightbulb"></i> 红外 LED 850 nm
               </button></li>
-              <li><button class="dropdown-item btn btn-secondary" type="button" id="ir940" title="IR LED 940 nm">
-                <i class="bi bi-lightbulb"></i> IR LED 940 nm
+              <li><button class="dropdown-item btn btn-secondary" type="button" id="ir940" title="红外 LED 940 nm">
+                <i class="bi bi-lightbulb"></i> 红外 LED 940 nm
               </button></li>
-              <li><button class="dropdown-item btn btn-secondary" type="button" id="white" title="White LED">
-                <i class="bi bi-lightbulb"></i> White LED
+              <li><button class="dropdown-item btn btn-secondary" type="button" id="white" title="白光 LED">
+                <i class="bi bi-lightbulb"></i> 白光 LED
               </button></li>
             </ul>
           </div>
-          <button type="button" class="btn btn-secondary" id="microphone" title="Microphone">
+          <button type="button" class="btn btn-secondary" id="microphone" title="麦克风">
             <i class="bi bi-mic"></i>
           </button>
-          <button type="button" class="btn btn-secondary" id="speaker" title="Speaker">
+          <button type="button" class="btn btn-secondary" id="speaker" title="扬声器">
             <i class="bi bi-volume-up"></i>
           </button>
-          <button type="button" class="btn btn-secondary" id="recorder-ch0" data-channel="0" title="Main stream recorder">
+          <button type="button" class="btn btn-secondary" id="recorder-ch0" data-channel="0" title="主码流录制">
             <i class="bi bi-record"></i>
           </button>
-          <button type="button" class="btn btn-secondary" id="recorder-ch1" data-channel="1" title="Substream recorder">
+          <button type="button" class="btn btn-secondary" id="recorder-ch1" data-channel="1" title="子码流录制">
             <i class="bi bi-record"></i>
           </button>
-          <button type="button" class="btn btn-secondary" title="Send snapshot" data-bs-toggle="modal" data-bs-target="#sendModal">
+          <button type="button" class="btn btn-secondary" title="发送快照" data-bs-toggle="modal" data-bs-target="#sendModal">
             <i class="bi bi-send"></i>
           </button>
         </div>
       </div>
 
       <div class="col-1">
-        <a href="config-daynight.cgi" class="dnd-gain <%= $CSS_SILENT_LINK %>" title="Brightness"></a>
+        <a href="config-daynight.cgi" class="dnd-gain <%= $CSS_SILENT_LINK %>" title="亮度"></a>
       </div>
 
       <div class="col-4 col-lg-2">
@@ -177,7 +177,7 @@ configured_channel=$(jct "/etc/prudynt.json" get "recorder.channel" 2>/dev/null 
       </div>
 
       <div class="col-1 text-end">
-        <button type="button" class="btn btn-secondary" id="theme-toggle" title="Toggle theme">
+        <button type="button" class="btn btn-secondary" id="theme-toggle" title="切换主题">
           <i class="bi bi-brilliance"></i>
         </button>
       </div>
@@ -186,36 +186,36 @@ configured_channel=$(jct "/etc/prudynt.json" get "recorder.channel" 2>/dev/null 
 
 <% if ! [ "true" = "$wlanap_enabled" ] && [ -z "$network_gateway" ]; then %>
     <div class="alert alert-warning">
-      <p>No Internet connection. Please <a href="/config-network.html">check your network settings</a>.</p>
+      <p>无网络连接。请 <a href="/config-network.html">检查您的网络设置</a>。</p>
     </div>
 <% fi %>
 
 <% if [ "$(cat /etc/TZ)" != "$TZ" ]; then %>
     <div class="alert alert-danger">
-      <p>$TZ variable in system environment needs updating!</p>
+      <p>系统环境中的 $TZ 变量需要更新！</p>
       <span class="d-flex flex-wrap gap-3">
-        <a class="btn btn-danger" href="reboot.cgi">Reboot camera</a>
-        <a class="btn btn-primary" href="config-time.cgi">See timezone settings</a>
+        <a class="btn btn-danger" href="reboot.cgi">重启摄像头</a>
+        <a class="btn btn-primary" href="config-time.cgi">查看时区设置</a>
       </span>
     </div>
 <% fi %>
 
 <% if [ -f /tmp/network-restart.txt ]; then %>
     <div class="alert alert-danger">
-      <p>Network settings have been updated. Restart to apply changes.</p>
+      <p>网络设置已更新。重启以应用更改。</p>
       <span class="d-flex flex-wrap gap-3">
-        <a class="btn btn-danger" href="reboot.cgi">Reboot camera</a>
-        <a class="btn btn-primary" href="/config-network.html">See network settings</a>
+        <a class="btn btn-danger" href="reboot.cgi">重启摄像头</a>
+        <a class="btn btn-primary" href="/config-network.html">查看网络设置</a>
       </span>
     </div>
 <% fi %>
 
 <% if [ -f /tmp/sensor-iq-restart.txt ]; then %>
     <div class="alert alert-danger">
-      <p>The sensor IQ file has been updated. Restart to apply changes.</p>
+      <p>传感器 IQ 文件已更新。重启以应用更改。</p>
       <span class="d-flex flex-wrap gap-3">
-        <a class="btn btn-danger" href="reboot.cgi">Reboot camera</a>
-        <a class="btn btn-primary" href="config-sensor.cgi">See sensor settings</a>
+        <a class="btn btn-danger" href="reboot.cgi">重启摄像头</a>
+        <a class="btn btn-primary" href="config-sensor.cgi">查看传感器设置</a>
       </span>
     </div>
 <% fi %>
