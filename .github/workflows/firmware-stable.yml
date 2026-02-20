@@ -146,11 +146,14 @@ jobs:
           mv ./prudynt-t-${TAG}.tar.gz ./webdir/
           cd ./webdir/
           python3 -m http.server 8000 &
-          HTTP_PID=$!
+          echo "1-------------------------------------"
           # http://localhost:8000/prudynt-t-${TAG}.tar.gz
           # 设置TAG为全局变量，方便后续其他步骤使用
           echo "PRUDYNT_T_TAG=${TAG}" >> $GITHUB_ENV
+          echo "2-------------------------------------"
           netstat -an | grep 8000
+          echo "3-------------------------------------"
+          ps -ef | grep python
       
       - name: Set timezone
         run: |
