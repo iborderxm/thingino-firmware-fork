@@ -71,11 +71,11 @@ jobs:
           REPO_NAME="${REPO_FULL#*/}"
           echo "Repository name: $REPO_NAME"
           echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
-          echo "copied repository to /tmp/${{ env.REPO_NAME }}"
+          echo "copied repository to /tmp/$REPO_NAME"
           cd ../
-          cp -r ${{ env.REPO_NAME  }} /tmp/${{ env.REPO_NAME  }}
-          ls -ltr /tmp/${{ env.REPO_NAME  }}
-          cd /tmp/${{ env.REPO_NAME  }}
+          cp -r $REPO_NAME /tmp/$REPO_NAME
+          ls -ltr /tmp/$REPO_NAME
+          cd /tmp/$REPO_NAME
           git checkout iborder
 
       - name: Check for updates since last release
