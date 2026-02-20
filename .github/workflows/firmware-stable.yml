@@ -469,6 +469,7 @@ jobs:
 
           cd $GITHUB_WORKSPACE
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S37checkuenv overlay/lower/etc/init.d/S37checkuenv
+          cp -r /tmp/$REPO_NAME/package/prudynt-t/files/prudynt.json package/prudynt-t/files/prudynt.json
           rm -rf package/thingino-portal-simple/files
           cp -r /tmp/$REPO_NAME/package/thingino-portal-simple/files package/thingino-portal-simple/files
           rm -rf package/thingino-webui/files/www
