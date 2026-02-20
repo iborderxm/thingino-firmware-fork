@@ -139,6 +139,7 @@ jobs:
           # 切换到TAG
           git checkout $TAG
           cd /tmp
+          ls -ltr prudynt-t/include/
           mv prudynt-t prudynt-t-${TAG}
           tar -czf ./prudynt-t-${TAG}.tar.gz prudynt-t-${TAG}
           ls -ltr
@@ -268,11 +269,9 @@ jobs:
           gh repo clone gtxaspec/libimp-samples-musl /tmp/libimp-samples-musl
           echo "libimp-samples-musl cloned successfully"
           echo "libimp-samples-musl files:"
-          ls -la /tmp/libimp-samples-musl/
-
-          ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
- 
-          ls -la ~/dl/ingenic-lib/
+          # ls -la /tmp/libimp-samples-musl/
+          # ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
+          # ls -la ~/dl/ingenic-lib/
           if [ ! -f ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz ]; then
             echo "Warning: ingenic-lib-${hashcode}-git4.tar.gz not found in ~/dl/ingenic-lib/"
             exit 1
@@ -285,12 +284,12 @@ jobs:
           tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}*.tar.gz -C ~/dl/ingenic-lib/
           rm -f ~/dl/ingenic-lib/$targzFileName
           dirName=$(basename ~/dl/ingenic-lib/ingenic-lib-*)
-          ls -ltr
+          # ls -ltr
           ls -ltr ~/dl/ingenic-lib/${dirName}/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           echo "libimp-samples-musl files copied successfully"
-          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          # ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           currPath=`pwd`
           cd ~/dl/ingenic-lib/
           tar -czf ./$targzFileName ${dirName}
