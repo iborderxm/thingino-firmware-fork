@@ -1,0 +1,84 @@
+#!/bin/sh
+# Check uenv.txt on SD card and set WiFi if needed
+
+. /usr/share/common
+
+start() {
+    ENV_FILE="/mnt/mmcblk0p1/uenv.txt"
+
+    # Check if WiFi is already connected
+    if iw dev wlan0 link >/dev/null 2>&1; then
+        echo "WiFi is already connected, skipping uenv.txt check"
+        return 0
+    fi
+
+    # Wait for SD card to be mounted (max 30 seconds)
+    echo "Waiting for SD card to be mounted..."
+    local timeout=30
+    while [ $timeout -gt 0 ]; do
+        if [ -d "/mnt/mmcblk0p1" ]; then
+            echo "SD card mounted at /mnt/mmcblk0p1"
+            break
+        fi
+        sleep 1
+        timeout=$((timeout - 1))
+    done
+
+    # Check if uenv.txt exists on SD card
+    if [ -f "$ENV_FILE" ]; then
+        echo "Found uenv.txt on SD card, checking for WiFi settings..."
+        
+        # Read wlanssid and wlanpass from uenv.txt
+        wlanssid=$(grep -E '^wlanssid=' "$ENV_FILE" | cut -d'=' -f2- | tr -d '\r')
+        wlanpass=$(grep -E '^wlanpass=' "$ENV_FILE" | cut -d'=' -f2- | tr -d '\r')
+        
+        # Check if both parameters exist and have values
+        if [ -n "$wlanssid" ] && [ -n "$wlanpass" ]; then
+            # Check if wlanpass length is >= 8
+            if [ ${#wlanpass} -ge 8 ]; then
+                echo "Valid WiFi settings found, configuring WiFi..."
+                
+                # Create temporary file for jct
+                temp_file=$(mktemp)
+                
+                # Convert password to PSK if needed (using the same method as api.cgi)
+                wlan_pass=$(convert_psk "$wlanssid" "$wlanpass" 2>/dev/null || echo "$wlanpass")
+                
+                # Set WiFi settings
+                jct "$temp_file" set wlan.ssid "$wlanssid"
+                jct "$temp_file" set wlan.pass "$wlan_pass"
+                
+                # Import settings to thingino.json
+                jct /etc/thingino.json import "$temp_file"
+                
+                # Clean up
+                rm -f "$temp_file"
+                
+                # Restart network service
+                echo "Restarting network service..."
+                /etc/init.d/S38wpa_supplicant restart
+                
+                echo "WiFi configured successfully from uenv.txt"
+            else
+                echo "wlanpass length is less than 8, skipping WiFi configuration"
+            fi
+        else
+            echo "Either wlanssid or wlanpass is missing or empty, skipping WiFi configuration"
+        fi
+    else
+        echo "No uenv.txt found on SD card, skipping WiFi configuration"
+    fi
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        true
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        exit 1
+        ;;
+esac
