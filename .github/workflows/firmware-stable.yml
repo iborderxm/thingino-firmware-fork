@@ -317,7 +317,7 @@ jobs:
           sed -i 's/^PRUDYNT_T_GIT_SUBMODULES/# PRUDYNT_T_GIT_SUBMODULES/' package/prudynt-t/prudynt-t.mk
           sed -i '1i\PRUDYNT_T_VERSION = ${{ env.PRUDYNT_T_TAG }}' package/prudynt-t/prudynt-t.mk
           sed -i '2i\PRUDYNT_T_SOURCE = prudynt-t-$(PRUDYNT_T_VERSION).tar.gz' package/prudynt-t/prudynt-t.mk
-          sed -i '3i\PRUDYNT_T_SITE = http://localhost:8000/prudynt-t-$(PRUDYNT_T_VERSION).tar.gz' package/prudynt-t/prudynt-t.mk
+          sed -i '3i\PRUDYNT_T_SITE = http://localhost:8000' package/prudynt-t/prudynt-t.mk
           echo "4----------------------------------------"
           sed -i 's/\$(shell git show -s --format=%h)/${{ env.PRUDYNT_T_TAG }}/' package/prudynt-t/prudynt-t.mk
           # Verify the changes
