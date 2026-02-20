@@ -114,17 +114,15 @@ jobs:
           # apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget
           apt-get install -y git gh python3 wget
 
-      - name: Checkout code
+      - name: Checkout prudynt-t
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PRIVATE_TOKEN }}
           repository: iborderxm/prudynt-t
           path: ./prudynt-t
 
-      - name: check prudynt-t
+      - name: Prepare prudynt-t
         run: |
-          pwd
-          echo "GITHUB_WORKSPACE:$GITHUB_WORKSPACE"
           ls -ltr ./prudynt-t/
           mv ./prudynt-t /tmp/prudynt-t
           cd /tmp/prudynt-t
@@ -147,17 +145,12 @@ jobs:
           ls -ltr
           mkdir webdir
           mv ./prudynt-t-${TAG}.tar.gz ./webdir/
-          echo "switch to webdir"
           cd ./webdir/
-          ls -ltr
           python3 -m http.server 8000 &
           HTTP_PID=$!
-          sleep 5
-          echo "download prudynt-t-${TAG}.tar.gz"
-          wget http://localhost:8000/prudynt-t-${TAG}.tar.gz -O new-prudynt-t-${TAG}.tar.gz
-          ls -ltr
-          # 清理HTTP服务器进程
-          kill $HTTP_PID 2>/dev/null || true
+          # http://localhost:8000/prudynt-t-${TAG}.tar.gz
+          # 设置TAG为全局变量，方便后续其他步骤使用
+          echo "PRUDYNT_T_TAG=${TAG}" >> $GITHUB_ENV
       
       - name: Set timezone
         run: |
@@ -320,9 +313,14 @@ jobs:
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
           # Update prudynt-t.mk file with correct repository information
-          sed -i '3c PRUDYNT_T_SITE = https://github.com/iborderxm/prudynt-t-fork' package/prudynt-t/prudynt-t.mk
-          sed -i '4c PRUDYNT_T_SITE_BRANCH = iborder' package/prudynt-t/prudynt-t.mk
-          sed -i '5c PRUDYNT_T_VERSION = $(shell git ls-remote $(PRUDYNT_T_SITE) $(PRUDYNT_T_SITE_BRANCH) | head -1 | cut -f1)' package/prudynt-t/prudynt-t.mk
+          sed -i 's/^PRUDYNT_T_SITE/# PRUDYNT_T_SITE/' package/prudynt-t/prudynt-t.mk
+          sed -i 's/^PRUDYNT_T_VERSION/# PRUDYNT_T_VERSION/' package/prudynt-t/prudynt-t.mk
+          sed -i '1i\
+          PRUDYNT_T_VERSION = ${{ env.PRUDYNT_T_TAG }}
+          PRUDYNT_T_SOURCE = prudynt-t-\$(PRUDYNT_T_VERSION).tar.gz
+          PRUDYNT_T_SITE = http://localhost:8000/prudynt-t-\$(PRUDYNT_T_VERSION).tar.gz
+          ' package/prudynt-t/prudynt-t.mk
+
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
