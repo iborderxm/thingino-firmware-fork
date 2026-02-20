@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Time Configuration</title>
+  <title>thingino · 时间配置</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,62 +26,62 @@
       <form id="timeForm" class="needs-validation" novalidate autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">Time Settings</h2>
-            <small>Local time zone and time syncronization</small>
-            <button type="button" class="btn btn-outline-secondary" id="time-reload" title="Reload values from camera">
-              <i class="bi bi-arrow-clockwise"></i> Reload
+            <h2 class="card-title">时间设置</h2>
+            <small>本地时区和时间同步</small>
+            <button type="button" class="btn btn-outline-secondary" id="time-reload" title="从摄像机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 刷新
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
             <div class="row g-4">
               <div class="col-12 col-lg-4">
-                <h4>Time Zone</h4>
-                <small>Local time zone name and offset from GMT</small>
+                <h4>时区</h4>
+                <small>本地时区名称和 GMT 偏移量</small>
                 <datalist id="tz_list"></datalist>
                 <p>
-                  <label for="tz_name">Zone name</label>
-                  <a href="#" id="frombrowser">Pick up from browser</a>
+                  <label for="tz_name">区域名称</label>
+                  <a href="#" id="frombrowser">从浏览器获取</a>
                   <input type="text" id="tz_name" name="tz_name" class="form-control" list="tz_list" autocomplete="off">
-                  <span class="hint text-secondary">Start typing the name of the nearest large city in the box above then select from available variants.</span>
+                  <span class="hint text-secondary">在上面的框中输入最近大城市的名称，然后从可用变体中选择。</span>
                 </p>
                 <p>
-                  <label for="tz_data">Zone string</label>
+                  <label for="tz_data">区域字符串</label>
                   <input type="text" id="tz_data" name="tz_data" class="form-control" readonly>
-                  <span class="hint text-secondary">Control string of the time zone selected above.</span>
+                  <span class="hint text-secondary">上面选择的时区的控制字符串。</span>
                 </p>
               </div>
               <div class="col">
-                <h4>Time Synchronization</h4>
-                <small>NTP servers to syncronize time with</small>
+                <h4>时间同步</h4>
+                <small>用于同步时间的 NTP 服务器</small>
                 <p>
-                  <label for="ntp_server_0">NTP Server 1</label>
+                  <label for="ntp_server_0">NTP 服务器 1</label>
                   <input type="text" id="ntp_server_0" name="ntp_server_0" class="form-control">
                 </p>
                 <p>
-                  <label for="ntp_server_1">NTP Server 2</label>
+                  <label for="ntp_server_1">NTP 服务器 2</label>
                   <input type="text" id="ntp_server_1" name="ntp_server_1" class="form-control">
                 </p>
                 <p>
-                  <label for="ntp_server_2">NTP Server 3</label>
+                  <label for="ntp_server_2">NTP 服务器 3</label>
                   <input type="text" id="ntp_server_2" name="ntp_server_2" class="form-control">
                 </p>
                 <p>
-                  <label for="ntp_server_3">NTP Server 4</label>
+                  <label for="ntp_server_3">NTP 服务器 4</label>
                   <input type="text" id="ntp_server_3" name="ntp_server_3" class="form-control">
                 </p>
               </div>
               <div class="col">
-                <h4>Actions</h4>
-                <small>Force time syncronization</small>
+                <h4>操作</h4>
+                <small>强制时间同步</small>
                 <button id="sync-time" type="button" class="btn btn-secondary mb-3 w-100">
-                  <i class="bi bi-arrow-repeat"></i> Synchronize time
+                  <i class="bi bi-arrow-repeat"></i> 同步时间
                 </button>
                 <div id="sync-time-result"></div>
               </div>
             </div>
           </div>
         </div>
-        <button type="submit" id="time_submit" class="btn btn-primary">Save changes</button>
+        <button type="submit" id="time_submit" class="btn btn-primary">保存更改</button>
       </form>
     </section>
   </div>

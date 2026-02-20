@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Flash Operations</title>
+  <title>thingino · 闪存操作</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,84 +25,84 @@
     <section>
       <div class="card mb-3">
         <div class="card-header">
-          <h2 class="card-title">Flash operations</h2>
-          <small>Create a backup, trigger OTA upgrade, or upload a verified image without touching the shell.</small>
-          <button type="button" class="btn btn-outline-secondary" id="refreshState" title="Reload values from camera">
-            <i class="bi bi-arrow-clockwise"></i> Reload
+          <h2 class="card-title">闪存操作</h2>
+          <small>创建备份、触发 OTA 升级，或上传经过验证的映像而无需接触 shell。</small>
+          <button type="button" class="btn btn-outline-secondary" id="refreshState" title="从摄像机重新加载值">
+            <i class="bi bi-arrow-clockwise"></i> 刷新
           </button>
         </div><!-- .card-header -->
         <div class="card-body">
           <div class="row">
 
             <div class="col-6">
-              <h4>Thingino OTA update</h4>
-              <small>Fetch the latest signed image from GitHub and run sysupgrade with the selected scope.</small>
+              <h4>Thingino OTA 更新</h4>
+              <small>从 GitHub 获取最新的签名映像并使用所选范围运行 sysupgrade。</small>
               <div class="vstack gap-2 mb-3">
                 <div class="form-check border rounded-3 p-2 position-relative">
                   <input type="radio" name="otaOption" value="full" id="ota-full" class="form-check-input position-absolute top-50 translate-middle-y" style="left:1rem" checked>
                   <label for="ota-full" class="form-check-label d-block ms-3">
-                    <span class="fw-semibold">Full image</span><br>
-                    <span class="small">Will erase everything and install a pristine new image. No customization will survive. You will have to reconfigure the system from scratch.
-                      <span class="text-warning">RECOMMENDED</span></span>
+                    <span class="fw-semibold">完整映像</span><br>
+                    <span class="small">将擦除所有内容并安装一个全新的映像。不会保留任何自定义。您将不得不从头开始重新配置系统。
+                      <span class="text-warning">推荐</span></span>
                   </label>
                 </div>
                 <div class="form-check border rounded-3 p-2 position-relative">
                   <input type="radio" name="otaOption" value="partial" id="ota-partial" class="form-check-input position-absolute top-50 translate-middle-y" style="left:1rem">
                   <label for="ota-partial" class="form-check-label d-block ms-3">
-                    <span class="fw-semibold">Partial update</span><br>
-                    <span class="small">Will keep overlay partition with customizations. Most likely will end up in conflicts, so you might need to reset and reconfigure the system. <span class="text-warning">USE AT YOUR OWN RISK</span></span>
+                    <span class="fw-semibold">部分更新</span><br>
+                    <span class="small">将保留带有自定义的覆盖分区。很可能会以冲突告终，因此您可能需要重置并重新配置系统。<span class="text-warning">使用风险自负</span></span>
                   </label>
                 </div>
                 <div class="form-check border rounded-3 p-2 position-relative">
                   <input type="radio" name="otaOption" value="bootloader" id="ota-bootloader" class="form-check-input position-absolute top-50 translate-middle-y" style="left:1rem">
                   <label for="ota-bootloader" class="form-check-label d-block ms-3">
-                    <span class="fw-semibold">Bootloader</span><br>
-                    <span class="small">Upgrades just the bootloader. This is not a normal operation and should only be done when instructed by a developer.</span>
+                    <span class="fw-semibold">引导加载程序</span><br>
+                    <span class="small">仅升级引导加载程序。这不是正常操作，只有在开发人员指示时才应执行。</span>
                   </label>
                 </div>
               </div>
-              <p class="text-warning small">OTA upgrade will reboot the camera when it finishes.</p>
+              <p class="text-warning small">OTA 升级将在完成时重新启动摄像机。</p>
               <button type="button" class="btn btn-danger" id="otaRun">
-                <i class="bi bi-cloud-arrow-down me-1"></i>Download and Upgrade
+                <i class="bi bi-cloud-arrow-down me-1"></i>下载并升级
               </button>
             </div>
 
             <div class="col-3">
-              <h4>Manual sysupgrade image</h4>
-              <small>Upload and flash a verified .bin file.</small>
+              <h4>手动 sysupgrade 映像</h4>
+              <small>上传并刷写经过验证的 .bin 文件。</small>
               <p>
-                <label for="firmwareInput">Firmware image</label>
+                <label for="firmwareInput">固件映像</label>
                 <input type="file" class="form-control" id="firmwareInput" accept=".bin,.img,.gz">
               </p>
-              <p class="alert alert-danger small">Uploading an invalid image may render the device unresponsive!</p>
+              <p class="alert alert-danger small">上传无效的映像可能会导致设备无响应！</p>
               <button type="button" class="btn btn-danger mb-1" id="uploadButton" disabled>
-                <i class="bi bi-upload me-1"></i>Upload and Flash
+                <i class="bi bi-upload me-1"></i>上传并刷写
               </button>
-              <p class="text-secondary small">Staged at /tmp/fw-web.bin</p>
+              <p class="text-secondary small">暂存于 /tmp/fw-web.bin</p>
             </div>
 
             <div class="col d-none">
-              <h4>MTD partition dump</h4>
-              <small>Saves a raw /dev/mtdX block for low-level recovery work.</small>
-              <p class="text-warning small">Dumping flash partitions is intended for recovery experts.</p>
+              <h4>MTD 分区转储</h4>
+              <small>保存原始 /dev/mtdX 块用于低级恢复工作。</small>
+              <p class="text-warning small">转储闪存分区仅供恢复专家使用。</p>
               <p>
-                <label for="partitionSelect">Partition</label>
+                <label for="partitionSelect">分区</label>
                 <select class="form-select" id="partitionSelect"></select>
               </p>
               <button type="button" class="btn btn-primary mb-3" id="partitionDownload">
-                <i class="bi bi-box-arrow-down me-1"></i>Save mtdblock
+                <i class="bi bi-box-arrow-down me-1"></i>保存 mtdblock
               </button>
             </div>
 
             <div class="col-3">
-              <h4>Back up the configuration</h4>
-              <small>Download customizations as an archive.</small>
-              <p class="alert alert-warning small">The archive includes Wi-Fi credentials, SSH certificates, and accounts for various services. Store securely!</p>
-              <p class="small">Please note that there is no restoration procedure!
-                The saved configuration files may not be compatible with the latest changes.
-                Use them only as a reference for creating a new configuration.</p>
+              <h4>备份配置</h4>
+              <small>将自定义内容下载为存档。</small>
+              <p class="alert alert-warning small">存档包括 Wi-Fi 凭据、SSH 证书和各种服务的账户。请安全存储！</p>
+              <p class="small">请注意，没有恢复程序！
+                保存的配置文件可能与最新更改不兼容。
+                仅将它们用作创建新配置的参考。</p>
               <button type="button" class="btn btn-primary" id="backupButton">
-                <i class="bi bi-download me-1"></i>Generate archive
+                <i class="bi bi-download me-1"></i>生成存档
               </button>
             </div>
           </div>
@@ -117,17 +117,17 @@
   <div class="modal-dialog modal-lg modal-fullscreen-md-down" style="height: 80vh; max-height: 80vh;">
     <div class="modal-content h-100 d-flex flex-column">
       <div class="modal-header flex-shrink-0">
-        <h5 class="modal-title" id="flashProgressModalLabel">Flash Progress</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="flashProgressModalLabel">闪存进度</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
       </div>
       <div class="modal-body flex-grow-1 overflow-hidden p-0" style="min-height: 0;">
         <pre id="output" class="terminal ansi-log overflow-auto h-100 m-0" data-reboot="true"></pre>
       </div>
       <div class="modal-footer flex-shrink-0">
         <button type="button" class="btn btn-outline-secondary btn-sm" id="copyLog" disabled>
-          <i class="bi bi-clipboard me-1"></i>Copy Log
+          <i class="bi bi-clipboard me-1"></i>复制日志
         </button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
       </div>
     </div>
   </div>

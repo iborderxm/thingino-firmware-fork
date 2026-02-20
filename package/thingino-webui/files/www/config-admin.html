@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Admin Profile</title>
+  <title>thingino · 管理员资料</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,28 +26,28 @@
       <form id="adminForm" class="needs-validation" novalidate autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">Admin Profile</h2>
-            <small>Name and email address of the admin record will be used as sender identity for emails originating from this camera</small>
-            <button type="button" class="btn btn-outline-secondary" id="admin-reload" title="Reload values from camera">
-              <i class="bi bi-arrow-clockwise"></i> Reload
+            <h2 class="card-title">管理员资料</h2>
+            <small>管理员记录的姓名和电子邮件地址将用作从此摄像机发出的邮件的发件人身份</small>
+            <button type="button" class="btn btn-outline-secondary" id="admin-reload" title="从摄像机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 刷新
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
             <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 mb-3">
               <div class="col">
-                <p><label for="admin_name">Full name</label>
+                <p><label for="admin_name">全名</label>
                   <input type="text" id="admin_name" class="form-control"></p>
-                <p><label for="admin_email">Email address</label>
+                <p><label for="admin_email">电子邮件地址</label>
                   <input type="email" id="admin_email" class="form-control"></p>
-                <p><label for="admin_telegram">Username on Telegram</label>
+                <p><label for="admin_telegram">Telegram 用户名</label>
                   <input type="text" id="admin_telegram" class="form-control" placeholder="@username"></p>
-                <p><label for="admin_discord">Username on Discord</label>
+                <p><label for="admin_discord">Discord 用户名</label>
                   <input type="text" id="admin_discord" class="form-control" placeholder="@username"></p>
               </div><!-- .col -->
             </div><!-- .row -->
           </div><!-- .card-header -->
         </div><!-- .card -->
-        <button type="submit" id="admin_submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Save changes</button>
+        <button type="submit" id="admin_submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> 保存更改</button>
       </form>
     </section>
 

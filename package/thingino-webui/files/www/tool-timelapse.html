@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Timelapse Recorder</title>
+  <title>thingino · 延时摄影录像机</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,37 +25,37 @@
     <section>
       <div class="card mb-3">
         <div class="card-body">
-          <h3 class="card-title">Timelapse Recorder</h3>
-          <p class="small text-secondary">Capture periodic snapshots and store them alongside your clips.
-            Need continuous video recording instead? <a href="/tool-record.html" class="link-light text-decoration-none">Open the video recorder</a>.</p>
+          <h3 class="card-title">延时摄影录像机</h3>
+          <p class="small text-secondary">捕获定期快照并将它们与您的片段一起存储。
+            需要连续视频录制吗？<a href="/tool-record.html" class="link-light text-decoration-none">打开视频录像机</a>。</p>
 
           <form id="timelapseForm" class="needs-validation" novalidate>
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3">
               <div class="col">
                 <p>
-                  <label for="timelapseMount">Storage mountpoint</label>
-                  <a href="/tool-file-manager.html" class="text-decoration-none" id="timelapseMountLink">Open in File Manager</a>
-                  <select class="form-select" id="timelapseMount" data-help="Snapshots will be stored inside this mount">
-                    <option value="">Loading mounts...</option>
+                  <label for="timelapseMount">存储挂载点</label>
+                  <a href="/tool-file-manager.html" class="text-decoration-none" id="timelapseMountLink">在文件管理器中打开</a>
+                  <select class="form-select" id="timelapseMount" data-help="快照将存储在此挂载点内">
+                    <option value="">正在加载挂载点...</option>
                   </select>
                 </p>
                 <p>
-                  <label for="timelapseFilepath">Device-specific subdirectory</label>
+                  <label for="timelapseFilepath">设备特定子目录</label>
                   <input type="text" class="form-control" id="timelapseFilepath" autocomplete="off" placeholder="camera/timelapses"
-                    data-help="Keeps files separated when multiple cameras share storage">
+                    data-help="当多个摄像机共享存储时保持文件分离">
                 </p>
                 <p>
-                  <label for="timelapseFilename">Image filename template</label>
+                  <label for="timelapseFilename">图像文件名模板</label>
                   <input type="text" class="form-control strftime" id="timelapseFilename" autocomplete="off" placeholder="%Y%m%d/%Y%m%dT%H%M%S.jpg">
                 </p>
               </div>
               <div class="col">
                 <p>
-                  <label for="timelapseInterval">Snapshot cadence, minutes</label>
+                  <label for="timelapseInterval">快照频率，分钟</label>
                   <input type="number" class="form-control" id="timelapseInterval" min="1" max="1440" step="1" value="1">
                 </p>
                 <p>
-                  <label for="timelapseKeepDays">Retention window, days</label>
+                  <label for="timelapseKeepDays">保留窗口，天</label>
                   <input type="number" class="form-control" id="timelapseKeepDays" min="0" max="365" step="1" value="7">
                 </p>
               </div>
@@ -64,15 +64,15 @@
                   <div class="card-header">
                     <div class="form-switch mb-0">
                       <input class="form-check-input" type="checkbox" role="switch" id="timelapsePreset">
-                      <label class="form-check-label" for="timelapsePreset">Apply snapshot preset before each shot</label>
+                      <label class="form-check-label" for="timelapsePreset">在每次拍摄前应用快照预设</label>
                     </div>
                   </div>
                   <div class="card-body">
-                    <p class="text-secondary small">Preset values are applied before each snapshot and reverted immediately after.</p>
+                    <p class="text-secondary small">预设值在每次快照前应用并立即恢复。</p>
                     <dl>
                       <dd class="form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="presetIrcut">
-                        <label class="form-check-label" for="presetIrcut">IR-cut filter</label>
+                        <label class="form-check-label" for="presetIrcut">IR-cut 滤光片</label>
                       </dd>
                       <dd class="form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="presetIr850">
@@ -84,11 +84,11 @@
                       </dd>
                       <dd class="form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="presetWhite">
-                        <label class="form-check-label" for="presetWhite">White LED</label>
+                        <label class="form-check-label" for="presetWhite">白光 LED</label>
                       </dd>
                       <dd class="form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="presetColor">
-                        <label class="form-check-label" for="presetColor">Force color mode</label>
+                        <label class="form-check-label" for="presetColor">强制彩色模式</label>
                       </dd>
                     </dl>
                   </div>
@@ -98,12 +98,12 @@
 
             <p class="form-switch">
               <input class="form-check-input" type="checkbox" role="switch" id="timelapseEnabled">
-              <label class="form-check-label" for="timelapseEnabled">Launch timelapse recorder on boot</label>
+              <label class="form-check-label" for="timelapseEnabled">启动时启动延时摄影录像机</label>
             </p>
 
             <button type="submit" id="timelapseSubmit" class="btn btn-primary">
               <i class="bi bi-save me-1"></i>
-              Save changes
+              保存更改
             </button>
           </form>
         </div>
@@ -111,12 +111,12 @@
     </section>
 
     <div class="alert alert-info">
-      <p class="mb-2">Combine still images into a single video on your computer:</p>
+      <p class="mb-2">在您的计算机上将静止图像组合成单个视频：</p>
       <pre class="cb mb-0">ffmpeg -r 10 -f image2 -pattern_type glob -i '*.jpg' -vcodec libx264 -an timelapse.mp4</pre>
     </div>
 
     <section class="ui-debug d-none">
-      <h6>Timelapse recorder</h6>
+      <h6>延时摄影录像机</h6>
       <pre id="debugTimelapse"></pre>
       <h6>Crontab</h6>
       <pre id="debugCrontab"></pre>

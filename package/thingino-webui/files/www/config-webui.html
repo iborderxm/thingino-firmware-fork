@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Web Interface</title>
+  <title>thingino · Web 界面</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,57 +26,57 @@
       <form id="webuiForm" class="needs-validation" novalidate autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">Web User Interface Settings</h2>
-            <small>Configure Web UI</small>
-            <button type="button" class="btn btn-outline-secondary" id="webui-reload" title="Reload values from camera">
-              <i class="bi bi-arrow-clockwise"></i> Reload
+            <h2 class="card-title">Web 界面设置</h2>
+            <small>配置 Web 界面</small>
+            <button type="button" class="btn btn-outline-secondary" id="webui-reload" title="从摄像机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 刷新
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
             <div class="row g-4">
               <div class="col-12 col-lg-4">
-                <h4>Account Credentials</h4>
-                <small>Password for <b>root</b> user</small>
+                <h4>账户凭据</h4>
+                <small><b>root</b> 用户的密码</small>
                 <p>
-                  <label for="webui_username">Web UI username</label>
+                  <label for="webui_username">Web 界面用户名</label>
                   <input type="text" id="webui_username" class="form-control" value="root" readonly>
                 </p>
                 <p>
-                  <label for="webui_password">New password</label>
+                  <label for="webui_password">新密码</label>
                   <input type="password" id="webui_password" class="form-control" placeholder="K3wLH@Zk3R!" autocomplete="new-password">
-                  <span class="form-text">Leave blank to keep the current password.</span>
+                  <span class="form-text">留空以保留当前密码。</span>
                 </p>
               </div>
               <div class="col-12 col-lg-4">
-                <h4>Appearance</h4>
+                <h4>外观</h4>
                 <small>...</small>
                 <p>
-                  <label for="webui_theme">Theme</label>
+                  <label for="webui_theme">主题</label>
                   <select id="webui_theme" class="form-select">
-                    <option value="auto">Auto</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
+                    <option value="auto">自动</option>
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
                   </select>
-                  <span class="form-text">Auto mode switches to dark mode after sunset.</span>
+                  <span class="form-text">自动模式在日落后切换到深色模式。</span>
                 </p>
                 <p class="form-switch">
                   <input class="form-check-input" type="checkbox" id="webui_paranoid" role="switch">
-                  <label class="form-check-label" for="webui_paranoid">Paranoid mode</label><br>
-                  <span class="form-text">Use simplified local assets. Useful when camera is isolated from the internet.</span>
+                  <label class="form-check-label" for="webui_paranoid">偏执模式</label><br>
+                  <span class="form-text">使用简化的本地资源。当摄像机与互联网隔离时很有用。</span>
                 </p>
               </div><!-- .col -->
               <div class="col-12 col-lg-4">
-                <h4>Stream Behavior</h4>
-                <small>Control MJPEG streaming behavior</small>
+                <h4>流行为</h4>
+                <small>控制 MJPEG 流媒体行为</small>
                 <p class="form-switch">
                   <input class="form-check-input" type="checkbox" id="webui_track_focus" role="switch">
-                  <label class="form-check-label" for="webui_track_focus">Track browser focus</label><br>
-                  <span class="form-text">Stop streaming when browser tab loses focus to save bandwidth.</span>
+                  <label class="form-check-label" for="webui_track_focus">跟踪浏览器焦点</label><br>
+                  <span class="form-text">当浏览器标签页失去焦点时停止流媒体以节省带宽。</span>
                 </p>
                 <p>
-                  <label for="webui_focus_timeout">Focus timeout (seconds)</label>
+                  <label for="webui_focus_timeout">焦点超时（秒）</label>
                   <input type="number" id="webui_focus_timeout" class="form-control" min="0" max="300" value="0">
-                  <span class="form-text">Delay before stopping stream when focus is lost (0 = immediate).</span>
+                  <span class="form-text">失去焦点后停止流媒体前的延迟（0 = 立即）。</span>
                 </p>
               </div><!-- .col -->
             </div><!-- .row -->
@@ -86,35 +86,35 @@
         <!-- API Key Section -->
         <div class="card mb-3">
           <div class="card-header">
-            <h3 class="card-title">API Access</h3>
-            <small>API key for automation and integrations</small>
+            <h3 class="card-title">API 访问</h3>
+            <small>用于自动化和集成的 API 密钥</small>
           </div>
           <div class="card-body">
             <p class="text-muted">
               <i class="bi bi-info-circle"></i>
-              Use this API key to access camera endpoints from automation tools (Home Assistant, scripts, etc.)
+              使用此 API 密钥从自动化工具（Home Assistant、脚本等）访问摄像机端点
             </p>
             <div class="row g-3">
               <div class="col-12">
-                <label for="api_key_display">API Key</label>
+                <label for="api_key_display">API 密钥</label>
                 <div class="input-group">
-                  <input type="text" id="api_key_display" class="form-control font-monospace" readonly placeholder="No API key generated">
-                  <button type="button" class="btn btn-outline-secondary" id="api_key_copy" title="Copy to clipboard" disabled>
+                  <input type="text" id="api_key_display" class="form-control font-monospace" readonly placeholder="未生成 API 密钥">
+                  <button type="button" class="btn btn-outline-secondary" id="api_key_copy" title="复制到剪贴板" disabled>
                     <i class="bi bi-clipboard"></i>
                   </button>
                 </div>
               </div>
               <div class="col-12">
                 <button type="button" class="btn btn-success" id="api_key_generate">
-                  <i class="bi bi-plus-circle"></i> Generate New Key
+                  <i class="bi bi-plus-circle"></i> 生成新密钥
                 </button>
                 <button type="button" class="btn btn-danger" id="api_key_delete" disabled>
-                  <i class="bi bi-trash"></i> Delete Key
+                  <i class="bi bi-trash"></i> 删除密钥
                 </button>
               </div>
               <div class="col-12">
                 <div class="alert alert-info d-none" id="api_key_example">
-                  <strong>Usage example:</strong>
+                  <strong>使用示例：</strong>
                   <pre class="mb-0"><code>curl -H "X-API-Key: <span id="api_key_example_value"></span>" http://CAMERA_IP/x/ch0.jpg -o snapshot.jpg</code></pre>
                 </div>
               </div>
@@ -122,7 +122,7 @@
           </div>
         </div><!-- .card -->
 
-        <button type="submit" id="webui_submit" class="btn btn-primary">Save changes</button>
+        <button type="submit" id="webui_submit" class="btn btn-primary">保存更改</button>
       </form>
     </section>
   </div><!-- .container -->

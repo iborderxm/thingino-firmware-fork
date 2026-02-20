@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · RTSP/ONVIF Access</title>
+  <title>thingino · RTSP/ONVIF 访问</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,46 +27,46 @@
         <div class="card mb-3">
           <div class="card-header">
             <h2 class="card-title">RTSP/ONVIF</h2>
-            <small>Configure credentials for accessing RTPS and ONVIF endpoints.</small>
-            <button type="button" class="btn btn-outline-secondary" id="rtsp-reload" title="Reload values from camera">
-              <i class="bi bi-arrow-clockwise"></i> Reload
+            <small>配置访问 RTSP 和 ONVIF 端点的凭据。</small>
+            <button type="button" class="btn btn-outline-secondary" id="rtsp-reload" title="从摄像机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 刷新
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
             <div class="row g-4">
               <div class="col-12 col-lg-4">
-                <h4>Access Credentials</h4>
-                <small>You can change the password but the username stays</small>
+                <h4>访问凭据</h4>
+                <small>您可以更改密码，但用户名保持不变</small>
                 <p>
-                  <label for="rtsp_username">RTSP/ONVIF Username</label>
+                  <label for="rtsp_username">RTSP/ONVIF 用户名</label>
                   <input type="text" id="rtsp_username" class="form-control" value="thingino" readonly>
                 </p>
                 <p>
-                  <label for="rtsp_password">RTSP/ONVIF Password</label>
+                  <label for="rtsp_password">RTSP/ONVIF 密码</label>
                   <input type="password" id="rtsp_password" class="form-control" placeholder="K3wLH@Zk3R!" minlength="4" autocomplete="new-password" required>
-                  <span class="form-text">Minimum 4 characters.</span>
+                  <span class="form-text">最少 4 个字符。</span>
                 </p>
               </div>
               <div class="col-12 col-lg-8">
                 <div class="alert alert-info">
-                  <h5>Ready-to-use URLs</h5>
+                  <h5>可用的 URL</h5>
                   <dl>
-                    <dt>ONVIF endpoint</dt>
-                    <dd id="url-onvif" class="cb font-monospace small">Loading...</dd>
-                    <dt>RTSP mainstream</dt>
-                    <dd id="url-rtsp-main" class="cb font-monospace small">Loading...</dd>
-                    <dt>RTSP substream</dt>
-                    <dd id="url-rtsp-sub" class="cb font-monospace small">Loading...</dd>
-                    <dt>RTSP microphone only</dt>
-                    <dd id="url-rtsp-mic" class="cb font-monospace small">Loading...</dd>
+                    <dt>ONVIF 端点</dt>
+                    <dd id="url-onvif" class="cb font-monospace small">加载中...</dd>
+                    <dt>RTSP 主流</dt>
+                    <dd id="url-rtsp-main" class="cb font-monospace small">加载中...</dd>
+                    <dt>RTSP 子流</dt>
+                    <dd id="url-rtsp-sub" class="cb font-monospace small">加载中...</dd>
+                    <dt>RTSP 仅麦克风</dt>
+                    <dd id="url-rtsp-mic" class="cb font-monospace small">加载中...</dd>
                   </dl>
-                  <p class="small mb-0">Click any URL to copy it.</p>
+                  <p class="small mb-0">点击任意 URL 以复制它。</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <button type="submit" id="rtsp_submit" class="btn btn-primary">Save changes</button>
+        <button type="submit" id="rtsp_submit" class="btn btn-primary">保存更改</button>
       </form>
     </section>
   </div>

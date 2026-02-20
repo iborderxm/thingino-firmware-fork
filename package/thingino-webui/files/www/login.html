@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Login</title>
+  <title>thingino · 登录</title>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,25 +33,25 @@
         <div class="card-body p-4">
           <div class="text-center mb-4">
             <img src="/a/logo.svg" alt="thingino" height="60">
-            <h4 class="mt-3">Sign In</h4>
+            <h4 class="mt-3">登录</h4>
           </div>
 
           <div id="alert" class="alert d-none" role="alert"></div>
 
           <form id="loginForm">
             <div class="mb-3">
-              <label for="username" class="form-label">Username</label>
+              <label for="username" class="form-label">用户名</label>
               <input type="text" class="form-control" id="username" name="username" value="root" required autofocus>
             </div>
 
             <div class="mb-3">
-              <label for="password" class="form-label">Password</label>
+              <label for="password" class="form-label">密码</label>
               <input type="password" class="form-control" id="password" name="password" required>
-              <div class="form-text">Default password is "root"</div>
+              <div class="form-text">默认密码为 "root"</div>
             </div>
 
             <button type="submit" class="btn btn-primary w-100" id="loginBtn">
-              <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+              <i class="bi bi-box-arrow-in-right me-2"></i>登录
             </button>
           </form>
         </div>
@@ -89,7 +89,7 @@
       const password = document.getElementById('password').value;
 
       loginBtn.disabled = true;
-      loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
+      loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>登录中...';
 
       try {
         const response = await fetch('/x/login.cgi', {
@@ -109,14 +109,14 @@
             window.location.href = '/';
           }
         } else {
-          showAlert(result.error?.message || 'Login failed', 'danger');
+          showAlert(result.error?.message || '登录失败', 'danger');
           loginBtn.disabled = false;
-          loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Sign In';
+          loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>登录';
         }
       } catch (err) {
-        showAlert('Network error. Please try again.', 'danger');
+        showAlert('网络错误，请重试。', 'danger');
         loginBtn.disabled = false;
-        loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Sign In';
+        loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>登录';
       }
     });
   </script>

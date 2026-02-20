@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Network</title>
+  <title>thingino · 网络</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,31 +26,31 @@
       <form id="networkForm" class="needs-validation" novalidate autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">Network Settings</h2>
-            <small>Configure networking parameters. Requires reboot after changes.</small>
-            <button type="button" class="btn btn-outline-secondary" id="network-reload" title="Reload values from camera">
-              <i class="bi bi-arrow-clockwise"></i> Reload
+            <h2 class="card-title">网络设置</h2>
+            <small>配置网络参数。更改后需要重启。</small>
+            <button type="button" class="btn btn-outline-secondary" id="network-reload" title="从摄像机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 刷新
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
             <div class="row row-cols-1 rows-col-lg-3 mb-3">
               <div class="col col-xl-4">
-                <h4>General</h4>
-                <small>Hostname and DNS servers</small>
-                <p><label for="hostname">Hostname</label>
-                  <input type="text" class="form-control" id="hostname" pattern="[A-Za-z0-9.-]+" required data-help="Letters, numbers, period and hyphen only"></p>
-                <p><label for="dns_primary">Primary DNS</label>
+                <h4>常规</h4>
+                <small>主机名和 DNS 服务器</small>
+                <p><label for="hostname">主机名</label>
+                  <input type="text" class="form-control" id="hostname" pattern="[A-Za-z0-9.-]+" required data-help="仅限字母、数字、点和连字符"></p>
+                <p><label for="dns_primary">首选 DNS</label>
                   <input type="text" class="form-control" id="dns_primary" placeholder="1.1.1.1" required></p>
-                <p><label for="dns_secondary">Secondary DNS</label>
+                <p><label for="dns_secondary">备用 DNS</label>
                   <input type="text" class="form-control" id="dns_secondary" placeholder="8.8.8.8"></p>
-                <p class="small">At least one DNS server is required; the second one is optional and provides redundancy.</p>
+                <p class="small">至少需要一个 DNS 服务器；第二个是可选的，提供冗余。</p>
               </div><!-- .col -->
               <div class="col col-xl-8">
-                <h4>Wi-Fi Configuration</h4>
-                <small>Passwords shorter than 64 characters convert to WPA2 PSK on save.</small>
+                <h4>Wi-Fi 配置</h4>
+                <small>少于 64 个字符的密码在保存时将转换为 WPA2 PSK。</small>
                 <ul class="nav nav-underline" id="wifi-tabs" role="tablist">
                   <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="tab-wifi-net" data-bs-toggle="tab" data-bs-target="#pane-wifi-net" type="button" role="tab">Wi-Fi Network</button>
+                    <button class="nav-link active" id="tab-wifi-net" data-bs-toggle="tab" data-bs-target="#pane-wifi-net" type="button" role="tab">Wi-Fi 网络</button>
                   </li>
                   <li class="nav-item" role="presentation">
                     <button class="nav-link" id="tab-wifi-ap" data-bs-toggle="tab" data-bs-target="#pane-wifi-ap" type="button" role="tab">Wi-Fi AP</button>
@@ -58,29 +58,29 @@
                 </ul><!-- .nav -->
                 <div class="tab-content">
                   <div class="tab-pane fade show active" id="pane-wifi-net" role="tabpanel" aria-labelledby="tab-wifi-net">
-                    <p><label for="wifi_ssid">Wireless Network Name (SSID)</label>
+                    <p><label for="wifi_ssid">无线网络名称 (SSID)</label>
                       <div class="input-group">
-                        <input type="text" class="form-control" id="wifi_ssid" autocomplete="off" autocapitalize="none" placeholder="Enter network name or scan for networks">
+                        <input type="text" class="form-control" id="wifi_ssid" autocomplete="off" autocapitalize="none" placeholder="输入网络名称或扫描网络">
                         <datalist id="wifi-networks-list"></datalist>
-                        <button class="btn btn-outline-secondary" type="button" id="wifi-scan-btn" title="Scan for networks">
+                        <button class="btn btn-outline-secondary" type="button" id="wifi-scan-btn" title="扫描网络">
                           <span id="wifi-scan-spinner" class="hidden"><i class="bi bi-arrow-clockwise spinning"></i></span>
                           <span id="wifi-scan-text"><i class="bi bi-search"></i></span>
                         </button>
                       </div></p>
-                    <p><label for="wifi_bssid">Access Point MAC (BSSID)</label>
-                      <input type="text" class="form-control text-uppercase" id="wifi_bssid" placeholder="AA:BB:CC:DD:EE:FF" data-help="Optional when SSID broadcast is enabled"></p>
-                    <p><label for="wifi_pass">Wi-Fi Password / PSK</label>
+                    <p><label for="wifi_bssid">接入点 MAC (BSSID)</label>
+                      <input type="text" class="form-control text-uppercase" id="wifi_bssid" placeholder="AA:BB:CC:DD:EE:FF" data-help="启用 SSID 广播时可选"></p>
+                    <p><label for="wifi_pass">Wi-Fi 密码 / PSK</label>
                       <input type="text" class="form-control" id="wifi_pass" autocomplete="new-password" minlength="8"></p>
                   </div><!-- .tab-pane -->
                   <div class="tab-pane fade" id="pane-wifi-ap" role="tabpanel" aria-labelledby="tab-wifi-ap">
                     <p><label for="wifi_ap_ssid">Wi-Fi AP SSID</label>
                       <input type="text" class="form-control" id="wifi_ap_ssid" autocomplete="off"></p>
-                    <p><label for="wifi_ap_pass">Wi-Fi AP Password</label>
+                    <p><label for="wifi_ap_pass">Wi-Fi AP 密码</label>
                       <input type="text" class="form-control" id="wifi_ap_pass" minlength="8" autocomplete="new-password"
-                        data-help="8–64 characters. Converted to PSK automatically"></p>
+                        data-help="8-64 个字符。自动转换为 PSK"></p>
                     <p class="form-switch">
-                      <input class="form-check-input" type="checkbox" role="switch" id="wifi_ap_enabled" data-help="While the AP is enabled, station mode is stopped to avoid conflicts.">
-                      <label class="form-check-label" for="wifi_ap_enabled">Enable Wi-Fi AP mode</label>
+                      <input class="form-check-input" type="checkbox" role="switch" id="wifi_ap_enabled" data-help="启用 AP 时，站点模式将停止以避免冲突。">
+                      <label class="form-check-label" for="wifi_ap_enabled">启用 Wi-Fi AP 模式</label>
                     </p>
                   </div><!-- .tab-pane -->
                 </div><!-- .tab-content -->
@@ -88,38 +88,38 @@
             </div><!-- .row -->
           </div><!-- .card-body -->
           <div class="card-body">
-            <h4>Network Interfaces</h4>
-            <small>Each card controls a physical interface. Disable it to keep the file but stop auto bring-up.</small>
+            <h4>网络接口</h4>
+            <small>每个卡片控制一个物理接口。禁用它以保留文件但停止自动启动。</small>
             <div class="row g-4">
               <div class="col-12 col-xl-4">
                 <div class="card iface-card h-100" data-iface="eth0">
                   <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                      <h6>Ethernet (eth0)</h6>
-                      <span class="badge text-bg-secondary" data-role="link-status">Unknown link</span>
+                      <h6>以太网 (eth0)</h6>
+                      <span class="badge text-bg-secondary" data-role="link-status">未知链路</span>
                     </div>
                     <div class="form-switch">
                       <input class="form-check-input iface-enabled" type="checkbox" id="eth0_enabled">
-                      <label class="form-check-label" for="eth0_enabled">Enabled</label>
+                      <label class="form-check-label" for="eth0_enabled">已启用</label>
                     </div>
                   </div>
                   <div class="card-body">
-                    <p><label for="eth0_mac">MAC Address</label>
-                      <a class="generate-mac small" data-iface="eth0" title="Generate locally administered MAC"><i class="bi bi-shuffle"></i> Generate random</a>
-                      <input type="text" class="form-control text-uppercase iface-mac" id="eth0_mac" placeholder="00:11:22:33:44:55" data-help="Leave blank to use factory MAC"></p>
-                    <p class="form-switch"><input class="form-check-input iface-dhcp" type="checkbox" id="eth0_dhcp" checked> <label class="form-check-label" for="eth0_dhcp">Use DHCP</label></p>
+                    <p><label for="eth0_mac">MAC 地址</label>
+                      <a class="generate-mac small" data-iface="eth0" title="生成本地管理的 MAC"><i class="bi bi-shuffle"></i> 随机生成</a>
+                      <input type="text" class="form-control text-uppercase iface-mac" id="eth0_mac" placeholder="00:11:22:33:44:55" data-help="留空以使用出厂 MAC"></p>
+                    <p class="form-switch"><input class="form-check-input iface-dhcp" type="checkbox" id="eth0_dhcp" checked> <label class="form-check-label" for="eth0_dhcp">使用 DHCP</label></p>
                     <div class="row iface-static" data-static-fields>
-                      <p><label for="eth0_address">IP Address</label>
+                      <p><label for="eth0_address">IP 地址</label>
                         <input type="text" class="form-control iface-address" id="eth0_address"></p>
-                      <p><label for="eth0_netmask">Netmask</label>
+                      <p><label for="eth0_netmask">子网掩码</label>
                         <input type="text" class="form-control iface-netmask" id="eth0_netmask"></p>
-                      <p><label for="eth0_gateway">Gateway</label>
+                      <p><label for="eth0_gateway">网关</label>
                         <input type="text" class="form-control iface-gateway" id="eth0_gateway"></p>
-                      <p><label for="eth0_broadcast">Broadcast</label>
+                      <p><label for="eth0_broadcast">广播</label>
                         <input type="text" class="form-control iface-broadcast" id="eth0_broadcast"></p>
                     </div>
                     <p class="form-switch"><input class="form-check-input iface-ipv6" type="checkbox" id="eth0_ipv6">
-                      <label class="form-check-label" for="eth0_ipv6">Request DHCPv6</label></p>
+                      <label class="form-check-label" for="eth0_ipv6">请求 DHCPv6</label></p>
                   </div><!-- .card-body -->
                 </div><!-- .card -->
               </div>
@@ -128,33 +128,33 @@
                   <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
                       <h6>Wi-Fi (wlan0)</h6>
-                      <span class="badge text-bg-secondary" data-role="link-status">Unknown link</span>
+                      <span class="badge text-bg-secondary" data-role="link-status">未知链路</span>
                     </div>
                     <div class="form-switch">
                       <input class="form-check-input iface-enabled" type="checkbox" id="wlan0_enabled">
-                      <label class="form-check-label" for="wlan0_enabled">Enabled</label>
+                      <label class="form-check-label" for="wlan0_enabled">已启用</label>
                     </div>
                   </div>
                   <div class="card-body">
-                    <p><label for="wlan0_mac">MAC Address</label>
-                      <a class="generate-mac" data-iface="wlan0" title="Generate locally administered MAC"><i class="bi bi-shuffle"></i> Generate random</a>
-                      <input type="text" class="form-control text-uppercase iface-mac" id="wlan0_mac" placeholder="02:11:22:33:44:55" data-help="Leave blank to use factory MAC"></p>
+                    <p><label for="wlan0_mac">MAC 地址</label>
+                      <a class="generate-mac" data-iface="wlan0" title="生成本地管理的 MAC"><i class="bi bi-shuffle"></i> 随机生成</a>
+                      <input type="text" class="form-control text-uppercase iface-mac" id="wlan0_mac" placeholder="02:11:22:33:44:55" data-help="留空以使用出厂 MAC"></p>
                     <p class="form-switch">
                       <input class="form-check-input iface-dhcp" type="checkbox" id="wlan0_dhcp" checked>
-                      <label class="form-check-label" for="wlan0_dhcp">Use DHCP</label>
+                      <label class="form-check-label" for="wlan0_dhcp">使用 DHCP</label>
                     </p>
                     <div class="row iface-static" data-static-fields>
-                      <p><label for="wlan0_address">IP Address</label>
+                      <p><label for="wlan0_address">IP 地址</label>
                         <input type="text" class="form-control iface-address" id="wlan0_address"></p>
-                      <p><label for="wlan0_netmask">Netmask</label>
+                      <p><label for="wlan0_netmask">子网掩码</label>
                         <input type="text" class="form-control iface-netmask" id="wlan0_netmask"></p>
-                      <p><label for="wlan0_gateway">Gateway</label>
+                      <p><label for="wlan0_gateway">网关</label>
                         <input type="text" class="form-control iface-gateway" id="wlan0_gateway"></p>
-                      <p><label for="wlan0_broadcast">Broadcast</label>
+                      <p><label for="wlan0_broadcast">广播</label>
                         <input type="text" class="form-control iface-broadcast" id="wlan0_broadcast"></p>
                     </div>
                     <p class="form-switch"><input class="form-check-input iface-ipv6" type="checkbox" id="wlan0_ipv6">
-                      <label class="form-check-label" for="wlan0_ipv6">Request DHCPv6</label></p>
+                      <label class="form-check-label" for="wlan0_ipv6">请求 DHCPv6</label></p>
                   </div>
                 </div>
               </div>
@@ -162,32 +162,32 @@
                 <div class="card iface-card h-100" data-iface="usb0">
                   <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                      <h6>USB/Ethernet (usb0)</h6>
-                      <span class="badge text-bg-secondary" data-role="link-status">Unknown link</span>
+                      <h6>USB/以太网 (usb0)</h6>
+                      <span class="badge text-bg-secondary" data-role="link-status">未知链路</span>
                     </div>
                     <div class="form-switch mb-0">
                       <input class="form-check-input iface-enabled" type="checkbox" id="usb0_enabled">
-                      <label class="form-check-label" for="usb0_enabled">Enabled</label>
+                      <label class="form-check-label" for="usb0_enabled">已启用</label>
                     </div>
                   </div>
                   <div class="card-body">
-                    <p><label for="usb0_mac">MAC Address</label>
-                      <a class="generate-mac" data-iface="usb0" title="Generate locally administered MAC"><i class="bi bi-shuffle"></i> Generate random</a>
-                      <input type="text" class="form-control text-uppercase iface-mac" id="usb0_mac" placeholder="06:11:22:33:44:55" data-help="Leave blank to use factory MAC"></p>
+                    <p><label for="usb0_mac">MAC 地址</label>
+                      <a class="generate-mac" data-iface="usb0" title="生成本地管理的 MAC"><i class="bi bi-shuffle"></i> 随机生成</a>
+                      <input type="text" class="form-control text-uppercase iface-mac" id="usb0_mac" placeholder="06:11:22:33:44:55" data-help="留空以使用出厂 MAC"></p>
                     <p class="form-switch"><input class="form-check-input iface-dhcp" type="checkbox" id="usb0_dhcp" checked>
-                      <label class="form-check-label" for="usb0_dhcp">Use DHCP</label></p>
+                      <label class="form-check-label" for="usb0_dhcp">使用 DHCP</label></p>
                     <div class="row iface-static" data-static-fields>
-                      <p><label for="usb0_address">IP Address</label>
+                      <p><label for="usb0_address">IP 地址</label>
                         <input type="text" class="form-control iface-address" id="usb0_address"></p>
-                      <p><label for="usb0_netmask">Netmask</label>
+                      <p><label for="usb0_netmask">子网掩码</label>
                         <input type="text" class="form-control iface-netmask" id="usb0_netmask"></p>
-                      <p><label for="usb0_gateway">Gateway</label>
+                      <p><label for="usb0_gateway">网关</label>
                         <input type="text" class="form-control iface-gateway" id="usb0_gateway"></p>
-                      <p><label for="usb0_broadcast">Broadcast</label>
+                      <p><label for="usb0_broadcast">广播</label>
                         <input type="text" class="form-control iface-broadcast" id="usb0_broadcast"></p>
                     </div>
                     <p class="form-switch"><input class="form-check-input iface-ipv6" type="checkbox" id="usb0_ipv6">
-                      <label class="form-check-label" for="usb0_ipv6">Request DHCPv6</label></p>
+                      <label class="form-check-label" for="usb0_ipv6">请求 DHCPv6</label></p>
                   </div><!-- .card-body -->
                 </div><!-- .card -->
               </div><!-- .col -->
@@ -195,7 +195,7 @@
           </div><!-- .card-body -->
         </div><!-- .card -->
 
-        <button type="submit" id="network_submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Save changes</button>
+        <button type="submit" id="network_submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> 保存更改</button>
       </form>
     </section>
   </div>

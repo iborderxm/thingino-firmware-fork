@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Video Recorder</title>
+  <title>thingino · 视频录像机</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,46 +25,46 @@
     <section>
       <div class="card">
         <div class="card-body">
-          <h3 class="card-title">Video Recorder</h3>
-          <p class="text-secondary">Configure continuous clip recording directly on your storage target. Prefer periodic
-            snapshots? <a href="/tool-timelapse.html" class="link-light text-decoration-none">Open the timelapse recorder</a>.</p>
+          <h3 class="card-title">视频录像机</h3>
+          <p class="text-secondary">在您的存储目标上直接配置连续片段录制。更喜欢定期
+            快照？<a href="/tool-timelapse.html" class="link-light text-decoration-none">打开延时摄影录像机</a>。</p>
 
           <form id="videoForm" class="needs-validation" novalidate>
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3">
               <div class="col">
                 <p>
-                  <label for="videoMount">Storage mount</label>
+                  <label for="videoMount">存储挂载点</label>
                   <a href="/tool-file-manager.html" class="small text-decoration-none" id="videoMountLink">
-                    <i class="bi bi-folder2-open me-1"></i>Open in File Manager
+                    <i class="bi bi-folder2-open me-1"></i>在文件管理器中打开
                   </a>
-                  <select class="form-select" id="videoMount" required data-help="Select the SD card or share used for recordings">
-                    <option value="">Loading mounts...</option>
+                  <select class="form-select" id="videoMount" required data-help="选择用于录制的 SD 卡或共享">
+                    <option value="">正在加载挂载点...</option>
                   </select>
                 </p>
                 <p>
-                  <label for="videoDevicePath">Device-specific path</label>
+                  <label for="videoDevicePath">设备特定路径</label>
                   <input type="text" class="form-control" id="videoDevicePath" autocomplete="off" placeholder="camera/records"
-                    data-help="Helpful when multiple cameras record to the same share">
+                    data-help="当多个摄像机录制到同一共享时很有用">
                 </p>
                 <p>
-                  <label for="videoFilename">File name template</label>
+                  <label for="videoFilename">文件名模板</label>
                   <input type="text" class="form-control strftime" id="videoFilename" autocomplete="off" placeholder="%Y%m%d/%H/%Y%m%dT%H%M%S">
                 </p>
               </div>
               <div class="col">
                 <p>
-                  <label for="videoChannel">Stream to record</label>
+                  <label for="videoChannel">要录制的流</label>
                   <select class="form-select" id="videoChannel">
-                    <option value="0">Main stream</option>
-                    <option value="1">Substream</option>
+                    <option value="0">主流</option>
+                    <option value="1">子流</option>
                   </select>
                 </p>
                 <p>
-                  <label for="videoDuration">Clip duration, seconds</label>
+                  <label for="videoDuration">片段持续时间，秒</label>
                   <input type="number" class="form-control" id="videoDuration" min="5" max="3600" step="5" value="60">
                 </p>
                 <p>
-                  <label for="videoLimit">Storage limit, gigabytes</label>
+                  <label for="videoLimit">存储限制，千兆字节</label>
                   <input type="number" class="form-control" id="videoLimit" min="1" max="1024" step="1" value="15">
                 </p>
               </div>
@@ -72,12 +72,12 @@
 
             <p class="form-switch">
               <input class="form-check-input" type="checkbox" role="switch" id="videoAutostart">
-              <label class="form-check-label" for="videoAutostart">Start recording automatically on boot</label>
+              <label class="form-check-label" for="videoAutostart">启动时自动开始录制</label>
             </p>
 
             <button type="submit" class="btn btn-primary" id="videoSubmit">
               <i class="bi bi-save me-1"></i>
-              Save changes
+              保存更改
             </button>
           </form>
         </div>
@@ -85,7 +85,7 @@
     </section>
 
     <div class="ui-debug d-none">
-      <h6>Video recorder</h6>
+      <h6>视频录像机</h6>
       <pre id="debugVideo"></pre>
       <h6>Crontab</h6>
       <pre id="debugCrontab"></pre>

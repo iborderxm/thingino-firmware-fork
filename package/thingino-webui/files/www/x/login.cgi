@@ -69,8 +69,8 @@ case "$REQUEST_METHOD" in
     password=$(echo "$post_data" | grep -o '"password":"[^"]*"' | cut -d'"' -f4)
 
     # Validate inputs
-    [ -z "$username" ] && json_error 400 "Username required"
-    [ -z "$password" ] && json_error 400 "Password required"
+    [ -z "$username" ] && json_error 400 "需要用户名"
+    [ -z "$password" ] && json_error 400 "需要密码"
 
     # Verify credentials
     if verify_password "$username" "$password"; then
@@ -93,11 +93,11 @@ case "$REQUEST_METHOD" in
       printf '{"success":true,"is_default_password":%s}\n' "$is_default"
       exit 0
     else
-      json_error 401 "Invalid credentials" "401 Unauthorized"
+      json_error 401 "凭据无效" "401 Unauthorized"
     fi
     ;;
 
   *)
-    json_error 405 "Method not allowed" "405 Method Not Allowed"
+    json_error 405 "不允许的方法" "405 Method Not Allowed"
     ;;
 esac

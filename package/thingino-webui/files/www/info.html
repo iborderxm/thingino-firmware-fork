@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Commands and logs</title>
+  <title>thingino · 命令和日志</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,7 +32,7 @@
     </section>
 
     <div class="ui-debug d-none">
-      <p>Inspect <code>/etc/thingino.json</code> over SSH for deeper troubleshooting.</p>
+      <p>通过 SSH 检查 <code>/etc/thingino.json</code> 以进行更深入的故障排除。</p>
     </div>
   </div>
 </main>
@@ -43,12 +43,12 @@
   <div class="modal-dialog modal-fullscreen">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="textEditorModalLabel">Text Editor</h1>
+        <h1 class="modal-title fs-5" id="textEditorModalLabel">文本编辑器</h1>
         <div class="ms-auto d-flex gap-2">
           <button type="button" class="btn btn-success" id="saveTextBtn">
-            <i class="bi bi-floppy me-1"></i>Save
+            <i class="bi bi-floppy me-1"></i>保存
           </button>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
         </div>
       </div>
       <div class="modal-body p-0">
@@ -60,17 +60,17 @@
           </div>
           <div class="border-start" style="width: 300px; min-height: 400px;">
             <div class="p-3">
-              <h6 class="mb-3">File Info</h6>
+              <h6 class="mb-3">文件信息</h6>
               <div class="small">
                 <div class="mb-3">
-                  <strong>File:</strong>
+                  <strong>文件：</strong>
                   <div id="editorFileName" class="text-muted word-break"></div>
                 </div>
                 <div class="mb-3">
                   <div class="form-switch">
                     <input class="form-check-input" type="checkbox" id="lineWrapping" checked>
                     <label class="form-check-label" for="lineWrapping">
-                      Line wrapping
+                      自动换行
                     </label>
                   </div>
                 </div>
@@ -78,20 +78,20 @@
                   <div class="form-switch">
                     <input class="form-check-input" type="checkbox" id="autoBackup" checked>
                     <label class="form-check-label" for="autoBackup">
-                      Auto backup on save
+                      保存时自动备份
                     </label>
                   </div>
-                  <div class="form-text small">Download original before saving changes</div>
+                  <div class="form-text small">保存更改前下载原始文件</div>
                 </div>
                 <div class="mb-3">
                   <button type="button" class="btn btn-outline-warning btn-sm w-100" id="downloadBackupBtn">
-                    <i class="bi bi-download me-1"></i>Download Current Backup
+                    <i class="bi bi-download me-1"></i>下载当前备份
                   </button>
-                  <div class="form-text small">Save current version manually</div>
+                  <div class="form-text small">手动保存当前版本</div>
                 </div>
                 <div class="alert alert-danger" role="alert">
                   <i class="bi bi-exclamation-triangle me-1"></i>
-                  Be careful editing system files! You can break the system!
+                  编辑系统文件时要小心！您可能会破坏系统！
                 </div>
               </div>
             </div>
@@ -100,12 +100,12 @@
       </div>
       <div class="modal-footer">
         <div class="me-auto small text-muted">
-          <span id="editorStatus">Ready</span>
+          <span id="editorStatus">就绪</span>
         </div>
         <button type="button" class="btn btn-outline-secondary" id="reloadTextBtn">
-          <i class="bi bi-arrow-clockwise me-1"></i>Reload
+          <i class="bi bi-arrow-clockwise me-1"></i>重新加载
         </button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
       </div>
     </div>
   </div>

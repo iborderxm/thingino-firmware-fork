@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta content="width=device-width,initial-scale=1" name="viewport">
-<title>Thingino Initial Configuration</title>
+<title>Thingino 初始配置</title>
 <link rel="stylesheet" href="portal.min.css">
 <script src="portal.min.js"></script>
 </head>
@@ -11,7 +11,7 @@
 <header class="my-4 text-center">
 <div class="container">
 <h1><img src="logo.svg" alt="Thingino Logo" class="img-fluid" id="logo"></h1>
-<h2>Initial Configuration</h2>
+<h2>初始配置</h2>
 </div>
 </header>
 <main>
@@ -19,68 +19,68 @@
 
 <div id="loading" class="hidden">
 <div class="spinner"></div>
-<p class="text-center">Saving...</p>
+<p class="text-center">正在保存...</p>
 </div>
 
 <div id="error-message" class="alert alert-danger hidden"></div>
 
 <div id="success-wlan" class="hidden">
 <div class="alert alert-success text-center">
-<h3>Configuration Completed</h3>
-<p class="lead">Your camera is rebooting to connect to your wireless network.</p>
-<p class="alert alert-warning mb-0">The MAC address is<br><span class="lead" id="wlan-mac"></span></p>
+<h3>配置完成</h3>
+<p class="lead">您的摄像机正在重新启动以连接到您的无线网络。</p>
+<p class="alert alert-warning mb-0">MAC 地址是<br><span class="lead" id="wlan-mac"></span></p>
 </div>
-<p>To get started, just tap the reset button on your camera. If it's connected to the internet, it'll tell you its IP address. If you're not hearing that, no worries! Find the IP address among DHCP server leases (usually in your wireless router).</p>
-<p>For configuration information and troubleshooting steps please refer to <a href="https://github.com/themactep/thingino-firmware/wiki/">the project Wiki</a>.</p>
+<p>要开始使用，只需点击摄像机上的重置按钮。如果它已连接到互联网，它会告诉您其 IP 地址。如果您没有听到，别担心！在 DHCP 服务器租约中查找 IP 地址（通常在您的无线路由器中）。</p>
+<p>有关配置信息和故障排除步骤，请参考<a href="https://github.com/themactep/thingino-firmware/wiki/">项目 Wiki</a>。</p>
 </div>
 
 <div id="success-wlanap" class="hidden">
 <div class="alert alert-success text-center">
-<h3>Configuration Completed</h3>
-<p class="lead mb-0">Your camera is rebooting to create a wireless access point.</p>
+<h3>配置完成</h3>
+<p class="lead mb-0">您的摄像机正在重新启动以创建无线接入点。</p>
 </div>
-<p>To start, locate the <b id="wlanap-ssid-display"></b> wireless network on your device, connect using your password then open the web interface at <b>http://thingino.local/</b> using login <b>root</b> and the password you have just set up for that user.</p>
+<p>要开始，请在您的设备上找到 <b id="wlanap-ssid-display"></b> 无线网络，使用您的密码连接，然后使用登录名 <b>root</b> 和您刚刚为该用户设置的密码在 <b>http://thingino.local/</b> 打开 Web 界面。</p>
 </div>
 
 <form id="config-form" class="my-3 needs-validation" novalidate>
 <div class="mb-2">
-<label class="form-label">Hostname</label>
+<label class="form-label">主机名</label>
 <input class="form-control bg-light text-dark" type="text" name="hostname" id="hostname" required autocapitalize="none">
-<div class="invalid-feedback">Please enter hostname</div>
+<div class="invalid-feedback">请输入主机名</div>
 </div>
 <div class="mb-2">
-<label class="form-label">Create a password for user <b>root</b></label>
+<label class="form-label">为用户 <b>root</b> 创建密码</label>
 <input class="form-control bg-light text-dark" type="text" name="rootpass" id="rootpass" required autocapitalize="none">
-<div class="invalid-feedback">Please enter password</div>
+<div class="invalid-feedback">请输入密码</div>
 </div>
 <div class="mb-2">
-<label class="form-label"><a data-bs-toggle="collapse" href="#collapse-rootpkey" role="button" aria-expanded="false" aria-controls="collapse-rootpkey">Public SSH Key for user <b>root</b></a> <span class="small">(optional)</span></label>
+<label class="form-label"><a data-bs-toggle="collapse" href="#collapse-rootpkey" role="button" aria-expanded="false" aria-controls="collapse-rootpkey">用户 <b>root</b> 的公钥</a> <span class="small">（可选）</span></label>
 <div class="collapse" id="collapse-rootpkey">
 <textarea class="form-control bg-light text-dark text-break" name="rootpkey" id="rootpkey" rows="3"></textarea>
 </div>
 </div>
 <div class="tabs-nav mb-3">
-<button type="button" class="tab-btn active" data-tab="wlan-tab-pane">Wi-Fi Network</button>
-<button type="button" class="tab-btn" data-tab="wlanap-tab-pane">Wi-Fi Access Point</button>
+<button type="button" class="tab-btn active" data-tab="wlan-tab-pane">Wi-Fi 网络</button>
+<button type="button" class="tab-btn" data-tab="wlanap-tab-pane">Wi-Fi 接入点</button>
 </div>
 <div id="wireless-tabs">
 <div class="tab-pane active" id="wlan-tab-pane">
 <div class="mb-2">
-<label class="form-label">Wi-Fi Network Name/SSID <span class="small text-white">(case-sensitive)</span></label>
+<label class="form-label">Wi-Fi 网络名称/SSID <span class="small text-white">（区分大小写）</span></label>
 <div style="position: relative;">
-<input class="form-control bg-light text-dark" type="text" id="wlan_ssid" name="wlan_ssid" autocapitalize="none" placeholder="Enter network name or scan for networks" required>
+<input class="form-control bg-light text-dark" type="text" id="wlan_ssid" name="wlan_ssid" autocapitalize="none" placeholder="输入网络名称或扫描网络" required>
 <datalist id="networks-list"></datalist>
-<button class="btn btn-link" type="button" id="scan-btn" title="Scan for networks">
+<button class="btn btn-link" type="button" id="scan-btn" title="扫描网络">
 <span id="scan-spinner" class="hidden"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#495057" class="bi bi-arrow-clockwise" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg></span>
 <span id="scan-text"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#495057" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg></span>
 </button>
 </div>
-<div class="invalid-feedback">Please enter network name</div>
+<div class="invalid-feedback">请输入网络名称</div>
 </div>
 <div class="mb-2">
-<label class="form-label">Wi-Fi Network Password <span class="small text-white">(case-sensitive)</span></label>
+<label class="form-label">Wi-Fi 网络密码 <span class="small text-white">（区分大小写）</span></label>
 <input class="form-control bg-light text-dark" type="text" id="wlan_pass" name="wlan_pass" autocapitalize="none" minlength="8" pattern=".{8,64}" required>
-<div class="invalid-feedback">Please enter a password 8 - 64 characters</div>
+<div class="invalid-feedback">请输入 8 - 64 个字符的密码</div>
 </div>
 </div>
 <div class="tab-pane" id="wlanap-tab-pane">
@@ -88,50 +88,50 @@
 <span class="form-check form-switch">
 <input type="hidden" id="wlanap_enabled-false" name="wlanap_enabled" value="false">
 <input type="checkbox" id="wlanap_enabled" name="wlanap_enabled" value="true" role="switch" class="form-check-input">
-<label for="wlanap_enabled" class="form-check-label">Enable Wireless AP</label>
+<label for="wlanap_enabled" class="form-check-label">启用无线 AP</label>
 </span>
 </div>
 <div class="mb-2">
-<label class="form-label">Wi-Fi AP Network SSID <span class="small text-white">(case-sensitive)</span></label>
+<label class="form-label">Wi-Fi AP 网络 SSID <span class="small text-white">（区分大小写）</span></label>
 <input class="form-control bg-light text-dark" type="text" id="wlanap_ssid" name="wlanap_ssid" autocapitalize="none">
-<div class="invalid-feedback">Please enter network name</div>
+<div class="invalid-feedback">请输入网络名称</div>
 </div>
 <div class="mb-2">
-<label class="form-label">Wi-Fi AP Network Password <span class="small text-white">(case-sensitive)</span></label>
+<label class="form-label">Wi-Fi AP 网络密码 <span class="small text-white">（区分大小写）</span></label>
 <input class="form-control bg-light text-dark" type="text" id="wlanap_pass" name="wlanap_pass" autocapitalize="none" minlength="8" pattern=".{8,64}">
-<div class="invalid-feedback">Please enter a password 8 - 64 characters</div>
+<div class="invalid-feedback">请输入 8 - 64 个字符的密码</div>
 </div>
 </div>
 </div>
 <input type="hidden" name="timezone" id="timezone" value="">
-<input type="submit" value="Review & Save" class="btn btn-primary my-4">
+<input type="submit" value="审查并保存" class="btn btn-primary my-4">
 </form>
 
 <div id="review-section" class="hidden">
 <div class="alert alert-secondary my-3">
-<h3>Ready to connect</h3>
-<p>Please double-check the entered data and correct it if you see an error!</p>
+<h3>准备连接</h3>
+<p>请仔细检查输入的数据，如果发现错误请更正！</p>
 <dl class="row" id="verify">
 <dt id="review-network-label"></dt>
 <dd id="review-network-ssid"></dd>
 <dt id="review-password-label"></dt>
 <dd class="text-break" id="review-network-pass"></dd>
-<dt>User <b>root</b> Password</dt>
+<dt>用户 <b>root</b> 密码</dt>
 <dd id="review-rootpass"></dd>
-<dt>Camera Hostname</dt>
+<dt>摄像机主机名</dt>
 <dd id="review-hostname"></dd>
-<dt>Time zone</dt>
+<dt>时区</dt>
 <dd id="review-timezone"></dd>
-<dt id="review-rootpkey-label" class="hidden">User <b>root</b> Public SSH Key</dt>
+<dt id="review-rootpkey-label" class="hidden">用户 <b>root</b> 公钥</dt>
 <dd class="small text-break" id="review-rootpkey"></dd>
 </dl>
 
 <div class="row text-center">
 <div class="col my-2">
-<button type="button" class="btn btn-danger" id="btn-edit">Edit data</button>
+<button type="button" class="btn btn-danger" id="btn-edit">编辑数据</button>
 </div>
 <div class="col my-2">
-<button type="button" class="btn btn-success" id="btn-proceed">Proceed</button>
+<button type="button" class="btn btn-success" id="btn-proceed">继续</button>
 </div>
 </div>
 </div>
@@ -143,8 +143,8 @@
 
 <div class="hidden" id="timeout-warning">
 <div class="alert alert-warning text-center">
-<h5>Timeout Warning</h5>
-<p class="mb-0">For security, portal will automatically shut off after 10 minutes. Power cycle the camera to re-activate portal.</p>
+<h5>超时警告</h5>
+<p class="mb-0">出于安全考虑，portal 将在 10 分钟后自动关闭。请重新启动摄像机以重新激活 portal。</p>
 </div>
 </div>
 
@@ -213,13 +213,13 @@ async function loadSystemInfo() {
       document.getElementById('wlan-mac').textContent = data.wlan_mac;
     }
   } catch (e) {
-    showError('Failed to load system information');
+    showError('无法加载系统信息');
   }
 }
 
 function validateHostname(hostname) {
   const badChars = hostname.replace(/[0-9A-Z\.-]/ig, '');
-  return badChars.length === 0 ? null : `Hostname cannot contain ${badChars}`;
+  return badChars.length === 0 ? null : `主机名不能包含 ${badChars}`;
 }
 
 function collectFormData() {
@@ -249,14 +249,14 @@ function showReview(data) {
   scheduleTimeoutWarning();
 
   if (data.wlanap_enabled === 'true') {
-    document.getElementById('review-network-label').textContent = 'Wireless AP Network SSID';
+    document.getElementById('review-network-label').textContent = '无线 AP 网络 SSID';
     document.getElementById('review-network-ssid').textContent = data.wlanap_ssid;
-    document.getElementById('review-password-label').textContent = 'Wireless AP Network Password';
+    document.getElementById('review-password-label').textContent = '无线 AP 网络密码';
     document.getElementById('review-network-pass').textContent = data.wlanap_pass;
   } else {
-    document.getElementById('review-network-label').textContent = 'Wireless Network SSID';
+    document.getElementById('review-network-label').textContent = '无线网络 SSID';
     document.getElementById('review-network-ssid').textContent = data.wlan_ssid;
-    document.getElementById('review-password-label').textContent = 'Wireless Network Password';
+    document.getElementById('review-password-label').textContent = '无线网络密码';
     document.getElementById('review-network-pass').textContent = data.wlan_pass;
   }
 
@@ -298,12 +298,12 @@ async function saveConfiguration(data) {
       }
       cancelTimeoutWarning();
     } else {
-      showError(result.error || 'Failed to save configuration');
+      showError(result.error || '无法保存配置');
       showForm();
     }
   } catch (e) {
     hideElement('loading');
-    showError('Failed to save configuration: ' + e.message);
+    showError('无法保存配置：' + e.message);
     showForm();
   }
 }
@@ -382,7 +382,7 @@ scanBtn.addEventListener('click', async () => {
   scanBtn.disabled = true;
   ssidInput.disabled = true;
   ssidInput.style.opacity = '0.6';
-  ssidInput.placeholder = 'Scanning for networks...';
+  ssidInput.placeholder = '正在扫描网络...';
   scanSpinner.classList.remove('hidden');
   scanText.classList.add('hidden');
 
@@ -416,13 +416,13 @@ scanBtn.addEventListener('click', async () => {
 
       // Mark that networks have been scanned and update placeholder
       networksScanned = true;
-      ssidInput.placeholder = 'Start typing to select a network';
+      ssidInput.placeholder = '开始输入以选择网络';
     }
   } catch (error) {
     // Don't show alert for aborted fetches (page refresh/navigation)
     if (error.name !== 'AbortError' && error.message !== 'Failed to fetch') {
       console.error('Scan failed:', error);
-      alert('Failed to scan networks. Please try again.');
+      alert('无法扫描网络。请重试。');
     }
   } finally {
     scanInProgress = false;

@@ -47,7 +47,7 @@ get_info() {
 scan_networks() {
 	# Check if wpa_cli is available
 	if ! command -v wpa_cli >/dev/null 2>&1; then
-		echo '{"error": "wpa_cli not available"}'
+		echo '{"error": "wpa_cli 不可用"}'
 		return
 	fi
 
@@ -167,7 +167,7 @@ save_config() {
 		cat <<-EOF
 		{
 			"success": false,
-			"error": "Hostname cannot contain $bad_chars"
+			"error": "主机名不能包含 $bad_chars"
 		}
 		EOF
 		return
@@ -232,6 +232,6 @@ case "$PARAM_action" in
 		json_response "$(save_config)"
 		;;
 	*)
-		json_response '{"error": "Invalid action"}'
+		json_response '{"error": "无效的操作"}'
 		;;
 esac
