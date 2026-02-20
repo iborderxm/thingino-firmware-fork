@@ -314,12 +314,13 @@ jobs:
           # Update prudynt-t.mk file with correct repository information
           sed -i 's/^PRUDYNT_T_SITE/# PRUDYNT_T_SITE/' package/prudynt-t/prudynt-t.mk
           sed -i 's/^PRUDYNT_T_VERSION/# PRUDYNT_T_VERSION/' package/prudynt-t/prudynt-t.mk
-          sed -i '1i\
-          PRUDYNT_T_VERSION = ${{ env.PRUDYNT_T_TAG }}
-          PRUDYNT_T_SOURCE = prudynt-t-$(PRUDYNT_T_VERSION).tar.gz
-          PRUDYNT_T_SITE = http://localhost:8000/prudynt-t-$(PRUDYNT_T_VERSION).tar.gz
-          ' package/prudynt-t/prudynt-t.mk
-
+          echo "1----------------------------------------"=
+          sed -i '1i\PRUDYNT_T_VERSION = ${{ env.PRUDYNT_T_TAG }}' package/prudynt-t/prudynt-t.mk
+          echo "2----------------------------------------"
+          sed -i '2i\PRUDYNT_T_SOURCE = prudynt-t-$(PRUDYNT_T_VERSION).tar.gz' package/prudynt-t/prudynt-t.mk
+          echo "3----------------------------------------"
+          sed -i '3i\PRUDYNT_T_SITE = http://localhost:8000/prudynt-t-$(PRUDYNT_T_VERSION).tar.gz' package/prudynt-t/prudynt-t.mk
+          echo "4----------------------------------------"
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
