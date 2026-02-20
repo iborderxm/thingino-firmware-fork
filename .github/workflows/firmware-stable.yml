@@ -112,7 +112,7 @@ jobs:
       - name: Install build dependencies
         run: |
           # apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget
-          apt-get install -y git gh
+          apt-get install -y git gh python3
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -124,13 +124,40 @@ jobs:
       - name: check prudynt-t
         run: |
           pwd
+          echo "GITHUB_WORKSPACE:$GITHUB_WORKSPACE"
           ls -ltr ./prudynt-t/
-          # 获取历史release
-          # RELEASES=$(curl -H "Authorization: Bearer ${{ secrets.PRIVATE_TOKEN }}" https://api.github.com/repos/iborderxm/prudynt-t/releases)
-          # echo $RELEASES
-          echo "${{ secrets.PRIVATE_TOKEN }}" | gh auth login --with-token
-          gh auth status
-          gh release list -R iborderxm/prudynt-t
+          mv ./prudynt-t /tmp/prudynt-t
+          cd /tmp/prudynt-t
+          git fetch --all
+          # 按tag名称排序,取第一个
+          TAG=$(git tag --sort=-v:refname | head -1)
+          echo "Latest Tag: $TAG"
+          
+          # 检查TAG是否为空
+          if [ -z "$TAG" ]; then
+            echo "ERROR: No tags found in repository"
+            exit 1
+          fi
+          
+          # 切换到TAG
+          git checkout $TAG
+          cd /tmp
+          mv prudynt-t prudynt-t-${TAG}
+          tar -czf ./prudynt-t-${TAG}.tar.gz prudynt-t-${TAG}
+          ls -ltr
+          mkdir webdir
+          mv ./prudynt-t-${TAG}.tar.gz ./webdir/
+          echo "switch to webdir"
+          cd ./webdir/
+          ls -ltr
+          python3 -m http.server 8000 &
+          HTTP_PID=$!
+          sleep 5
+          echo "download prudynt-t-${TAG}.tar.gz"
+          wget http://localhost:8000/prudynt-t-${TAG}.tar.gz -O new-prudynt-t-${TAG}.tar.gz
+          ls -ltr
+          # 清理HTTP服务器进程
+          kill $HTTP_PID 2>/dev/null || true
       
       - name: Set timezone
         run: |
