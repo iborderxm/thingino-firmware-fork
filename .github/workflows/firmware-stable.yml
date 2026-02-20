@@ -316,8 +316,8 @@ jobs:
           sed -i 's/^PRUDYNT_T_VERSION/# PRUDYNT_T_VERSION/' package/prudynt-t/prudynt-t.mk
           sed -i '1i\
           PRUDYNT_T_VERSION = ${{ env.PRUDYNT_T_TAG }}
-          PRUDYNT_T_SOURCE = prudynt-t-\$(PRUDYNT_T_VERSION).tar.gz
-          PRUDYNT_T_SITE = http://localhost:8000/prudynt-t-\$(PRUDYNT_T_VERSION).tar.gz
+          PRUDYNT_T_SOURCE = prudynt-t-$(PRUDYNT_T_VERSION).tar.gz
+          PRUDYNT_T_SITE = http://localhost:8000/prudynt-t-$(PRUDYNT_T_VERSION).tar.gz
           ' package/prudynt-t/prudynt-t.mk
 
           # Verify the changes
