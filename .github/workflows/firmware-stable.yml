@@ -66,11 +66,16 @@ jobs:
           git rev-parse HEAD
           echo "Last commit:"
           git log --oneline -1
-          echo "copied repository to /tmp/${{ github.repository }}"
+          # 复制当前项目目录到/tmp
+          REPO_FULL="${{ github.repository }}"
+          REPO_NAME="${REPO_FULL#*/}"
+          echo "Repository name: $REPO_NAME"
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
+          echo "copied repository to /tmp/${{ env.REPO_NAME }}"
           cd ../
-          cp -r ${{ github.repository }} /tmp/${{ github.repository }}
-          ls -ltr /tmp/${{ github.repository }}
-          cd /tmp/${{ github.repository }}
+          cp -r ${{ env.REPO_NAME  }} /tmp/${{ env.REPO_NAME  }}
+          ls -ltr /tmp/${{ env.REPO_NAME  }}
+          cd /tmp/${{ env.REPO_NAME  }}
           git checkout iborder
 
       - name: Check for updates since last release
@@ -479,9 +484,9 @@ jobs:
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
           rm -rf package/thingino-portal-simple/files
-          cp -r /tmp/${{ github.repository }}/package/thingino-portal-simple/files package/thingino-portal-simple/files
+          cp -r /tmp/${{ env.REPO_NAME  }}/package/thingino-portal-simple/files package/thingino-portal-simple/files
           rm -rf package/thingino-webui/files/www
-          cp -r /tmp/${{ github.repository }}/package/thingino-webui/files/www package/thingino-webui/files/www
+          cp -r /tmp/${{ env.REPO_NAME  }}/package/thingino-webui/files/www package/thingino-webui/files/www
 
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}
