@@ -327,6 +327,11 @@ jobs:
 
       - name: Build prudynt-t only
         run: |
+          netstat -an | grep 8000
+          if [ $? -ne 0 ]; then
+            echo "Error: Port 8000 is not open"
+            exit 1
+          fi
           echo "Building prudynt-t for ${{ matrix.thingino-version }}..."
           if [ "${{ github.event.inputs.debug_enabled }}" == "true" ]; then
             BOARD=${{ matrix.thingino-version }} make rebuild-prudynt-t DEBUG=1 WORKFLOW=1
