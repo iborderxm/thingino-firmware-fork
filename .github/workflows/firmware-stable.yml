@@ -328,7 +328,7 @@ jobs:
       - name: Build prudynt-t only
         run: |
           ps -ef | grep python
-          wget http://localhost:8000/prudynt-t-${PRUDYNT_T_TAG}.tar.gz
+          wget http://localhost:8000/prudynt-t-${env.PRUDYNT_T_TAG}.tar.gz
           ls -ltr
           echo "Building prudynt-t for ${{ matrix.thingino-version }}..."
           if [ "${{ github.event.inputs.debug_enabled }}" == "true" ]; then
