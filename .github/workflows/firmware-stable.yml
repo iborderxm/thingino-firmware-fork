@@ -477,6 +477,7 @@ jobs:
           cp -r /tmp/$REPO_NAME/package/thingino-webui/files/www package/thingino-webui/files/www
 
           # 替换bootstrap国内cdn
+          sed -i "s|integrity=|integrity1=|g" *.html
           cd package/thingino-webui/files/www
           target_key="bootstrap.min.css"
           result=$(grep -r "$target_key" . --include="*.html" | \
