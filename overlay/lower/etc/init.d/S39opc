@@ -1,0 +1,68 @@
+#!/bin/sh
+# Start opc service with configuration from /etc/opc.json
+
+. /usr/share/common
+
+start() {
+    CONFIG_FILE="/etc/opc.json"
+    OPC_BIN="/usr/sbin/opc"
+
+    # Check if opc binary exists
+    if [ ! -x "$OPC_BIN" ]; then
+        echo "opc binary not found at $OPC_BIN, skipping"
+        return 0
+    fi
+
+    # Check if config file exists
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "opc.json not found at $CONFIG_FILE, skipping"
+        return 0
+    fi
+
+    # Read configuration from opc.json
+    server_ip=$(jct "$CONFIG_FILE" get server_ip 2>/dev/null)
+    server_port=$(jct "$CONFIG_FILE" get server_port 2>/dev/null)
+    auth_key=$(jct "$CONFIG_FILE" get auth_key 2>/dev/null)
+
+    # Check if all required parameters exist and have values
+    if [ -z "$server_ip" ] || [ -z "$server_port" ] || [ -z "$auth_key" ]; then
+        echo "Missing required parameters in opc.json (server_ip, server_port, auth_key), skipping"
+        return 0
+    fi
+
+    echo "Starting opc service..."
+    echo "Server IP: $server_ip"
+    echo "Server Port: $server_port"
+
+    # Start opc with parameters
+    $OPC_BIN -h "$server_ip" -p "$server_port" -a "$auth_key" &
+    
+    echo "opc service started"
+}
+
+stop() {
+    # Kill opc process
+    if pidof opc >/dev/null 2>&1; then
+        echo "Stopping opc service..."
+        killall opc 2>/dev/null
+        echo "opc service stopped"
+    fi
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        sleep 1
+        start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac
