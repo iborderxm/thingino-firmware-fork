@@ -144,6 +144,10 @@ define THINGINO_WEBUI_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/var/www/tool-upgrade.html
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/wait.html \
 		$(TARGET_DIR)/var/www/wait.html
+	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/config-persondetection.html \
+		$(TARGET_DIR)/var/www/config-persondetection.html
+	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/config-opc.html \
+		$(TARGET_DIR)/var/www/config-opc.html
 
 	# JavaScripts
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/audio.js \
@@ -240,6 +244,10 @@ define THINGINO_WEBUI_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/var/www/a/tool-upgrade.js
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/wait.js \
 		$(TARGET_DIR)/var/www/a/wait.js
+	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/config-persondetection.js \
+		$(TARGET_DIR)/var/www/a/config-persondetection.js
+	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/config-opc.js \
+		$(TARGET_DIR)/var/www/a/config-opc.js
 
 	[ -h "$(TARGET_DIR)/var/www/a/tz.json" ] || \
 		ln -s /usr/share/tz.json $(TARGET_DIR)/var/www/a/tz.json
@@ -400,6 +408,13 @@ define THINGINO_WEBUI_INSTALL_TARGET_CMDS
 
 	$(INSTALL) -D -m 0755 $(@D)/mjpeg_frame \
 		$(TARGET_DIR)/usr/bin/mjpeg_frame
+
+	$(INSTALL) -D -m 0755 $(THINGINO_WEBUI_PKGDIR)/files/www/x/opc-restart.cgi \
+		$(TARGET_DIR)/var/www/x/opc-restart.cgi
+	$(INSTALL) -D -m 0755 $(THINGINO_WEBUI_PKGDIR)/files/www/x/opc-status.cgi \
+		$(TARGET_DIR)/var/www/x/opc-status.cgi
+	$(INSTALL) -D -m 0755 $(THINGINO_WEBUI_PKGDIR)/files/www/x/json-config-opc.cgi \
+		$(TARGET_DIR)/var/www/x/json-config-opc.cgi
 
 	$(call THINGINO_WEBUI_APPLY_ASSET_TAG)
 endef

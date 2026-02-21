@@ -468,6 +468,7 @@ jobs:
           git checkout iborder
 
           cd $GITHUB_WORKSPACE
+          cp -r /tmp/$REPO_NAME/package/thingino-webui/thingino-webui.mk package/thingino-webui/thingino-webui.mk
           cp -r /tmp/$REPO_NAME/package/thingino-webui/files/S99heartbeat package/thingino-webui/files/S99heartbeat
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S37checkuenv overlay/lower/etc/init.d/S37checkuenv
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S39opc overlay/lower/etc/init.d/S39opc
