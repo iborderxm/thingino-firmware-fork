@@ -468,22 +468,50 @@ jobs:
           git checkout iborder
 
           cd $GITHUB_WORKSPACE
+          cp -r /tmp/$REPO_NAME/package\thingino-webui\files\S99heartbeat package/thingino-webui/files/S99heartbeat
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S37checkuenv overlay/lower/etc/init.d/S37checkuenv
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/prudynt.json package/prudynt-t/files/prudynt.json
           rm -rf package/thingino-portal-simple/files
           cp -r /tmp/$REPO_NAME/package/thingino-portal-simple/files package/thingino-portal-simple/files
           rm -rf package/thingino-webui/files/www
           cp -r /tmp/$REPO_NAME/package/thingino-webui/files/www package/thingino-webui/files/www
-          # 新增bootstrap国内cdn
-          # 遍历package/thingino-webui/files/www目录下的全部html文件
-          for file in package/thingino-webui/files/www/*.html; do
-            if grep -q "cdn\.jsdelivr\.net" "$file"; then
-              line_num=$(grep -n "cdn\.jsdelivr\.net" "$file" | head -1 | cut -d: -f1)
-              sed -i "$((line_num - 1))i\  <link rel=\"stylesheet\" href=\"https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.8/css/bootstrap.min.css\">" "$file"
-              sed -i "$((line_num - 1))i\  <link rel=\"stylesheet\" href=\"https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.13.1/font/bootstrap-icons.min.css\">" "$file"
-              sed -i "$((line_num - 1))i\  <script src=\"https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js\"><\/script>" "$file"
-            fi
+
+          # 替换bootstrap国内cdn
+          cd package/thingino-webui/files/www
+          target_key="bootstrap.min.css"
+          result=$(grep -r "$target_key" . --include="*.html" | \
+          grep 'href=' | \
+          sed -n 's/.*href="\([^"]*'$target_key'[^"]*\)".*/\1/p' | \
+          sort | uniq)
+          for item in $result
+          do
+              echo "$item"
+              sed -i "s|$item|https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.8/css/bootstrap.min.css|g" *.html
           done
+
+          target_key="bootstrap-icons.min.css"
+          result=$(grep -r "$target_key" . --include="*.html" | \
+          grep 'href=' | \
+          sed -n 's/.*href="\([^"]*'$target_key'[^"]*\)".*/\1/p' | \
+          sort | uniq)
+          for item in $result
+          do
+              echo "$item"
+              sed -i "s|$item|https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.13.1/font/bootstrap-icons.min.css|g" *.html
+          done
+
+          target_key="bootstrap.bundle.min.js"
+          result=$(grep -r "$target_key" . --include="*.html" | \
+          grep 'src=' | \
+          sed -n 's/.*src="\([^"]*'$target_key'[^"]*\)".*/\1/p' | \
+          sort | uniq)
+          for item in $result
+          do
+              echo "$item"
+              sed -i "s|$item|https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js|g" *.html
+          done
+
+          cd $GITHUB_WORKSPACE
           
       - name: Update prudynt-t.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
@@ -557,7 +585,7 @@ jobs:
             echo "FULL_FW_SHA=${FULL_FW}.sha256sum" >> ${GITHUB_ENV}
             echo "UPDATE_FW=${UPDATE_FW}" >> ${GITHUB_ENV}
             echo "UPDATE_FW_SHA=${UPDATE_FW}.sha256sum" >> ${GITHUB_ENV}
-            
+
             UPDATE_FW_DATETIME=$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')
             echo "UPDATE_FW_DATETIME=${UPDATE_FW_DATETIME}" >> ${GITHUB_ENV}
           else
