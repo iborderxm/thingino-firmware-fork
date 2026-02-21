@@ -573,7 +573,7 @@ jobs:
       - name: Upload compiled firmware artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: thingino-${{ matrix.thingino-version }}-firmware
+          name: thingino-${{ matrix.thingino-version }}-firmware--$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')"
           path: |
             ${{ env.FULL_FW }}
             ${{ env.FULL_FW_UBOOT }}

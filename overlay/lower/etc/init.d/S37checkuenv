@@ -53,6 +53,8 @@ start() {
                 
                 # Clean up
                 rm -f "$temp_file"
+
+                jct /etc/onvif.json set ifs wlan0
                 
                 # Restart network service
                 echo "Restarting network service..."
