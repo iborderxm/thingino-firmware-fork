@@ -20,111 +20,111 @@
   function buildDefaultMenu() {
     const hasMotors = uiConfig.device && uiConfig.device.motors === true;
     const settingsItems = [
-      { label: 'Admin profile', href: '/config-admin.html' },
-      { label: 'GPIO pins', href: '/config-gpio.html' }
+      { label: '管理员配置', href: '/config-admin.html' },
+      { label: 'GPIO 引脚', href: '/config-gpio.html' }
     ];
 
     if (hasMotors) {
-      settingsItems.push({ label: 'Pan/Tilt motors', href: '/config-motors.html' });
+      settingsItems.push({ label: '云台电机', href: '/config-motors.html' });
     }
 
     settingsItems.push(
-      { label: 'Network', href: '/config-network.html' },
-      { label: 'Audio', href: '/config-audio.html' },
-      { label: 'Privacy screen', href: '/config-privacy.html' },
-      { label: 'Photosensing', href: '/config-photosensing.html' },
-      { label: 'RTSP/ONVIF access', href: '/config-rtsp.html' },
-      { label: 'Remote logging', href: '/config-syslog.html' },
-      { label: 'Telegram Bot', href: '/config-telegrambot.html' },
-      { label: 'Time', href: '/config-time.html' },
-      { label: 'Web Interface', href: '/config-webui.html' },
+      { label: '网络', href: '/config-network.html' },
+      { label: '音频', href: '/config-audio.html' },
+      { label: '隐私屏幕', href: '/config-privacy.html' },
+      { label: '光感', href: '/config-photosensing.html' },
+      { label: 'RTSP/ONVIF 访问', href: '/config-rtsp.html' },
+      { label: '远程日志', href: '/config-syslog.html' },
+      { label: 'Telegram 机器人', href: '/config-telegrambot.html' },
+      { label: '时间', href: '/config-time.html' },
+      { label: 'Web 界面', href: '/config-webui.html' },
       { label: 'WireGuard VPN', href: '/config-wireguard.html' },
       { label: 'ZeroTier VPN', href: '/config-zerotier.html' },
       { type: 'divider' },
-      { label: 'Reset...', href: '/reset.html' }
+      { label: '重置...', href: '/reset.html' }
     );
 
     return [
       {
         type: 'dropdown',
         id: 'ddInfo',
-        label: 'Information',
+        label: '信息',
         items: [
-          { label: 'File: crontab', href: '/info.html?crontab' },
-          { label: 'File: httpd.conf', href: '/info.html?httpd' },
-          { label: 'File: onvif.json', href: '/info.html?onvif' },
-          { label: 'File: prudynt.json', href: '/info.html?prudynt' },
-          { label: 'File: thingino.json', href: '/info.html?thingino' },
-          { label: 'Log: dmesg', href: '/info.html?dmesg' },
-          { label: 'Log: logcat', href: '/info.html?logcat' },
-          { label: 'Log: logread', href: '/info.html?logread' },
-          { label: 'Info: lsmod', href: '/info.html?lsmod' },
-          { label: 'Info: netstat', href: '/info.html?netstat' },
-          { label: 'Info: system', href: '/info.html?system' },
-          { label: 'Info: top', href: '/info.html?top' },
-          { label: 'Info: status', href: '/info.html?status' },
-          { label: 'Overlay partition', href: '/info-overlay.html' },
-          { label: 'System usage', href: '/info-usage.html' },
-          { label: 'Diagnostic info', href: '/info-diagnostic.html' }
+          { label: '文件：crontab', href: '/info.html?crontab' },
+          { label: '文件：httpd.conf', href: '/info.html?httpd' },
+          { label: '文件：onvif.json', href: '/info.html?onvif' },
+          { label: '文件：prudynt.json', href: '/info.html?prudynt' },
+          { label: '文件：thingino.json', href: '/info.html?thingino' },
+          { label: '日志：dmesg', href: '/info.html?dmesg' },
+          { label: '日志：logcat', href: '/info.html?logcat' },
+          { label: '日志：logread', href: '/info.html?logread' },
+          { label: '信息：lsmod', href: '/info.html?lsmod' },
+          { label: '信息：netstat', href: '/info.html?netstat' },
+          { label: '信息：系统', href: '/info.html?system' },
+          { label: '信息：top', href: '/info.html?top' },
+          { label: '信息：状态', href: '/info.html?status' },
+          { label: '覆盖分区', href: '/info-overlay.html' },
+          { label: '系统使用情况', href: '/info-usage.html' },
+          { label: '诊断信息', href: '/info-diagnostic.html' }
         ]
       },
       {
         type: 'dropdown',
         id: 'ddSettings',
-        label: 'Settings',
+        label: '设置',
         items: settingsItems
       },
       {
         type: 'dropdown',
         id: 'ddTools',
-        label: 'Tools',
+        label: '工具',
         items: [
-          { label: 'File manager', href: '/tool-file-manager.html' },
-          { label: 'Network test', href: '/tool-ping-trace.html' },
-          { label: 'SD card', href: '/tool-sdcard.html' },
-          { label: 'Send to services', href: '/tool-send2.html' },
-          { label: 'Flash operations', href: '/tool-upgrade.html' },
+          { label: '文件管理器', href: '/tool-file-manager.html' },
+          { label: '网络测试', href: '/tool-ping-trace.html' },
+          { label: 'SD 卡', href: '/tool-sdcard.html' },
+          { label: '发送到服务', href: '/tool-send2.html' },
+          { label: '固件操作', href: '/tool-upgrade.html' },
           { type: 'divider' },
-          { label: 'Reboot camera', href: '/x/reboot.cgi', className: 'text-danger confirm' }
+          { label: '重启摄像头', href: '/x/reboot.cgi', className: 'text-danger confirm' }
         ]
       },
       {
         type: 'dropdown',
         id: 'ddServices',
-        label: 'Services',
+        label: '服务',
         items: [
-          { label: 'Timelapse Recorder', href: '/tool-timelapse.html' },
-          { label: 'Video Recorder', href: '/tool-record.html' }
+          { label: '延时摄影录制', href: '/tool-timelapse.html' },
+          { label: '视频录制', href: '/tool-record.html' }
         ]
       },
       {
         type: 'dropdown',
         id: 'ddStreamer',
-        label: 'Streamer',
+        label: '流媒体',
         items: [
-          { label: 'Image Quality', href: '/streamer-image.html' },
-          { label: 'RTSP Main stream', href: '/streamer-main.html' },
-          { label: 'Main stream OSD', href: '/streamer-osd0.html' },
-          { label: 'RTSP Substream', href: '/streamer-substream.html' },
-          { label: 'Substream OSD', href: '/streamer-osd1.html' },
-          { label: 'Sensor IQ File', href: '/streamer-sensor.html' },
+          { label: '图像质量', href: '/streamer-image.html' },
+          { label: 'RTSP 主流', href: '/streamer-main.html' },
+          { label: '主流 OSD', href: '/streamer-osd0.html' },
+          { label: 'RTSP 子流', href: '/streamer-substream.html' },
+          { label: '子流 OSD', href: '/streamer-osd1.html' },
+          { label: '传感器 IQ 文件', href: '/streamer-sensor.html' },
           { type: 'divider' },
-          { label: 'Streamer config', href: '/info.html?prudynt' },
-          { label: 'Streamer log', href: '/info.html?logcat' },
-          { label: 'Restart streamer', href: '#', id: 'restart-prudynt-nav', className: 'text-danger confirm', trackActive: false }
+          { label: '流媒体配置', href: '/info.html?prudynt' },
+          { label: '流媒体日志', href: '/info.html?logcat' },
+          { label: '重启流媒体', href: '#', id: 'restart-prudynt-nav', className: 'text-danger confirm', trackActive: false }
         ]
       },
-      { type: 'link', label: 'Preview', href: '/preview.html' },
+      { type: 'link', label: '预览', href: '/preview.html' },
       {
         type: 'dropdown',
         id: 'ddHelp',
-        label: 'Help',
+        label: '帮助',
         menuClass: 'dropdown-menu dropdown-menu-lg-end',
         items: [
-          { label: 'About thingino', href: 'https://thingino.com/', target: '_blank', rel: 'noreferrer noopener', trackActive: false },
+          { label: '关于 Thingino', href: 'https://thingino.com/', target: '_blank', rel: 'noreferrer noopener', trackActive: false },
           { label: 'Thingino Wiki', href: 'https://github.com/themactep/thingino-firmware/wiki', target: '_blank', rel: 'noreferrer noopener', trackActive: false },
           { type: 'divider' },
-          { label: 'Logout', href: '/x/logout.cgi', className: 'text-danger', trackActive: false }
+          { label: '登出', href: '/x/logout.cgi', className: 'text-danger', trackActive: false }
         ]
       }
     ];
@@ -306,7 +306,7 @@
     const offcanvasTitle = document.createElement('h5');
     offcanvasTitle.className = 'offcanvas-title';
     offcanvasTitle.id = 'navOffcanvasLabel';
-    offcanvasTitle.textContent = 'Menu';
+    offcanvasTitle.textContent = '菜单';
 
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
