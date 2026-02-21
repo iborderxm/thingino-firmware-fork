@@ -21,7 +21,8 @@
     const hasMotors = uiConfig.device && uiConfig.device.motors === true;
     const settingsItems = [
       { label: '管理员配置', href: '/config-admin.html' },
-      { label: 'GPIO 引脚', href: '/config-gpio.html' }
+      { label: 'GPIO 引脚', href: '/config-gpio.html' },
+      { label: '人形检测', href: '/config-persondetection.html' }
     ];
 
     if (hasMotors) {
