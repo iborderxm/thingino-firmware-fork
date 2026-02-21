@@ -34,21 +34,21 @@ heartbeat_loop() {
     privacy_enabled="false"; [ -f "/run/prudynt/privacy.active" ] && privacy_enabled="true"
 
     # Single prudyntctl call
-    prudynt_data=$(prudyntctl json - 2>/dev/null <<'EOF'
-{
-  "image": {"running_mode": null},
-  "audio": {"mic_enabled": null, "spk_enabled": null},
-  "daynight": {"status": null, "enabled": null}
-}
-EOF
-)
+#     prudynt_data=$(prudyntctl json - 2>/dev/null <<'EOF'
+# {
+#   "image": {"running_mode": null},
+#   "audio": {"mic_enabled": null, "spk_enabled": null},
+#   "daynight": {"status": null, "enabled": null}
+# }
+# EOF
+# )
 
-    color_mode=$(echo "$prudynt_data" | grep -o '"running_mode":[^,}]*' | cut -d: -f2)
-    mic_enabled=$(echo "$prudynt_data" | grep -o '"mic_enabled":[^,}]*' | cut -d: -f2)
-    spk_enabled=$(echo "$prudynt_data" | grep -o '"spk_enabled":[^,}]*' | cut -d: -f2)
-    total_gain=$(echo "$prudynt_data" | grep -o '"total_gain":[0-9-]*' | cut -d: -f2)
+    color_mode=$(jct prudynt get image.running_mode || echo "null")
+    mic_enabled=$(jct prudynt get audio.mic_enabled || echo "null")
+    spk_enabled=$(jct prudynt get audio.spk_enabled || echo "null")
+    total_gain=$(jct prudynt get audio.total_gain || echo "null")
     total_gain="${total_gain:-0}"
-    daynight_enabled=$(echo "$prudynt_data" | grep -o '"enabled":[^,}]*' | cut -d: -f2)
+    daynight_enabled=$(jct prudynt get daynight.enabled || echo "null")
 
     ircut_state=$(ircut read 2>/dev/null || echo "null")
     ir850_state=$(light ir850 read 2>/dev/null || echo "null")
