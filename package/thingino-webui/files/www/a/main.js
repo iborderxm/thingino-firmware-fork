@@ -92,11 +92,11 @@ function ensureDebugModalStructure() {
 	  <div class="modal-dialog modal-lg modal-dialog-scrollable">
 	    <div class="modal-content">
 	      <div class="modal-header">
-	        <h5 class="modal-title">Debug information</h5>
+	        <h5 class="modal-title">调试信息</h5>
 	        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 	      </div>
 	      <div class="modal-body">
-	        <p class="text-body-secondary mb-0">No debug information available.</p>
+	        <p class="text-body-secondary mb-0">没有可用的调试信息。</p>
 	      </div>
 	    </div>
 	  </div>`;
@@ -987,7 +987,7 @@ function ensureSliderModal() {
 					<input type="range" id="sliderModalRange" class="form-range">
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
 				</div>
 			</div>
 		</div>`;
@@ -1128,7 +1128,7 @@ function ensureSendModal() {
 	  <div class="modal-dialog modal-lg">
 	    <div class="modal-content">
 	      <div class="modal-header">
-	        <h5 class="modal-title" id="sendModalLabel">Send snapshot/videoclip to...</h5>
+	        <h5 class="modal-title" id="sendModalLabel">发送快照/视频剪辑到...</h5>
 	        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 	      </div>
 	      <div class="modal-body">
@@ -1246,7 +1246,7 @@ function ensureDebugControl(attempt = 0) {
 		debugBtn.value = '1';
 		debugBtn.title = 'Debug info';
 		debugBtn.className = 'btn btn-outline-secondary btn-sm w-100';
-		debugBtn.innerHTML = '<i class="bi bi-bug"></i> Debug';
+		debugBtn.innerHTML = '<i class="bi bi-bug"></i> 调试';
 		footerStack.appendChild(debugBtn);
 	} else if (debugBtn.parentElement !== footerStack) {
 		footerStack.appendChild(debugBtn);
@@ -2042,28 +2042,28 @@ window.thinginoConfirm = thinginoConfirm;
 				<div class="modal-dialog modal-dialog-centered">
 					<div class="modal-content border-warning">
 						<div class="modal-header bg-warning text-dark">
-							<h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>Security Warning</h5>
+							<h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>安全警告</h5>
 						</div>
 						<div class="modal-body">
 							<div id="password-warning-message">
-								<p><strong>You are using the default password "root".</strong></p>
-								<p>For security reasons, you must change the password immediately.</p>
+								<p><strong>您正在使用默认密码 "root"。</strong></p>
+								<p>出于安全考虑，您必须立即更改密码。</p>
 							</div>
 							<div id="password-change-alert" class="alert d-none" role="alert"></div>
 							<form id="password-change-form">
 								<div class="mb-3">
-									<label for="new-password" class="form-label">New Password</label>
+									<label for="new-password" class="form-label">新密码</label>
 									<input type="password" class="form-control" id="new-password" required minlength="4">
-									<div class="form-text">Minimum 4 characters</div>
+									<div class="form-text">最少 4 个字符</div>
 								</div>
 								<div class="mb-3">
-									<label for="confirm-password" class="form-label">Confirm Password</label>
+									<label for="confirm-password" class="form-label">确认密码</label>
 									<input type="password" class="form-control" id="confirm-password" required minlength="4">
 								</div>
 							</form>
 						</div>
 						<div class="modal-footer">
-							<button type="button" class="btn btn-warning" id="change-password-btn">Change Password</button>
+							<button type="button" class="btn btn-warning" id="change-password-btn">更改密码</button>
 						</div>
 					</div>
 				</div>
@@ -2116,7 +2116,7 @@ window.thinginoConfirm = thinginoConfirm;
 
 				// Disable button and show loading state
 				changeBtn.disabled = true;
-				changeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Changing...';
+				changeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>更改中...';
 
 				try {
 					const response = await fetch('/x/json-config-webui.cgi', {
