@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · WireGuard VPN</title>
+  <title>thingino · WireGuard VPN配置</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,39 +23,39 @@
     <div data-app-controls></div>
 
     <div id="wg-not-supported" class="alert alert-danger d-none">
-      <p><strong>WireGuard is not supported on this camera.</strong></p>
-      <p>The WireGuard binary (<code>/bin/wg</code>) is not found on your system.</p>
+      <p><strong>此相机不支持 WireGuard。</strong></p>
+      <p>您的系统上未找到 WireGuard 二进制文件（<code>/bin/wg</code>）。</p>
     </div>
 
     <section>
       <form id="wireguardForm" class="needs-validation" novalidate autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title"><img src="/a/wireguard.svg" alt="WireGuard" class="img-fluid icon float-start me-3 mb-1" style="max-width: 48px"> Wireguard VPN</h2>
-            <small>WireGuard is a fast and simple general purpose VPN. <a href="https://github.com/themactep/thingino-firmware/wiki/VPN:-Wireguard" target="_blank">Thingino Wiki</a></small>
-            <button type="button" class="btn btn-outline-secondary" id="wireguard-reload" title="Reload values from camera">
-              <i class="bi bi-arrow-clockwise"></i> Reload
+            <h2 class="card-title"><img src="/a/wireguard.svg" alt="WireGuard" class="img-fluid icon float-start me-3 mb-1" style="max-width: 48px"> WireGuard VPN</h2>
+            <small>WireGuard 是一个快速且简单的通用 VPN。<a href="https://github.com/themactep/thingino-firmware/wiki/VPN:-Wireguard" target="_blank">Thingino Wiki</a></small>
+            <button type="button" class="btn btn-outline-secondary" id="wireguard-reload" title="从相机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
             <div class="row g-4">
               <div class="col-12 col-lg-4">
-                <h4>Interface</h4>
-                <small>VPN client tunnel settings</small>
+                <h4>接口</h4>
+                <small>VPN 客户端隧道设置</small>
                 <p>
-                  <label for="wg_privkey">Private Key</label>
+                  <label for="wg_privkey">私钥</label>
                   <input type="password" id="wg_privkey" class="form-control">
                 </p>
                 <p>
-                  <label for="wg_peerpsk">Pre-Shared Key</label>
+                  <label for="wg_peerpsk">预共享密钥</label>
                   <input type="password" id="wg_peerpsk" class="form-control">
                 </p>
                 <p>
-                  <label for="wg_address">FQDN or IP address</label>
+                  <label for="wg_address">FQDN 或 IP 地址</label>
                   <input type="text" id="wg_address" class="form-control">
                 </p>
                 <p>
-                  <label for="wg_port">Port</label>
+                  <label for="wg_port">端口</label>
                   <input type="text" id="wg_port" class="form-control">
                 </p>
                 <p>
@@ -64,14 +64,14 @@
                 </p>
               </div><!-- .col -->
               <div class="col col-12 col-lg-6 col-xxl-4 order-3 order-xxl-2">
-                <h4>Peer</h4>
-                <small>VPN server settings</small>
+                <h4>对等方</h4>
+                <small>VPN 服务器设置</small>
                 <p>
-                  <label for="wg_endpoint">Endpoint host:port</label>
+                  <label for="wg_endpoint">端点 主机:端口</label>
                   <input type="text" id="wg_endpoint" class="form-control">
                 </p>
                 <p>
-                  <label for="wg_peerpub">Peer Public Key</label>
+                  <label for="wg_peerpub">对等方公钥</label>
                   <input type="text" id="wg_peerpub" class="form-control">
                 </p>
                 <p>
@@ -79,11 +79,11 @@
                   <input type="text" id="wg_mtu" class="form-control">
                 </p>
                 <p>
-                  <label for="wg_keepalive">Persistent Keepalive</label>
+                  <label for="wg_keepalive">持久保活</label>
                   <input type="text" id="wg_keepalive" class="form-control">
                 </p>
                 <p>
-                  <label for="wg_allowed">Allowed CIDRs (networks)</label>
+                  <label for="wg_allowed">允许的 CIDR（网络）</label>
                   <input type="text" id="wg_allowed" class="form-control">
                 </p>
               </div><!-- .col -->
@@ -91,7 +91,7 @@
                 <div id="wg-ctrl" class="alert d-none">
                   <p id="wg-ctrl-message"></p>
                   <p class="text-end mb-0">
-                    <button type="button" class="btn" id="btn-wg-toggle">Switch WireGuard <span id="wg-toggle-label"></span></button>
+                    <button type="button" class="btn" id="btn-wg-toggle">切换 WireGuard <span id="wg-toggle-label"></span></button>
                   </p>
                 </div><!-- .alert -->
               </div><!-- .col -->
@@ -101,10 +101,10 @@
 
         <p class="form-switch">
           <input type="checkbox" id="wg_enabled" class="form-check-input" role="switch">
-          <label for="wg_enabled" class="form-check-label">Run WireGuard at boot</label>
+          <label for="wg_enabled" class="form-check-label">启动时运行 WireGuard</label>
         </p>
 
-        <button type="submit" id="wg_submit" class="btn btn-primary">Save changes</button>
+        <button type="submit" id="wg_submit" class="btn btn-primary">保存更改</button>
       </form>
     </section>
   </div>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Sensor Data Collector</title>
+  <title>thingino · 传感器数据收集器</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -103,17 +103,17 @@
       <div class="card-body">
         <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 mb-3">
           <div class="d-flex align-items-center gap-2">
-            <h2 class="mb-0">Raw Sensor Data Collection</h2>
-            <i id="stream-status" class="bi bi-circle-fill stream-status disconnected" title="Connecting..."></i>
+            <h2 class="mb-0">原始传感器数据收集</h2>
+            <i id="stream-status" class="bi bi-circle-fill stream-status disconnected" title="连接中..."></i>
           </div>
-          <p class="mb-0 text-secondary small flex-grow-1">Graphs raw unprocessed sensor values for day/night algorithm analysis.</p>
+          <p class="mb-0 text-secondary small flex-grow-1">绘制原始未处理的传感器值图表，用于日夜算法分析。</p>
         </div>
         <div class="row preview">
           <div class="col-12 col-lg-5" id="preview-col">
             <div id="frame" class="position-relative mb-2">
               <img id="preview" src="/x/ch1.mjpg" class="img-fluid" alt="Image: Preview">
             </div>
-            <h5 class="mt-3">Current Values</h5>
+            <h5 class="mt-3">当前值</h5>
             <div class="stat-grid" id="data-stats"></div>
           </div>
           <div class="col-12 col-lg-7" id="tabs-col">
@@ -121,16 +121,16 @@
               <canvas id="dataChart"></canvas>
             </div>
             <div class="controls d-flex flex-wrap gap-1 w-100">
-              <button id="clear-data" class="btn btn-sm btn-danger">Clear Data</button>
-              <button id="toggle-pause" class="btn btn-sm btn-secondary">Pause</button>
+              <button id="clear-data" class="btn btn-sm btn-danger">清除数据</button>
+              <button id="toggle-pause" class="btn btn-sm btn-secondary">暂停</button>
               <div class="btn-group" role="group" id="max-points">
                 <button type="button" class="btn btn-sm btn-secondary" data-points="100">100</button>
                 <button type="button" class="btn btn-sm btn-primary active" data-points="300">300</button>
                 <button type="button" class="btn btn-sm btn-secondary" data-points="600">600</button>
                 <button type="button" class="btn btn-sm btn-secondary" data-points="1200">1200</button>
               </div>
-              <button id="export-json" class="btn btn-sm btn-outline-secondary">Export JSON</button>
-              <button id="export-csv" class="btn btn-sm btn-outline-secondary">Export CSV</button>
+              <button id="export-json" class="btn btn-sm btn-outline-secondary">导出 JSON</button>
+              <button id="export-csv" class="btn btn-sm btn-outline-secondary">导出 CSV</button>
             </div>
           </div>
         </div>
@@ -138,7 +138,7 @@
     </section>
 
     <div class="ui-debug d-none">
-      <p>Use SSH (<code>thingino@camera</code>) to watch <code>/tmp/timegraph-stream.log</code> or query <code>/x/json-timegraph-stream.cgi</code> directly for troubleshooting.</p>
+      <p>使用 SSH (<code>thingino@camera</code>) 查看 <code>/tmp/timegraph-stream.log</code> 或直接查询 <code>/x/json-timegraph-stream.cgi</code> 进行故障排除。</p>
     </div>
   </div>
 </main>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Storage Configuration</title>
+  <title>thingino · 存储配置</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,52 +25,52 @@
     <section>
       <div class="d-flex align-items-center gap-2 mb-3">
         <a href="tool-send2.html" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Back to Services
+          <i class="bi bi-arrow-left"></i> 返回服务
         </a>
-        <h2 class="mb-0">Storage Configuration</h2>
+        <h2 class="mb-0">存储配置</h2>
       </div>
 
       <form id="storageForm" class="needs-validation" novalidate autocomplete="off">
         <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
 
-          <!-- Storage Settings -->
+          <!-- 存储设置 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Storage Settings</div>
+              <div class="card-header">存储设置</div>
               <div class="card-body">
                 <p>
-                  <label for="storage_mount">Mount point</label>
+                  <label for="storage_mount">挂载点</label>
                   <select class="form-select" id="storage_mount" name="storage_mount" required>
-                    <option value="">Select mount point...</option>
+                    <option value="">选择挂载点...</option>
                   </select>
-                  <small class="form-text text-secondary">SD card or network share</small>
+                  <small class="form-text text-secondary">SD卡或网络共享</small>
                 </p>
                 <p>
-                  <label for="storage_device_path">Device-specific path</label>
+                  <label for="storage_device_path">设备特定路径</label>
                   <input type="text" class="form-control" id="storage_device_path" name="storage_device_path" placeholder="%hostname/motion">
-                  <small class="form-text text-secondary">Subdirectory within mount point (default: %hostname/motion)</small>
+                  <small class="form-text text-secondary">挂载点内的子目录（默认：%hostname/motion）</small>
                 </p>
                 <p>
-                  <label for="storage_template">Filename template</label>
+                  <label for="storage_template">文件名模板</label>
                   <input type="text" class="form-control" id="storage_template" name="storage_template" placeholder="%Y%m%d/%H/%Y%m%dT%H%M%S">
-                  <small class="form-text text-secondary">Supports strftime (default: %Y%m%d/%H/%Y%m%dT%H%M%S). Do not use extension</small>
+                  <small class="form-text text-secondary">支持 strftime 格式（默认：%Y%m%d/%H/%Y%m%dT%H%M%S）。不要使用扩展名</small>
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Content Options -->
+          <!-- 内容选项 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Content Options</div>
+              <div class="card-header">内容选项</div>
               <div class="card-body">
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="storage_send_photo" name="storage_send_photo" checked>
-                  <label class="form-check-label" for="storage_send_photo">Save photo</label>
+                  <label class="form-check-label" for="storage_send_photo">保存照片</label>
                 </p>
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="storage_send_video" name="storage_send_video">
-                  <label class="form-check-label" for="storage_send_video">Save video</label>
+                  <label class="form-check-label" for="storage_send_video">保存视频</label>
                 </p>
               </div>
             </div>
@@ -79,10 +79,10 @@
 
         <div class="text-end">
           <button type="button" class="btn btn-outline-secondary" id="storage-reload">
-            <i class="bi bi-arrow-clockwise"></i> Reload
+            <i class="bi bi-arrow-clockwise"></i> 重新加载
           </button>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i> Save Settings
+            <i class="bi bi-check-circle"></i> 保存设置
           </button>
         </div>
       </form>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · File Manager</title>
+  <title>thingino · 文件管理器</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,15 +24,15 @@
 
     <div class="row align-items-center mb-3">
       <div class="col-12 col-lg-8">
-        <h1 class="h3 mb-1">File Manager</h1>
-        <p class="text-secondary mb-0">Browse directories, download files, and preview MP4 recordings stored on the camera.</p>
+        <h1 class="h3 mb-1">文件管理器</h1>
+        <p class="text-secondary mb-0">浏览目录、下载文件、预览存储在摄像机上的 MP4 录像。</p>
       </div>
       <div class="col-12 col-lg-4 mt-3 mt-lg-0 d-flex gap-2 justify-content-lg-end flex-wrap">
         <button type="button" class="btn btn-outline-secondary" id="btnParent">
-          <i class="bi bi-arrow-up me-1"></i> Up one level
+          <i class="bi bi-arrow-up me-1"></i> 上一级
         </button>
         <button type="button" class="btn btn-outline-secondary" id="btnRefresh">
-          <i class="bi bi-arrow-repeat me-1"></i> Refresh
+          <i class="bi bi-arrow-repeat me-1"></i> 刷新
         </button>
       </div>
     </div>
@@ -40,7 +40,7 @@
 
     <div class="status-overlay-region">
 
-      <nav aria-label="Directory trail" class="mb-3">
+      <nav aria-label="目录路径" class="mb-3">
         <ol class="breadcrumb mb-0" id="breadcrumbs"></ol>
       </nav>
 
@@ -48,10 +48,10 @@
         <table class="table align-middle" id="fileTable">
           <thead>
             <tr>
-              <th scope="col">Name</th>
-              <th scope="col" class="text-end">Size (bytes)</th>
-              <th scope="col">Permissions</th>
-              <th scope="col">Date</th>
+              <th scope="col">名称</th>
+              <th scope="col" class="text-end">大小 (字节)</th>
+              <th scope="col">权限</th>
+              <th scope="col">日期</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -59,7 +59,7 @@
       </div>
 
       <div id="emptyState" class="alert alert-secondary d-none">
-        <p class="mb-0">This directory is empty.</p>
+        <p class="mb-0">此目录为空。</p>
       </div>
     </div>
   </div>
@@ -68,18 +68,18 @@
 <footer data-app-footer></footer>
 
 <div class="modal fade" id="playerModal" tabindex="-1" aria-labelledby="playerModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="playerModalLabel">Video preview</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h1 class="modal-title fs-5" id="playerModalLabel">视频预览</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
       </div>
       <div class="modal-body">
         <video id="player" class="w-100" controls playsinline></video>
       </div>
       <div class="modal-footer">
-        <a href="#" class="btn btn-primary" id="playerModalDownload">Download</a>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <a href="#" class="btn btn-primary" id="playerModalDownload">下载</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
       </div>
     </div>
   </div>
@@ -89,12 +89,12 @@
   <div class="modal-dialog modal-fullscreen">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="textEditorModalLabel">Text Editor</h1>
+        <h1 class="modal-title fs-5" id="textEditorModalLabel">文本编辑器</h1>
         <div class="ms-auto d-flex gap-2">
           <button type="button" class="btn btn-success" id="saveTextBtn">
-            <i class="bi bi-floppy me-1"></i>Save
+            <i class="bi bi-floppy me-1"></i>保存
           </button>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
         </div>
       </div>
       <div class="modal-body p-0">
@@ -102,21 +102,21 @@
           <div class="flex-grow-1">
             <textarea id="textEditor" class="form-control border-0 h-100"
                       style="resize: none; font-family: 'Courier New', monospace; font-size: 14px;"
-                      placeholder="Loading file..."></textarea>
+                      placeholder="正在加载文件..."></textarea>
           </div>
           <div class="border-start" style="width: 300px; min-height: 400px;">
             <div class="p-3">
-              <h6 class="mb-3">File Info</h6>
+              <h6 class="mb-3">文件信息</h6>
               <div class="small">
                 <div class="mb-3">
-                  <strong>File:</strong>
+                  <strong>文件:</strong>
                   <div id="editorFileName" class="text-muted word-break"></div>
                 </div>
                 <div class="mb-3">
                   <div class="form-switch">
                     <input class="form-check-input" type="checkbox" id="lineWrapping" checked>
                     <label class="form-check-label" for="lineWrapping">
-                      Line wrapping
+                      自动换行
                     </label>
                   </div>
                 </div>
@@ -124,20 +124,20 @@
                   <div class="form-switch">
                     <input class="form-check-input" type="checkbox" id="autoBackup" checked>
                     <label class="form-check-label" for="autoBackup">
-                      Auto backup on save
+                      保存时自动备份
                     </label>
                   </div>
-                  <div class="form-text small">Download original before saving changes</div>
+                  <div class="form-text small">保存更改前下载原始文件</div>
                 </div>
                 <div class="mb-3">
                   <button type="button" class="btn btn-outline-warning btn-sm w-100" id="downloadBackupBtn">
-                    <i class="bi bi-download me-1"></i>Download Current Backup
+                    <i class="bi bi-download me-1"></i>下载当前备份
                   </button>
-                  <div class="form-text small">Save current version manually</div>
+                  <div class="form-text small">手动保存当前版本</div>
                 </div>
                 <div class="alert alert-danger" role="alert">
                   <i class="bi bi-exclamation-triangle me-1"></i>
-                  Be careful editing system files! You can break the system!
+                  编辑系统文件时要小心！您可能会破坏系统！
                 </div>
               </div>
             </div>
@@ -146,12 +146,12 @@
       </div>
       <div class="modal-footer">
         <div class="me-auto small text-muted">
-          <span id="editorStatus">Ready</span>
+          <span id="editorStatus">就绪</span>
         </div>
         <button type="button" class="btn btn-outline-secondary" id="reloadTextBtn">
-          <i class="bi bi-arrow-clockwise me-1"></i>Reload
+          <i class="bi bi-arrow-clockwise me-1"></i>重新加载
         </button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
       </div>
     </div>
   </div>
@@ -161,8 +161,8 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="fileActionsModalLabel">File Actions</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h1 class="modal-title fs-5" id="fileActionsModalLabel">文件操作</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
       </div>
       <div class="modal-body">
         <div class="d-flex align-items-center mb-3">
@@ -172,36 +172,36 @@
             <small class="text-muted" id="fileActionPath">/path/to/file</small>
           </div>
         </div>
-        <p class="text-muted small">What would you like to do with this file?</p>
+        <p class="text-muted small">您想对此文件执行什么操作？</p>
       </div>
       <div class="modal-footer d-flex flex-column gap-2">
         <button type="button" class="btn btn-info w-100 d-none" id="fileActionView">
-          <i class="bi bi-eye me-2"></i>View in Browser
+          <i class="bi bi-eye me-2"></i>在浏览器中查看
         </button>
         <button type="button" class="btn btn-primary w-100" id="fileActionDownload">
-          <i class="bi bi-download me-2"></i>Download
+          <i class="bi bi-download me-2"></i>下载
         </button>
         <button type="button" class="btn btn-success w-100 d-none" id="fileActionEdit">
-          <i class="bi bi-pencil-square me-2"></i>Edit
+          <i class="bi bi-pencil-square me-2"></i>编辑
         </button>
         <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">
-          <i class="bi bi-x-circle me-2"></i>Close
+          <i class="bi bi-x-circle me-2"></i>关闭
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Image Preview Modal -->
+<!-- 图片预览模态框 -->
 <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="imagePreviewModalLabel">Image Preview</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h1 class="modal-title fs-5" id="imagePreviewModalLabel">图片预览</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
       </div>
       <div class="modal-body text-center">
-        <img id="imagePreviewImg" class="img-fluid" alt="Image preview" style="max-height: 70vh;">
+        <img id="imagePreviewImg" class="img-fluid" alt="图片预览" style="max-height: 70vh;">
       </div>
       <div class="modal-footer justify-content-between">
         <div>
@@ -209,7 +209,7 @@
         </div>
         <div>
           <a class="btn btn-primary" id="imagePreviewDownload" download>
-            <i class="bi bi-download me-2"></i>Download
+            <i class="bi bi-download me-2"></i>下载
           </a>
         </div>
       </div>

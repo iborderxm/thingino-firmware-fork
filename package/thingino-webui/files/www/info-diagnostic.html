@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Diagnostic log</title>
+  <title>thingino · 诊断日志</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,42 +26,42 @@
       <form id="diagnostic-form" class="needs-validation" novalidate autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">Diagnostic</h2>
-            <small>Generate a diagnostic bundle that you can share with the developers</small>
+            <h2 class="card-title">诊断</h2>
+            <small>生成一个可以与开发者共享的诊断包</small>
           </div><!-- .card-header -->
           <div class="card-body">
             <div class="row">
               <div class="col mb-3 mb-xl-0">
                 <div class="alert alert-info">
-                  The generated diagnostic bundle may contain sensitive information.
-                  Therefore, review the output before sharing it with developers.
-                  Uploaded content is stored for seven days.
+                  生成的诊断包可能包含敏感信息。
+                  因此，在与开发者共享之前，请检查输出内容。
+                  上传的内容将保存七天。
                 </div>
                 <div class="form-check mb-3">
                   <input type="checkbox" class="form-check-input" id="direct-upload" name="direct-upload">
                   <label class="form-check-label" for="direct-upload">
-                    Upload diagnostic data directly to the Thingino Termbin server and receive a shareable link.
+                    直接将诊断数据上传到 Thingino 服务器并获取可共享的链接。
                   </label>
                 </div>
-                <button type="submit" class="btn btn-primary" id="generate-btn">Generate diagnostic log</button>
+                <button type="submit" class="btn btn-primary" id="generate-btn">生成诊断日志</button>
               </div>
               <div class="col-12 col-xl-9 col-xxl-8">
                 <pre id="diagnostic-output" class="terminal d-none"></pre>
                 <div class="mt-3">
                   <button type="button" class="btn btn-primary d-none" id="upload-btn">
                     <i class="bi bi-cloud-upload me-1"></i>
-                    Upload to tb.thingino.com
+                    上传到 tb.thingino.com
                   </button>
                   <button type="button" class="btn btn-success d-none ms-2" id="download-btn">
                     <i class="bi bi-download me-1"></i>
-                    Download as file
+                    下载为文件
                   </button>
                 </div>
                 <div class="diagnostic-link-row mt-3 d-none" id="diagnostic-link-row">
-                  <strong>Upload successful!</strong>
+                  <strong>上传成功！</strong>
                   <a href="#" target="_blank" rel="noopener" id="diagnostic-link" class="diagnostic-link ms-2">—</a>
-                  <button type="button" class="btn btn-outline-success btn-sm" id="diagnostic-copy-icon" aria-label="Copy link">
-                    <i class="bi bi-clipboard"></i> Copy
+                  <button type="button" class="btn btn-outline-success btn-sm" id="diagnostic-copy-icon" aria-label="复制链接">
+                    <i class="bi bi-clipboard"></i> 复制
                   </button>
                 </div>
               </div>

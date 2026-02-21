@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Overlay partition</title>
+  <title>thingino · 覆盖分区</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,37 +28,37 @@
         <div class="card-body">
           <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
             <div>
-              <h5 class="card-title mb-1">Overlay usage</h5>
-              <p class="text-secondary mb-0">Monitor free space on <code>/overlay</code> to avoid unexpected resets.</p>
+              <h5 class="card-title mb-1">覆盖使用情况</h5>
+              <p class="text-secondary mb-0">监控 <code>/overlay</code> 上的可用空间以避免意外重置。</p>
             </div>
             <div class="d-flex gap-2">
-              <a href="/firmware-reset.html?action=wipeoverlay" class="btn btn-outline-danger">Wipe overlay</a>
-              <button type="button" id="refreshOverlay" class="btn btn-outline-secondary">Refresh</button>
+              <a href="/firmware-reset.html?action=wipeoverlay" class="btn btn-outline-danger">清除覆盖</a>
+              <button type="button" id="refreshOverlay" class="btn btn-outline-secondary">刷新</button>
             </div>
           </div>
           <div class="alert alert-primary" id="overlaySummary">
             <div class="d-flex justify-content-between flex-wrap gap-2 align-items-center">
-              <div>
-                <div class="text-uppercase text-body-secondary x-small">Overlay fill level</div>
-                <div class="fs-3" id="overlayUsageLabel">--</div>
-              </div>
-              <div class="flex-grow-1">
-                <div class="progress" role="progressbar" aria-label="Overlay" aria-valuemin="0" aria-valuemax="100">
-                  <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="overlayProgressBar" style="width:0%"></div>
+                <div>
+                  <div class="text-uppercase text-body-secondary x-small">覆盖填充级别</div>
+                  <div class="fs-3" id="overlayUsageLabel">--</div>
+                </div>
+                <div class="flex-grow-1">
+                  <div class="progress" role="progressbar" aria-label="覆盖" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="overlayProgressBar" style="width:0%"></div>
+                  </div>
                 </div>
               </div>
-            </div>
           </div>
           <div>
-            <h6 class="mb-2">Directory listing</h6>
-            <pre id="overlayListing" class="terminal">Loading...</pre>
+            <h6 class="mb-2">目录列表</h6>
+            <pre id="overlayListing" class="terminal">加载中...</pre>
           </div>
         </div>
       </div>
     </section>
 
     <div class="ui-debug d-none">
-      <p>Inspect <code>/etc/thingino.json</code> over SSH for deeper troubleshooting.</p>
+      <p>通过 SSH 检查 <code>/etc/thingino.json</code> 以进行更深入的故障排除。</p>
     </div>
   </div>
 </main>

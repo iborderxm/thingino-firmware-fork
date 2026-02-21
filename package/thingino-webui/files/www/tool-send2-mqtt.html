@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · MQTT Configuration</title>
+  <title>thingino · MQTT 配置</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,62 +25,62 @@
     <section>
       <div class="d-flex align-items-center gap-2 mb-3">
         <a href="tool-send2.html" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Back to Services
+          <i class="bi bi-arrow-left"></i> 返回服务
         </a>
-        <h2 class="mb-0">MQTT Configuration</h2>
+        <h2 class="mb-0">MQTT 配置</h2>
       </div>
 
       <form id="mqttForm" class="needs-validation" novalidate autocomplete="off">
         <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 mb-4">
 
-          <!-- Broker Settings -->
+          <!-- 代理设置 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Broker Settings</div>
+              <div class="card-header">代理设置</div>
               <div class="card-body">
                 <p>
-                  <label for="mqtt_client_id">Client ID</label>
+                  <label for="mqtt_client_id">客户端 ID</label>
                   <input type="text" class="form-control" id="mqtt_client_id" name="mqtt_client_id" placeholder="camera-01">
                 </p>
                 <div class="row g-1 mb-3">
                   <div class="col-9">
-                    <label for="mqtt_host">Broker address</label>
+                    <label for="mqtt_host">代理地址</label>
                     <input type="text" class="form-control" id="mqtt_host" name="mqtt_host" placeholder="mqtt.example.com" required>
                   </div>
                   <div class="col-3">
-                    <label for="mqtt_port">Port</label>
+                    <label for="mqtt_port">端口</label>
                     <input type="number" class="form-control" id="mqtt_port" name="mqtt_port" value="1883" required>
                   </div>
                 </div>
                 <p>
-                  <label for="mqtt_username">Username</label>
+                  <label for="mqtt_username">用户名</label>
                   <input type="text" class="form-control" id="mqtt_username" name="mqtt_username" autocomplete="username">
                 </p>
                 <p>
-                  <label for="mqtt_password">Password</label>
+                  <label for="mqtt_password">密码</label>
                   <input type="password" class="form-control" id="mqtt_password" name="mqtt_password" autocomplete="current-password">
                 </p>
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="mqtt_use_ssl" name="mqtt_use_ssl">
-                  <label class="form-check-label" for="mqtt_use_ssl">Use SSL</label>
+                  <label class="form-check-label" for="mqtt_use_ssl">使用 SSL</label>
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Message Settings -->
+          <!-- 消息设置 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Message Settings</div>
+              <div class="card-header">消息设置</div>
               <div class="card-body">
                 <p>
-                  <label for="mqtt_topic">Topic</label>
+                  <label for="mqtt_topic">主题</label>
                   <input type="text" class="form-control" id="mqtt_topic" name="mqtt_topic" placeholder="camera/motion" required>
                 </p>
                 <p>
-                  <label for="mqtt_message">Message</label>
+                  <label for="mqtt_message">消息</label>
                   <textarea class="form-control" id="mqtt_message" name="mqtt_message" rows="4" placeholder="Motion detected at %datetime%"></textarea>
-                  <small class="form-text text-secondary">Supports strftime variables</small>
+                  <small class="form-text text-secondary">支持 strftime 变量</small>
                 </p>
               </div>
             </div>
@@ -89,10 +89,10 @@
 
         <div class="text-end">
           <button type="button" class="btn btn-outline-secondary" id="mqtt-reload">
-            <i class="bi bi-arrow-clockwise"></i> Reload
+            <i class="bi bi-arrow-clockwise"></i> 重新加载
           </button>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i> Save Settings
+            <i class="bi bi-check-circle"></i> 保存设置
           </button>
         </div>
       </form>

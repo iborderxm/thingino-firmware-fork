@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Send to Services</title>
+  <title>thingino · 发送到服务</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,54 +23,54 @@
     <div data-app-controls></div>
 
     <section>
-      <h2 class="mb-3">Send to Services</h2>
-      <p class="text-secondary mb-4">Configure where snapshots and video clips are delivered when motion is detected.</p>
+      <h2 class="mb-3">发送到服务</h2>
+      <p class="text-secondary mb-4">配置当检测到运动时快照和视频片段的传递位置。</p>
 
       <div class="row g-3">
-        <!-- Motion Detection Card -->
+        <!-- 运动检测卡片 -->
         <div class="col-12 col-lg-6">
           <div class="card h-100">
             <div class="card-header">
               <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <span>Motion Detection</span>
+                <span>运动检测</span>
                 <div class="form-switch m-0">
                   <input class="form-check-input" type="checkbox" id="motion_enabled">
-                  <label class="form-check-label" for="motion_enabled">Start on boot</label>
+                  <label class="form-check-label" for="motion_enabled">开机启动</label>
                 </div>
               </div>
             </div>
             <div class="card-body">
               <p>
-                <label for="motion_sensitivity">Sensitivity: <span id="motion_sensitivity_value"></span></label>
+                <label for="motion_sensitivity">灵敏度: <span id="motion_sensitivity_value"></span></label>
                 <input type="range" class="form-range" id="motion_sensitivity" min="1" max="8" step="1">
               </p>
               <p>
-                <label for="motion_cooldown">Cooldown: <span id="motion_cooldown_value"></span> seconds</label>
+                <label for="motion_cooldown">冷却时间: <span id="motion_cooldown_value"></span> 秒</label>
                 <input type="range" class="form-range" id="motion_cooldown" min="1" max="60" step="1">
               </p>
               <div class="text-end">
                 <button type="button" class="btn btn-primary" id="save_motion">
-                  <i class="bi bi-check-circle"></i> Save Motion Settings
+                  <i class="bi bi-check-circle"></i> 保存运动设置
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Services Overview Card -->
+        <!-- 服务概览卡片 -->
         <div class="col-12 col-lg-6">
           <div class="card h-100">
-            <div class="card-header">Available Services</div>
+            <div class="card-header">可用服务</div>
             <div class="card-body">
               <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0 send2services">
                   <thead>
                     <tr>
-                      <th>Service</th>
-                      <th>On Motion</th>
-                      <th>Photo</th>
-                      <th>Video</th>
-                      <th>Test</th>
+                      <th>服务</th>
+                      <th>运动时</th>
+                      <th>照片</th>
+                      <th>视频</th>
+                      <th>测试</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -173,26 +173,26 @@
   </div>
 </main>
 
-<!-- Test Modal -->
+<!-- 测试模态框 -->
 <div class="modal fade" id="send2-test-modal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="send2-test-title">Send test</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="send2-test-title">发送测试</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
       </div>
       <div class="modal-body">
         <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
           <div class="form-check mb-0">
             <input class="form-check-input" type="checkbox" id="send2-test-verbose" checked>
-            <label class="form-check-label small" for="send2-test-verbose">Wait for command output</label>
+            <label class="form-check-label small" for="send2-test-verbose">等待命令输出</label>
           </div>
-          <span class="text-secondary small">Disable for quick fire-and-forget tests.</span>
+          <span class="text-secondary small">禁用此选项以进行快速的一次性测试。</span>
         </div>
-        <pre class="terminal" id="send2-test-output" style="white-space: break-spaces">(no output yet)</pre>
+        <pre class="terminal" id="send2-test-output" style="white-space: break-spaces">(暂无输出)</pre>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
       </div>
     </div>
   </div>

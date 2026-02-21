@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Remote Logging</title>
+  <title>thingino · 远程日志</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,38 +26,38 @@
       <form id="syslogForm" class="needs-validation" novalidate autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">System Logging</h2>
-            <small>Configure saving of the system log to a remote server</small>
-            <button type="button" class="btn btn-outline-secondary" id="syslog-reload" title="Reload values from camera">
-              <i class="bi bi-arrow-clockwise"></i> Reload
+            <h2 class="card-title">系统日志</h2>
+            <small>配置将系统日志保存到远程服务器</small>
+            <button type="button" class="btn btn-outline-secondary" id="syslog-reload" title="从相机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
             <div class="row g-4">
               <div class="col-12 col-lg-4">
-                <h4>SMNP Server</h4>
+                <h4>Syslog 服务器</h4>
                 <small>...</small>
                 <p>
-                  <label for="rsyslog_host">Syslog server FQDN or IP address</label>
+                  <label for="rsyslog_host">Syslog 服务器 FQDN 或 IP 地址</label>
                   <input type="text" id="rsyslog_host" class="form-control">
                 </p>
                 <p>
-                  <label for="rsyslog_port">Port</label>
+                  <label for="rsyslog_port">端口</label>
                   <input type="text" id="rsyslog_port" class="form-control" pattern="[0-9]+" title="numeric value">
                 </p>
                 <p class="form-switch">
                   <input type="checkbox" id="rsyslog_enabled" class="form-check-input" role="switch">
-                  <label for="rsyslog_enabled" class="form-check-label">Enable remote logging</label>
+                  <label for="rsyslog_enabled" class="form-check-label">启用远程日志</label>
                 </p>
                 <p class="form-switch">
                   <input type="checkbox" id="rsyslog_file" class="form-check-input" role="switch">
-                  <label for="rsyslog_file" class="form-check-label">Enable local logging</label>
+                  <label for="rsyslog_file" class="form-check-label">启用本地日志</label>
                 </p>
               </div>
             </div>
           </div>
         </div>
-        <button type="submit" id="rsyslog_submit" class="btn btn-primary">Save changes</button>
+        <button type="submit" id="rsyslog_submit" class="btn btn-primary">保存更改</button>
       </form>
     </section>
   </div>

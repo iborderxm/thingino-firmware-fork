@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · FTP Configuration</title>
+  <title>thingino · FTP 配置</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,72 +25,72 @@
     <section>
       <div class="d-flex align-items-center gap-2 mb-3">
         <a href="tool-send2.html" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Back to Services
+          <i class="bi bi-arrow-left"></i> 返回服务
         </a>
-        <h2 class="mb-0">FTP Configuration</h2>
+        <h2 class="mb-0">FTP 配置</h2>
       </div>
 
       <form id="ftpForm" class="needs-validation" novalidate autocomplete="off">
         <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 mb-4">
 
-          <!-- FTP Server -->
+          <!-- FTP 服务器 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">FTP Server</div>
+              <div class="card-header">FTP 服务器</div>
               <div class="card-body">
                 <div class="row g-1 mb-3">
                   <div class="col-9">
-                    <label for="ftp_host">Server address</label>
+                    <label for="ftp_host">服务器地址</label>
                     <input type="text" class="form-control" id="ftp_host" name="ftp_host" placeholder="ftp.example.com" required>
                   </div>
                   <div class="col-3">
-                    <label for="ftp_port">Port</label>
+                    <label for="ftp_port">端口</label>
                     <input type="number" class="form-control" id="ftp_port" name="ftp_port" value="21" required>
                   </div>
                 </div>
                 <p>
-                  <label for="ftp_username">Username</label>
+                  <label for="ftp_username">用户名</label>
                   <input type="text" class="form-control" id="ftp_username" name="ftp_username" autocomplete="username">
                 </p>
                 <p>
-                  <label for="ftp_password">Password</label>
+                  <label for="ftp_password">密码</label>
                   <input type="password" class="form-control" id="ftp_password" name="ftp_password" autocomplete="current-password">
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- File Settings -->
+          <!-- 文件设置 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">File Settings</div>
+              <div class="card-header">文件设置</div>
               <div class="card-body">
                 <p>
-                  <label for="ftp_path">Path on FTP server</label>
+                  <label for="ftp_path">FTP 服务器上的路径</label>
                   <input type="text" class="form-control" id="ftp_path" name="ftp_path" placeholder="/camera/%Y/%m/%d">
-                  <small class="form-text text-secondary">Supports strftime. Relative to FTP root</small>
+                  <small class="form-text text-secondary">支持 strftime。相对于 FTP 根目录</small>
                 </p>
                 <p>
-                  <label for="ftp_template">Filename template</label>
+                  <label for="ftp_template">文件名模板</label>
                   <input type="text" class="form-control" id="ftp_template" name="ftp_template" placeholder="%Y%m%d_%H%M%S">
-                  <small class="form-text text-secondary">Supports strftime. Do not use extension</small>
+                  <small class="form-text text-secondary">支持 strftime。不要使用扩展名</small>
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Content Options -->
+          <!-- 内容选项 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Content Options</div>
+              <div class="card-header">内容选项</div>
               <div class="card-body">
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="ftp_send_photo" name="ftp_send_photo" checked>
-                  <label class="form-check-label" for="ftp_send_photo">Send photo</label>
+                  <label class="form-check-label" for="ftp_send_photo">发送照片</label>
                 </p>
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="ftp_send_video" name="ftp_send_video">
-                  <label class="form-check-label" for="ftp_send_video">Send video</label>
+                  <label class="form-check-label" for="ftp_send_video">发送视频</label>
                 </p>
               </div>
             </div>
@@ -99,10 +99,10 @@
 
         <div class="text-end">
           <button type="button" class="btn btn-outline-secondary" id="ftp-reload">
-            <i class="bi bi-arrow-clockwise"></i> Reload
+            <i class="bi bi-arrow-clockwise"></i> 重新加载
           </button>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i> Save Settings
+            <i class="bi bi-check-circle"></i> 保存设置
           </button>
         </div>
       </form>

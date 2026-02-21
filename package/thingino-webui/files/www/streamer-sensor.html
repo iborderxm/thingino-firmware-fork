@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Sensor IQ File</title>
+  <title>thingino · 传感器 IQ 文件</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,32 +22,32 @@
   <div class="container">
     <div data-app-controls></div>
 
-    <h3>Sensor IQ File</h3>
+    <h3>传感器 IQ 文件</h3>
 
     <div class="row mb-3">
       <div class="col-12 col-xl-4">
         <div id="frame" class="position-relative">
-          <img id="preview" src="/a/nostream.svg" class="img-fluid" alt="Image: Preview" tabindex="-1" data-stream="ch1">
+          <img id="preview" src="/a/nostream.svg" class="img-fluid" alt="图片: 预览" tabindex="-1" data-stream="ch1">
         </div>
       </div>
       <div class="col col-xl-8">
-        <h4>Sensor IQ file</h4>
-        <small>This file contains image quality settings for the image sensor</small>
+        <h4>传感器 IQ 文件</h4>
+        <small>此文件包含图像传感器的图像质量设置</small>
         <p class="alert alert-secondary" id="sensor-info">
-          <span id="sensor-loading">Loading sensor information...</span>
+          <span id="sensor-loading">正在加载传感器信息...</span>
           <span id="sensor-details" class="d-none">
-            File: <span id="sensor-file-path"></span><br>
+            文件: <span id="sensor-file-path"></span><br>
             MD5: <span id="sensor-md5"></span>
           </span>
         </p>
-        <p>Upload a custom sensor IQ file for <span class="fw-bold text-uppercase">t31l</span>
-          and <span class="fw-bold text-uppercase">gc2083</span>, e.g. from a stock firmware backup.</p>
+        <p>为 <span class="fw-bold text-uppercase">t31l</span>
+          和 <span class="fw-bold text-uppercase">gc2083</span> 上传自定义传感器 IQ 文件，例如从原厂固件备份中获取的文件。</p>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mdSensorIQ">
-          <i class="bi bi-upload"></i> Upload Sensor IQ File
+          <i class="bi bi-upload"></i> 上传传感器 IQ 文件
         </button>
 
         <button type="button" id="save-prudynt-config" class="btn btn-primary mt-3">
-          <i class="bi bi-floppy me-1"></i> Save configuration to file
+          <i class="bi bi-floppy me-1"></i> 保存配置到文件
         </button>
       </div>
     </div>
@@ -60,17 +60,17 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fs-4" id="mdlSensorIQ">Upload sensor IQ file</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title fs-4" id="mdlSensorIQ">上传传感器 IQ 文件</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
       </div>
       <div class="modal-body">
         <form id="sensorUploadForm" class="mb-4" method="post" action="/x/preview.cgi" enctype="multipart/form-data">
           <input type="hidden" name="form" value="sensor">
           <div class="mb-3">
-            <label for="sensorfile">Upload a sensor IQ binary file</label>
+            <label for="sensorfile">上传传感器 IQ 二进制文件</label>
             <input type="file" class="form-control" id="sensorfile" name="sensorfile" accept=".bin" required>
           </div>
-          <button type="submit" class="btn btn-primary w-100">Upload sensor IQ file</button>
+          <button type="submit" class="btn btn-primary w-100">上传传感器 IQ 文件</button>
         </form>
       </div>
     </div>

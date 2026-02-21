@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Photosensing</title>
+  <title>thingino · 光感</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,26 +26,26 @@
       <form id="photosensing-form" class="needs-validation" novalidate  autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">Photosensing</h2>
-            <small>Configure the day/night automation thresholds and the controls it toggles.</small>
-            <button type="button" class="btn btn-outline-secondary" id="photosensing-reload" title="Reload values from camera">
-              <i class="bi bi-arrow-clockwise"></i> Reload
+            <h2 class="card-title">光感</h2>
+            <small>配置日夜自动切换的阈值和它控制的功能。</small>
+            <button type="button" class="btn btn-outline-secondary" id="photosensing-reload" title="从相机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
             <div class="row g-4">
               <div class="col-12 col-lg-4">
-                <h4>Thresholds</h4>
-                <small>Maximum and minimum boundaries of Day/Night modes</small>
+                <h4>阈值</h4>
+                <small>日夜模式的最大和最小边界</small>
                 <p class="number-range">
-                  <label for="daynight_total_gain_night_threshold">Switch to night mode above</label>
+                  <label for="daynight_total_gain_night_threshold">切换到夜间模式（高于此值）</label>
                   <span class="input-group">
                     <input type="text" id="daynight_total_gain_night_threshold" name="daynight_total_gain_night_threshold" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="20000" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
                 <p class="number-range">
-                  <label for="daynight_total_gain_day_threshold">Switch to day mode below</label>
+                  <label for="daynight_total_gain_day_threshold">切换到日间模式（低于此值）</label>
                   <span class="input-group">
                     <input type="text" id="daynight_total_gain_day_threshold" name="daynight_total_gain_day_threshold" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="20000" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
@@ -53,32 +53,32 @@
                 </p>
               </div>
               <div class="col-12 col-lg-4">
-                <h4>Controls</h4>
-                <small>Select actions to perform when changing Day/Night mode</small>
+                <h4>控制</h4>
+                <small>选择切换日夜模式时执行的操作</small>
                 <p class="form-switch">
                   <input type="hidden" id="daynight_controls_color-false" name="daynight_controls_color" value="false">
                   <input type="checkbox" id="daynight_controls_color" name="daynight_controls_color" value="true" role="switch" class="form-check-input">
-                  <label for="daynight_controls_color" class="form-check-label">Change color mode</label>
+                  <label for="daynight_controls_color" class="form-check-label">更改颜色模式</label>
                 </p>
                 <p class="form-switch">
                   <input type="hidden" id="daynight_controls_ircut-false" name="daynight_controls_ircut" value="false">
                   <input type="checkbox" id="daynight_controls_ircut" name="daynight_controls_ircut" value="true" role="switch" class="form-check-input">
-                  <label for="daynight_controls_ircut" class="form-check-label">Flip IR cut filter</label>
+                  <label for="daynight_controls_ircut" class="form-check-label">翻转 IR 切换滤光片</label>
                 </p>
                 <p class="form-switch">
                   <input type="hidden" id="daynight_controls_ir850-false" name="daynight_controls_ir850" value="false">
                   <input type="checkbox" id="daynight_controls_ir850" name="daynight_controls_ir850" value="true" role="switch" class="form-check-input">
-                  <label for="daynight_controls_ir850" class="form-check-label">Toggle IR 850 nm</label>
+                  <label for="daynight_controls_ir850" class="form-check-label">切换 IR 850 nm</label>
                 </p>
                 <p class="form-switch">
                   <input type="hidden" id="daynight_controls_ir940-false" name="daynight_controls_ir940" value="false">
                   <input type="checkbox" id="daynight_controls_ir940" name="daynight_controls_ir940" value="true" role="switch" class="form-check-input">
-                  <label for="daynight_controls_ir940" class="form-check-label">Toggle IR 940 nm</label>
+                  <label for="daynight_controls_ir940" class="form-check-label">切换 IR 940 nm</label>
                 </p>
                 <p class="form-switch">
                   <input type="hidden" id="daynight_controls_white-false" name="daynight_controls_white" value="false">
                   <input type="checkbox" id="daynight_controls_white" name="daynight_controls_white" value="true" role="switch" class="form-check-input">
-                  <label for="daynight_controls_white" class="form-check-label">Toggle white light</label>
+                  <label for="daynight_controls_white" class="form-check-label">切换白光</label>
                 </p>
               </div>
             </div>
@@ -88,11 +88,11 @@
         <p class="form-switch">
           <input type="hidden" id="daynight_enabled-false" name="daynight_enabled" value="false">
           <input type="checkbox" id="daynight_enabled" name="daynight_enabled" value="true" role="switch" class="form-check-input">
-          <label for="daynight_enabled" class="form-check-label">Enable photosensing on boot</label>
+          <label for="daynight_enabled" class="form-check-label">启动时启用光感</label>
         </p>
 
         <button type="button" id="save-prudynt-config" class="btn btn-primary">
-          <i class="bi bi-floppy me-1"></i> Save configuration to file
+          <i class="bi bi-floppy me-1"></i> 保存配置到文件
         </button>
       </form>
     </div>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Network Test</title>
+  <title>thingino · 网络测试</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,47 +26,47 @@
       <form id="networkForm" class="needs-validation" novalidate autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">Network Test</h2>
-            <small>Run ping or traceroute diagnostics directly on the camera to debug connectivity issues</small>
-            <button type="button" class="btn btn-outline-secondary" id="btnClear" title="Clear output">
-              <i class="bi bi-eraser me-1"></i>Clear output
+            <h2 class="card-title">网络测试</h2>
+            <small>直接在摄像机上运行 ping 或 traceroute 诊断来调试连接问题</small>
+            <button type="button" class="btn btn-outline-secondary" id="btnClear" title="清除输出">
+              <i class="bi bi-eraser me-1"></i>清除输出
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
             <div class="row mb-3">
               <div class="col">
-                <h4>Test parameters</h4>
-                <small>Select the test type and destination. Interface and packet settings are optional.</small>
-                <p><label for="action">Action</label>
+                <h4>测试参数</h4>
+                <small>选择测试类型和目标。接口和数据包设置是可选的。</small>
+                <p><label for="action">操作</label>
                   <select class="form-select" id="action" name="action"></select>
-                  <span class="form-text" id="actionHelp">Choose a test type</span>
+                  <span class="form-text" id="actionHelp">选择测试类型</span>
                 </p>
-                <p><label for="target">Target host</label>
+                <p><label for="target">目标主机</label>
                   <input type="text" class="form-control" id="target" name="target" value="thingino.com"
-                    placeholder="FQDN or IP address" autocomplete="off" required></p>
-                <p><label for="interface">Interface</label>
+                    placeholder="域名或 IP 地址" autocomplete="off" required></p>
+                <p><label for="interface">接口</label>
                   <select class="form-select" id="interface" name="interface">
-                    <option value="auto" selected>auto</option>
+                    <option value="auto" selected>自动</option>
                   </select>
-                  <span class="form-text">Pick a specific interface or stay on auto</span>
+                  <span class="form-text">选择特定接口或保持自动</span>
                 </p>
-                <p><label for="packetSize">Packet size, bytes</label>
+                <p><label for="packetSize">数据包大小，字节</label>
                   <input type="number" class="form-control" id="packetSize" name="packet_size" min="56" max="65535" step="1" value="56"></p>
-                <p><label for="count">Number of packets</label>
+                <p><label for="count">数据包数量</label>
                   <input type="number" class="form-control" id="count" name="count" min="1" max="30" step="1" value="5"></p>
                 <button type="submit" class="btn btn-primary w-100" id="runTest">
-                  <i class="bi bi-play-fill me-1"></i>Run test
+                  <i class="bi bi-play-fill me-1"></i>运行测试
                 </button>
               </div><!-- .col -->
               <div class="col-12 col-lg-8 col-xxl-9">
-                <h4>Diagnostics output</h4>
-                <small>Configure a test and press Run to start streaming output.</small>
+                <h4>诊断输出</h4>
+                <small>配置测试并按运行开始流式输出。</small>
                 <div id="commandHeading"></div>
                 <pre id="output" class="terminal flex-grow-1 overflow-auto"
                   data-reboot="false"></pre>
                 <div id="streamStatus"></div>
                 <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCopy" disabled>
-                  <i class="bi bi-clipboard me-1"></i>Copy
+                  <i class="bi bi-clipboard me-1"></i>复制
                 </button>
               </div><!-- .col -->
             </div><!-- .row -->

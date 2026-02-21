@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · RTSP Substream</title>
+  <title>thingino · RTSP 子码流</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,29 +22,29 @@
   <div class="container">
     <div data-app-controls></div>
 
-    <h3>RTSP Substream</h3>
+    <h3>RTSP 子码流</h3>
 
     <div class="row mb-3">
       <div class="col-12 col-xl-4">
         <div id="frame" class="position-relative">
-          <img id="preview" src="/a/nostream.svg" class="img-fluid" alt="Image: Preview" tabindex="-1" data-stream="ch1">
+          <img id="preview" src="/a/nostream.svg" class="img-fluid" alt="图片: 预览" tabindex="-1" data-stream="ch1">
         </div>
       </div>
       <div class="col col-xl-8">
         <div class="row g-2">
           <div class="col">
             <p>
-              <label for="stream1_width">Width</label>
+              <label for="stream1_width">宽度</label>
               <input type="text" id="stream1_width" name="stream1_width" class="form-control" value="">
             </p>
             <p>
-              <label for="stream1_height">Height</label>
+              <label for="stream1_height">高度</label>
               <input type="text" id="stream1_height" name="stream1_height" class="form-control" value="">
             </p>
             <p>
-              <label for="stream1_format">Format</label>
+              <label for="stream1_format">格式</label>
               <select class="form-select" id="stream1_format" name="stream1_format">
-                <option value="">- Select -</option>
+                <option value="">- 选择 -</option>
                 <option value="H264">H264</option>
                 <option value="H265">H265</option>
               </select>
@@ -52,23 +52,23 @@
           </div><!-- .col -->
           <div class="col">
             <p>
-              <label for="stream1_fps">FPS</label>
-              <input type="text" id="stream1_fps" name="stream1_fps" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="5" data-max="30" data-step="1">
+              <label for="stream1_fps">帧率</label>
+              <input type="text" id="stream1_fps" name="stream1_fps" class="form-control text-end" value="" pattern="[0-9]{1,}" title="数值" data-min="5" data-max="30" data-step="1">
             </p>
             <p>
               <label for="stream1_gop">GOP</label>
               <input type="text" id="stream1_gop" name="stream1_gop" class="form-control" value="">
             </p>
             <p>
-              <label for="stream1_max_gop">Max GOP</label>
+              <label for="stream1_max_gop">最大 GOP</label>
               <input type="text" id="stream1_max_gop" name="stream1_max_gop" class="form-control" value="">
             </p>
           </div><!-- .col -->
           <div class="col">
             <p>
-              <label for="stream1_mode">Mode</label>
+              <label for="stream1_mode">模式</label>
               <select class="form-select" id="stream1_mode" name="stream1_mode">
-                <option value="">- Select -</option>
+                <option value="">- 选择 -</option>
                 <option value="CBR">CBR</option>
                 <option value="VBR">VBR</option>
                 <option value="FIXQP">FIXQP</option>
@@ -77,32 +77,32 @@
               </select>
             </p>
             <p>
-              <label for="stream1_bitrate">Bitrate</label>
+              <label for="stream1_bitrate">码率</label>
               <input type="text" id="stream1_bitrate" name="stream1_bitrate" class="form-control" value="">
             </p>
             <p>
-              <label for="stream1_profile">Profile</label>
+              <label for="stream1_profile">配置文件</label>
               <input type="text" id="stream1_profile" name="stream1_profile" class="form-control" value="">
             </p>
           </div><!-- .col -->
           <div class="col">
             <p>
-              <label for="stream1_buffers">Buffers</label>
+              <label for="stream1_buffers">缓冲区</label>
               <input type="text" id="stream1_buffers" name="stream1_buffers" class="form-control" value="">
             </p>
             <p>
-              <label for="stream1_rtsp_endpoint">RTSP Endpoint</label>
+              <label for="stream1_rtsp_endpoint">RTSP 端点</label>
               <input type="text" id="stream1_rtsp_endpoint" name="stream1_rtsp_endpoint" class="form-control" value="">
             </p>
             <p class="form-switch">
               <input type="hidden" id="stream1_video_enabled-false" name="stream1_video_enabled" value="false">
               <input type="checkbox" id="stream1_video_enabled" name="stream1_video_enabled" value="true" role="switch" class="form-check-input">
-              <label for="stream1_video_enabled" class="form-check-label">Video in stream</label>
+              <label for="stream1_video_enabled" class="form-check-label">流中包含视频</label>
             </p>
             <p class="form-switch">
               <input type="hidden" id="stream1_audio_enabled-false" name="stream1_audio_enabled" value="false">
               <input type="checkbox" id="stream1_audio_enabled" name="stream1_audio_enabled" value="true" role="switch" class="form-check-input">
-              <label for="stream1_audio_enabled" class="form-check-label">Audio in stream</label>
+              <label for="stream1_audio_enabled" class="form-check-label">流中包含音频</label>
             </p>
           </div>
         </div>
@@ -110,7 +110,7 @@
     </div>
 
     <button type="button" id="save-prudynt-config" class="btn btn-primary mt-3">
-      <i class="bi bi-floppy me-1"></i> Save configuration to file
+      <i class="bi bi-floppy me-1"></i> 保存配置到文件
     </button>
   </div>
 </main>

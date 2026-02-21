@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Webhook Configuration</title>
+  <title>thingino · Webhook 配置</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,43 +25,43 @@
     <section>
       <div class="d-flex align-items-center gap-2 mb-3">
         <a href="tool-send2.html" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Back to Services
+          <i class="bi bi-arrow-left"></i> 返回服务
         </a>
-        <h2 class="mb-0">Webhook Configuration</h2>
+        <h2 class="mb-0">Webhook 配置</h2>
       </div>
 
       <form id="webhookForm" class="needs-validation" novalidate autocomplete="off">
         <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
 
-          <!-- Webhook Settings -->
+          <!-- Webhook 设置 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Webhook Settings</div>
+              <div class="card-header">Webhook 设置</div>
               <div class="card-body">
                 <p>
                   <label for="webhook_url">Webhook URL</label>
                   <input type="url" class="form-control" id="webhook_url" name="webhook_url" placeholder="https://api.example.com/webhook" required>
                 </p>
                 <p>
-                  <label for="webhook_message">Message</label>
+                  <label for="webhook_message">消息</label>
                   <textarea class="form-control" id="webhook_message" name="webhook_message" rows="4" placeholder='{"event":"motion","time":"%datetime%"}'></textarea>
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Content Options -->
+          <!-- 内容选项 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Content Options</div>
+              <div class="card-header">内容选项</div>
               <div class="card-body">
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="webhook_send_photo" name="webhook_send_photo" checked>
-                  <label class="form-check-label" for="webhook_send_photo">Send photo</label>
+                  <label class="form-check-label" for="webhook_send_photo">发送照片</label>
                 </p>
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="webhook_send_video" name="webhook_send_video">
-                  <label class="form-check-label" for="webhook_send_video">Send video</label>
+                  <label class="form-check-label" for="webhook_send_video">发送视频</label>
                 </p>
               </div>
             </div>
@@ -70,10 +70,10 @@
 
         <div class="text-end">
           <button type="button" class="btn btn-outline-secondary" id="webhook-reload">
-            <i class="bi bi-arrow-clockwise"></i> Reload
+            <i class="bi bi-arrow-clockwise"></i> 重新加载
           </button>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i> Save Settings
+            <i class="bi bi-check-circle"></i> 保存设置
           </button>
         </div>
       </form>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Main Stream OSD</title>
+  <title>thingino · 主流 OSD</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,12 +22,12 @@
   <div class="container">
     <div data-app-controls></div>
 
-    <h3>Main Stream OSD</h3>
+    <h3>主流 OSD</h3>
 
     <div class="row mb-3">
       <div class="col-12 col-xl-4">
         <div id="frame" class="position-relative">
-          <img id="preview" src="/a/nostream.svg" class="img-fluid" alt="Image: Preview" tabindex="-1" data-stream="ch0">
+          <img id="preview" src="/a/nostream.svg" class="img-fluid" alt="图像：预览" tabindex="-1" data-stream="ch0">
         </div>
       </div>
       <div class="col col-xl-8">
@@ -36,21 +36,21 @@
             <p class="form-switch">
               <input type="hidden" id="osd0_enabled-false" name="osd0_enabled" value="false">
               <input type="checkbox" id="osd0_enabled" name="osd0_enabled" value="true" role="switch" class="form-check-input">
-              <label for="osd0_enabled" class="form-check-label">OSD enabled</label>
+              <label for="osd0_enabled" class="form-check-label">启用 OSD</label>
             </p>
             <p>
-              <label for="osd0_fontname">Font</label>
+              <label for="osd0_fontname">字体</label>
               <select class="form-select" id="osd0_fontname">
                 <option>default.ttf</option>
               </select>
-              <small><a href="#" data-bs-toggle="modal" data-bs-target="#mdFont">Upload a font</a></small>
+              <small><a href="#" data-bs-toggle="modal" data-bs-target="#mdFont">上传字体</a></small>
             </p>
             <p>
-              <label for="osd0_fontsize">Size</label>
+              <label for="osd0_fontsize">大小</label>
               <input type="text" id="osd0_fontsize" name="osd0_fontsize" class="form-control" value="">
             </p>
             <p>
-              <label for="osd0_strokesize">Shadow</label>
+              <label for="osd0_strokesize">阴影</label>
               <input type="text" id="osd0_strokesize" name="osd0_strokesize" class="form-control" value="">
             </p>
           </div><!-- .col -->
@@ -61,7 +61,7 @@
               <label for="osd0_logo_enabled" class="form-check-label">Logo</label>
             </p>
             <p>
-              <label for="osd0_logo_position">Position (x,y)</label>
+              <label for="osd0_logo_position">位置 (x,y)</label>
               <input type="text" id="osd0_logo_position" name="osd0_logo_position" class="form-control" value="">
             </p>
           </div><!-- .col -->
@@ -69,24 +69,24 @@
             <p class="form-switch">
               <input type="hidden" id="osd0_time_enabled-false" name="osd0_time_enabled" value="false">
               <input type="checkbox" id="osd0_time_enabled" name="osd0_time_enabled" value="true" role="switch" class="form-check-input">
-              <label for="osd0_time_enabled" class="form-check-label">Time</label>
+              <label for="osd0_time_enabled" class="form-check-label">时间</label>
             </p>
             <p>
-              <label for="osd0_time_position">Position (x,y)</label>
+              <label for="osd0_time_position">位置 (x,y)</label>
               <input type="text" id="osd0_time_position" name="osd0_time_position" class="form-control" value="">
             </p>
             <p id="osd0_time_fillcolor_wrap" class="file">
-              <label for="osd0_time_fillcolor">Color</label>
+              <label for="osd0_time_fillcolor">颜色</label>
               <input type="color" id="osd0_time_fillcolor" name="osd0_time_fillcolor" class="form-control input-color">
               <input type="range" id="osd0_time_fillcolor-alpha" name="osd0_time_fillcolor-alpha" min=0 max=255 step=1 class="expert">
             </p>
             <p id="osd0_time_strokecolor_wrap" class="file">
-              <label for="osd0_time_strokecolor">Shadow</label>
+              <label for="osd0_time_strokecolor">阴影</label>
               <input type="color" id="osd0_time_strokecolor" name="osd0_time_strokecolor" class="form-control input-color">
               <input type="range" id="osd0_time_strokecolor-alpha" name="osd0_time_strokecolor-alpha" min=0 max=255 step=1 class="expert">
             </p>
             <p>
-              <label for="osd0_time_format">Format</label>
+              <label for="osd0_time_format">格式</label>
               <input type="text" id="osd0_time_format" name="osd0_time_format" class="form-control" value="">
             </p>
           </div><!-- .col -->
@@ -94,19 +94,19 @@
             <p class="form-switch">
               <input type="hidden" id="osd0_uptime_enabled-false" name="osd0_uptime_enabled" value="false">
               <input type="checkbox" id="osd0_uptime_enabled" name="osd0_uptime_enabled" value="true" role="switch" class="form-check-input">
-              <label for="osd0_uptime_enabled" class="form-check-label">Uptime</label>
+              <label for="osd0_uptime_enabled" class="form-check-label">运行时间</label>
             </p>
             <p>
-              <label for="osd0_uptime_position">Position (x,y)</label>
+              <label for="osd0_uptime_position">位置 (x,y)</label>
               <input type="text" id="osd0_uptime_position" name="osd0_uptime_position" class="form-control" value="">
             </p>
             <p>
-              <label for="osd0_uptime_fillcolor">Color</label>
+              <label for="osd0_uptime_fillcolor">颜色</label>
               <input type="color" id="osd0_uptime_fillcolor" name="osd0_uptime_fillcolor" class="form-control input-color">
               <input type="range" id="osd0_uptime_fillcolor-alpha" name="osd0_uptime_fillcolor-alpha" min=0 max=255 step=1 class="expert">
             </p>
             <p>
-              <label for="osd0_uptime_strokecolor">Shadow</label>
+              <label for="osd0_uptime_strokecolor">阴影</label>
               <input type="color" id="osd0_uptime_strokecolor" name="osd0_uptime_strokecolor" class="form-control input-color">
               <input type="range" id="osd0_uptime_strokecolor-alpha" name="osd0_uptime_strokecolor-alpha" min=0 max=255 step=1 class="expert">
             </p>
@@ -115,24 +115,24 @@
             <p class="form-switch">
               <input type="hidden" id="osd0_usertext_enabled-false" name="osd0_usertext_enabled" value="false">
               <input type="checkbox" id="osd0_usertext_enabled" name="osd0_usertext_enabled" value="true" role="switch" class="form-check-input">
-              <label for="osd0_usertext_enabled" class="form-check-label">User text</label>
+              <label for="osd0_usertext_enabled" class="form-check-label">用户文本</label>
             </p>
             <p>
-              <label for="osd0_usertext_position">Position (x,y)</label>
+              <label for="osd0_usertext_position">位置 (x,y)</label>
               <input type="text" id="osd0_usertext_position" name="osd0_usertext_position" class="form-control" value="">
             </p>
             <p>
-              <label for="osd0_usertext_fillcolor">Color</label>
+              <label for="osd0_usertext_fillcolor">颜色</label>
               <input type="color" id="osd0_usertext_fillcolor" name="osd0_usertext_fillcolor" class="form-control input-color">
               <input type="range" id="osd0_usertext_fillcolor-alpha" name="osd0_usertext_fillcolor-alpha" min=0 max=255 step=1 class="expert">
             </p>
             <p>
-              <label for="osd0_usertext_strokecolor">Shadow</label>
+              <label for="osd0_usertext_strokecolor">阴影</label>
               <input type="color" id="osd0_usertext_strokecolor" name="osd0_usertext_strokecolor" class="form-control input-color">
               <input type="range" id="osd0_usertext_strokecolor-alpha" name="osd0_usertext_strokecolor-alpha" min=0 max=255 step=1 class="expert">
             </p>
             <p>
-              <label for="osd0_usertext_format">Format</label>
+              <label for="osd0_usertext_format">格式</label>
               <input type="text" id="osd0_usertext_format" name="osd0_usertext_format" class="form-control" value="">
             </p>
           </div><!-- .col -->
@@ -141,7 +141,7 @@
     </div><!-- .row -->
 
     <button type="button" id="save-prudynt-config" class="btn btn-primary mt-3">
-      <i class="bi bi-floppy me-1"></i> Save configuration to file
+      <i class="bi bi-floppy me-1"></i> 保存配置到文件
     </button>
   </div><!-- .container -->
 </main>
@@ -152,17 +152,17 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fs-4" id="mdlFont">Upload font file</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title fs-4" id="mdlFont">上传字体文件</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
       </div>
       <div class="modal-body">
         <form id="fontUploadForm" class="mb-4" method="post" action="/x/preview.cgi" enctype="multipart/form-data">
           <input type="hidden" name="form" value="font">
           <div class="mb-3">
-            <label for="fontfile">Upload a TTF file</label>
+            <label for="fontfile">上传 TTF 文件</label>
             <input type="file" class="form-control" id="fontfile" name="fontfile" accept=".ttf,.otf" required>
           </div>
-          <button type="submit" class="btn btn-primary w-100">Upload font</button>
+          <button type="submit" class="btn btn-primary w-100">上传字体</button>
         </form>
       </div>
     </div>

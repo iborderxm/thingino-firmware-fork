@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Ntfy Configuration</title>
+  <title>thingino · Ntfy 配置</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,59 +25,59 @@
     <section>
       <div class="d-flex align-items-center gap-2 mb-3">
         <a href="tool-send2.html" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Back to Services
+          <i class="bi bi-arrow-left"></i> 返回服务
         </a>
-        <h2 class="mb-0">Ntfy Configuration</h2>
+        <h2 class="mb-0">Ntfy 配置</h2>
       </div>
 
       <form id="ntfyForm" class="needs-validation" novalidate autocomplete="off">
         <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
 
-          <!-- Server Settings -->
+          <!-- 服务器设置 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Server Settings</div>
+              <div class="card-header">服务器设置</div>
               <div class="card-body">
                 <div class="row g-1 mb-3">
                   <div class="col-9">
-                    <label for="ntfy_host">Server address</label>
+                    <label for="ntfy_host">服务器地址</label>
                     <input type="text" class="form-control" id="ntfy_host" name="ntfy_host" placeholder="ntfy.sh">
-                    <small class="form-text text-secondary">Defaults to <a href="https://ntfy.sh/" target="_blank">ntfy.sh</a></small>
+                    <small class="form-text text-secondary">默认为 <a href="https://ntfy.sh/" target="_blank">ntfy.sh</a></small>
                   </div>
                   <div class="col-3">
-                    <label for="ntfy_port">Port</label>
+                    <label for="ntfy_port">端口</label>
                     <input type="number" class="form-control" id="ntfy_port" name="ntfy_port" value="443">
                   </div>
                 </div>
                 <p>
-                  <label for="ntfy_topic">Topic</label>
+                  <label for="ntfy_topic">主题</label>
                   <input type="text" class="form-control" id="ntfy_topic" name="ntfy_topic" placeholder="camera-alerts" required>
                 </p>
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="ntfy_use_ssl" name="ntfy_use_ssl" checked>
-                  <label class="form-check-label" for="ntfy_use_ssl">Use SSL</label>
+                  <label class="form-check-label" for="ntfy_use_ssl">使用 SSL</label>
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Authentication -->
+          <!-- 认证设置 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Authentication</div>
+              <div class="card-header">认证设置</div>
               <div class="card-body">
                 <p>
-                  <label for="ntfy_username">Username</label>
+                  <label for="ntfy_username">用户名</label>
                   <input type="text" class="form-control" id="ntfy_username" name="ntfy_username" autocomplete="username">
                 </p>
                 <p>
-                  <label for="ntfy_password">Password</label>
+                  <label for="ntfy_password">密码</label>
                   <input type="password" class="form-control" id="ntfy_password" name="ntfy_password" autocomplete="current-password">
                 </p>
                 <p>
-                  <label for="ntfy_token">Access Token</label>
+                  <label for="ntfy_token">访问令牌</label>
                   <input type="text" class="form-control" id="ntfy_token" name="ntfy_token">
-                  <small class="form-text text-secondary">Use token instead of username/password</small>
+                  <small class="form-text text-secondary">使用令牌代替用户名/密码</small>
                 </p>
               </div>
             </div>
@@ -86,10 +86,10 @@
 
         <div class="text-end">
           <button type="button" class="btn btn-outline-secondary" id="ntfy-reload">
-            <i class="bi bi-arrow-clockwise"></i> Reload
+            <i class="bi bi-arrow-clockwise"></i> 重新加载
           </button>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i> Save Settings
+            <i class="bi bi-check-circle"></i> 保存设置
           </button>
         </div>
       </form>

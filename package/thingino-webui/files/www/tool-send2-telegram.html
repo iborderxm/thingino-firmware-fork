@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Telegram Configuration</title>
+  <title>thingino · Telegram 配置</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,76 +25,76 @@
     <section>
       <div class="d-flex align-items-center gap-2 mb-3">
         <a href="tool-send2.html" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Back to Services
+          <i class="bi bi-arrow-left"></i> 返回服务
         </a>
-        <h2 class="mb-0">Telegram Configuration</h2>
+        <h2 class="mb-0">Telegram 配置</h2>
       </div>
 
       <form id="telegramForm" class="needs-validation" novalidate autocomplete="off">
         <div class="row row-cols-1 row-cols-lg-3 g-4 mb-4">
 
-          <!-- Bot Settings -->
+          <!-- 机器人设置 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Bot Settings</div>
+              <div class="card-header">机器人设置</div>
               <div class="card-body">
                 <p>
-                  <label for="telegram_token">Bot Token</label>
+                  <label for="telegram_token">机器人令牌</label>
                   <input type="text" class="form-control" id="telegram_token" name="telegram_token" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" required>
-                  <small class="form-text text-secondary">Get from <a href="https://t.me/BotFather" target="_blank">@BotFather</a></small>
+                  <small class="form-text text-secondary">从 <a href="https://t.me/BotFather" target="_blank">@BotFather</a> 获取</small>
                 </p>
                 <p>
-                  <label for="telegram_channel">Chat ID</label>
+                  <label for="telegram_channel">聊天 ID</label>
                   <input type="text" class="form-control" id="telegram_channel" name="telegram_channel" placeholder="-100xxxxxxxxxxxx" required>
-                  <small class="form-text text-secondary">ID of the channel to post images to</small>
+                  <small class="form-text text-secondary">要发布图片的频道 ID</small>
                 </p>
                 <p>
-                  <label for="telegram_caption">Photo caption</label>
+                  <label for="telegram_caption">照片说明</label>
                   <input type="text" class="form-control" id="telegram_caption" name="telegram_caption" placeholder="Motion detected at %datetime%">
-                  <small class="form-text text-secondary">Available variables: %hostname, %datetime</small>
+                  <small class="form-text text-secondary">可用变量: %hostname, %datetime</small>
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Message Content -->
+          <!-- 消息内容 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Message Content</div>
+              <div class="card-header">消息内容</div>
               <div class="card-body">
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="telegram_send_photo" name="telegram_send_photo" checked>
-                  <label class="form-check-label" for="telegram_send_photo">Send photo</label>
+                  <label class="form-check-label" for="telegram_send_photo">发送照片</label>
                 </p>
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="telegram_send_video" name="telegram_send_video">
-                  <label class="form-check-label" for="telegram_send_video">Send video</label>
+                  <label class="form-check-label" for="telegram_send_video">发送视频</label>
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Help -->
+          <!-- 帮助 -->
           <div class="col">
-            <h5 class="modal-title">To create a Telegram bot</h5>
-            <p>To create a channel for your Telegram bot:</p>
+            <h5 class="modal-title">创建 Telegram 机器人</h5>
+            <p>为您的 Telegram 机器人创建频道：</p>
             <ol>
-              <li>Start a chat with <a href="https://t.me/BotFather">@BotFather</a></li>
-              <li>Enter <code>/start</code> to start a session.</li>
-              <li>Enter <code>/newbot</code> to create a new bot.</li>
-              <li>Give your bot channel a name, e.g. <i>cool_cam_bot</i>.</li>
-              <li>Give your bot a username, e.g. <i>CoolCamBot</i>.</li>
-              <li>Copy the token assigned to your new bot by the BotFather, and paste it to the form.</li>
+              <li>开始与 <a href="https://t.me/BotFather">@BotFather</a> 聊天</li>
+              <li>输入 <code>/start</code> 开始会话。</li>
+              <li>输入 <code>/newbot</code> 创建新机器人。</li>
+              <li>为您的机器人频道命名，例如 <i>cool_cam_bot</i>。</li>
+              <li>为您的机器人设置用户名，例如 <i>CoolCamBot</i>。</li>
+              <li>复制 BotFather 分配给您新机器人的令牌，并将其粘贴到表单中。</li>
             </ol>
           </div>
         </div>
 
         <div class="text-end">
           <button type="button" class="btn btn-outline-secondary" id="telegram-reload">
-            <i class="bi bi-arrow-clockwise"></i> Reload
+            <i class="bi bi-arrow-clockwise"></i> 重新加载
           </button>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i> Save Settings
+            <i class="bi bi-check-circle"></i> 保存设置
           </button>
         </div>
       </form>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Privacy Screen</title>
+  <title>thingino · 隐私屏幕</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,43 +51,43 @@
 
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">Privacy screen overlays</h2>
-            <small>Configure the dedicated privacy OSD layers for each stream. Changes take effect immediately after the video/OSD threads restart.</small>
-            <button type="button" class="btn btn-outline-secondary" id="privacy-reload" title="Reload values from camera">
-              <i class="bi bi-arrow-clockwise"></i> Reload
+            <h2 class="card-title">隐私屏幕覆盖层</h2>
+            <small>为每个流配置专用的隐私 OSD 层。更改将在视频/OSD 线程重启后立即生效。</small>
+            <button type="button" class="btn btn-outline-secondary" id="privacy-reload" title="从相机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
             <div class="row row-cols-1 row-cols-xl-2 mb-3">
               <div class="col">
-                <h4>Main stream (stream0)</h4>
-                <small>Typically used by RTSP and local recordings.</small>
+                <h4>主码流（stream0）</h4>
+                <small>通常由 RTSP 和本地录制使用。</small>
                 <p class="form-switch"><input class="form-check-input me-1" type="checkbox" role="switch" id="privacy0_enabled" name="privacy0_enabled" value="true">
-                  <label class="form-check-label" for="privacy0_enabled">Enabled on start</label></p>
-                <p><label for="privacy0_text">Overlay text</label>
+                  <label class="form-check-label" for="privacy0_enabled">启动时启用</label></p>
+                <p><label for="privacy0_text">覆盖文本</label>
                   <input type="text" class="form-control" id="privacy0_text" name="privacy0_text" maxlength="160" placeholder="PRIVACY ENABLED"></p>
-                <p><label for="privacy0_fill_color">Fill color</label>
-                  <input type="color" class="form-control form-control-color" id="privacy0_fill_color" name="privacy0_fill_color" aria-label="Fill color picker"></p>
-                <p><label for="privacy0_stroke_color">Stroke color</label>
-                  <input type="color" class="form-control form-control-color" id="privacy0_stroke_color" name="privacy0_stroke_color" aria-label="Stroke color picker"></p>
+                <p><label for="privacy0_fill_color">填充颜色</label>
+                  <input type="color" class="form-control form-control-color" id="privacy0_fill_color" name="privacy0_fill_color" aria-label="填充颜色选择器"></p>
+                <p><label for="privacy0_stroke_color">描边颜色</label>
+                  <input type="color" class="form-control form-control-color" id="privacy0_stroke_color" name="privacy0_stroke_color" aria-label="描边颜色选择器"></p>
               </div><!-- .col -->
               <div class="col">
-                <h4>Substream (stream1)</h4>
-                <small>Used by thumbnails and bandwidth-constrained clients.</small>
+                <h4>子码流（stream1）</h4>
+                <small>由缩略图和带宽受限的客户端使用。</small>
                 <p class="form-switch"><input class="form-check-input me-1" type="checkbox" role="switch" id="privacy1_enabled" name="privacy1_enabled" value="true">
-                  <label class="form-check-label" for="privacy1_enabled">Enabled on load</label></p>
-                <p><label for="privacy1_text">Overlay text</label>
+                  <label class="form-check-label" for="privacy1_enabled">加载时启用</label></p>
+                <p><label for="privacy1_text">覆盖文本</label>
                   <input type="text" class="form-control" id="privacy1_text" name="privacy1_text" maxlength="160" placeholder="PRIVACY ENABLED"></p>
-                <p><label for="privacy1_fill_color">Fill color</label>
-                  <input type="color" class="form-control form-control-color" id="privacy1_fill_color" name="privacy1_fill_color" aria-label="Fill color picker"></p>
-                <p><label for="privacy1_stroke_color">Stroke color</label>
-                  <input type="color" class="form-control form-control-color" id="privacy1_stroke_color" name="privacy1_stroke_color" aria-label="Stroke color picker"></p>
+                <p><label for="privacy1_fill_color">填充颜色</label>
+                  <input type="color" class="form-control form-control-color" id="privacy1_fill_color" name="privacy1_fill_color" aria-label="填充颜色选择器"></p>
+                <p><label for="privacy1_stroke_color">描边颜色</label>
+                  <input type="color" class="form-control form-control-color" id="privacy1_stroke_color" name="privacy1_stroke_color" aria-label="描边颜色选择器"></p>
               </div><!-- .col -->
             </div><!-- .row -->
           </div><!-- -card-body -->
         </div><!-- -card -->
 
-        <button type="submit" id="privacy-save" class="btn btn-primary"><i class="bi bi-save me-1"></i> Save changes</button>
+        <button type="submit" id="privacy-save" class="btn btn-primary"><i class="bi bi-save me-1"></i> 保存更改</button>
       </form>
     </section>
   </div>

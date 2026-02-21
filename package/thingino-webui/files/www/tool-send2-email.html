@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · Email Configuration</title>
+  <title>thingino · 邮件配置</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,95 +25,95 @@
     <section>
       <div class="d-flex align-items-center gap-2 mb-3">
         <a href="tool-send2.html" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Back to Services
+          <i class="bi bi-arrow-left"></i> 返回服务
         </a>
-        <h2 class="mb-0">Email Configuration</h2>
+        <h2 class="mb-0">邮件配置</h2>
       </div>
 
       <form id="emailForm" class="needs-validation" novalidate autocomplete="off">
         <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 mb-4">
 
-          <!-- SMTP Server Settings -->
+          <!-- SMTP 服务器设置 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">SMTP Server</div>
+              <div class="card-header">SMTP 服务器</div>
               <div class="card-body">
                 <div class="row g-1 mb-3">
                   <div class="col-9">
-                    <label for="email_host">Server address</label>
+                    <label for="email_host">服务器地址</label>
                     <input type="text" class="form-control" id="email_host" name="email_host" placeholder="smtp.gmail.com" required>
                   </div>
                   <div class="col-3">
-                    <label for="email_port">Port</label>
+                    <label for="email_port">端口</label>
                     <input type="number" class="form-control" id="email_port" name="email_port" value="587" required>
                   </div>
                 </div>
                 <p>
-                  <label for="email_username">Username</label>
+                  <label for="email_username">用户名</label>
                   <input type="text" class="form-control" id="email_username" name="email_username" autocomplete="username">
                 </p>
                 <p>
-                  <label for="email_password">Password</label>
+                  <label for="email_password">密码</label>
                   <input type="password" class="form-control" id="email_password" name="email_password" autocomplete="current-password">
                 </p>
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="email_use_ssl" name="email_use_ssl">
-                  <label class="form-check-label" for="email_use_ssl">Use TLS/SSL</label>
+                  <label class="form-check-label" for="email_use_ssl">使用 TLS/SSL</label>
                 </p>
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="email_trust_cert" name="email_trust_cert">
-                  <label class="form-check-label" for="email_trust_cert">Ignore SSL certificate validity</label>
+                  <label class="form-check-label" for="email_trust_cert">忽略 SSL 证书有效性</label>
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Email Addresses -->
+          <!-- 邮件地址 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Email Addresses</div>
+              <div class="card-header">邮件地址</div>
               <div class="card-body">
                 <p>
-                  <label for="email_from_name">Sender's name</label>
-                  <input type="text" class="form-control" id="email_from_name" name="email_from_name" placeholder="Camera">
+                  <label for="email_from_name">发件人姓名</label>
+                  <input type="text" class="form-control" id="email_from_name" name="email_from_name" placeholder="摄像机">
                 </p>
                 <p>
-                  <label for="email_from_address">Sender's address</label>
+                  <label for="email_from_address">发件人地址</label>
                   <input type="email" class="form-control" id="email_from_address" name="email_from_address" placeholder="camera@example.com" required>
                 </p>
                 <p>
-                  <label for="email_to_name">Recipient's name</label>
-                  <input type="text" class="form-control" id="email_to_name" name="email_to_name" placeholder="Admin">
+                  <label for="email_to_name">收件人姓名</label>
+                  <input type="text" class="form-control" id="email_to_name" name="email_to_name" placeholder="管理员">
                 </p>
                 <p>
-                  <label for="email_to_address">Recipient's address</label>
+                  <label for="email_to_address">收件人地址</label>
                   <input type="email" class="form-control" id="email_to_address" name="email_to_address" placeholder="admin@example.com" required>
                 </p>
               </div>
             </div>
           </div>
 
-          <!-- Message Content -->
+          <!-- 邮件内容 -->
           <div class="col">
             <div class="card h-100">
-              <div class="card-header">Message Content</div>
+              <div class="card-header">邮件内容</div>
               <div class="card-body">
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="email_send_photo" name="email_send_photo" checked>
-                  <label class="form-check-label" for="email_send_photo">Send snapshot</label>
+                  <label class="form-check-label" for="email_send_photo">发送快照</label>
                 </p>
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="email_send_video" name="email_send_video">
-                  <label class="form-check-label" for="email_send_video">Send video</label>
+                  <label class="form-check-label" for="email_send_video">发送视频</label>
                 </p>
                 <p>
-                  <label for="email_subject">Email subject</label>
-                  <input type="text" class="form-control" id="email_subject" name="email_subject" placeholder="Motion detected">
+                  <label for="email_subject">邮件主题</label>
+                  <input type="text" class="form-control" id="email_subject" name="email_subject" placeholder="检测到动作">
                 </p>
                 <p>
-                  <label for="email_body">Email text</label>
-                  <textarea class="form-control" id="email_body" name="email_body" rows="4" placeholder="Motion was detected at %datetime%"></textarea>
-                  <small class="form-text text-secondary">Line breaks will be replaced with whitespaces</small>
+                  <label for="email_body">邮件正文</label>
+                  <textarea class="form-control" id="email_body" name="email_body" rows="4" placeholder="在 %datetime% 检测到动作"></textarea>
+                  <small class="form-text text-secondary">换行将被替换为空格</small>
                 </p>
               </div>
             </div>
@@ -122,13 +122,13 @@
 
         <div class="text-end">
           <button type="button" class="btn btn-outline-secondary" id="email-reload">
-            <i class="bi bi-arrow-clockwise"></i> Reload
+            <i class="bi bi-arrow-clockwise"></i> 重新加载
           </button>
           <button type="button" class="btn btn-outline-primary" id="test-email">
-            <i class="bi bi-send"></i> Test
+            <i class="bi bi-send"></i> 测试
           </button>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i> Save Settings
+            <i class="bi bi-check-circle"></i> 保存设置
           </button>
         </div>
       </form>

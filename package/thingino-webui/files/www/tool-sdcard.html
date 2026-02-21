@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · SD Card</title>
+  <title>thingino · SD 卡</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,37 +26,37 @@
       <form id="formatForm" class="needs-validation" novalidate autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">SD card management</h2>
-            <small>Inspect mounts, verify capacity, and safely format removable media without taking the camera offline</small>
-            <button type="button" class="btn btn-outline-secondary" id="refreshState" title="Reload values from camera">
-              <i class="bi bi-arrow-clockwise"></i> Reload
+            <h2 class="card-title">SD 卡管理</h2>
+            <small>检查挂载点、验证容量，并在不使摄像机离线的情况下安全格式化可移动媒体</small>
+            <button type="button" class="btn btn-outline-secondary" id="refreshState" title="从摄像机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
-            <p id="statusMessage" class="alert alert-info flex-grow-1 mb-0 status-overlay">Waiting for SD card status...</p>
+            <p id="statusMessage" class="alert alert-info flex-grow-1 mb-0 status-overlay">正在等待 SD 卡状态...</p>
             <section id="noCardPanel" class="d-none">
-              <h3><i class="bi bi-exclamation-triangle me-2"></i> No SD card detected</h3>
-              <p>Insert or reseat an SD card, then press Refresh. Cameras without SD slots will keep this tool disabled.</p>
+              <h3><i class="bi bi-exclamation-triangle me-2"></i> 未检测到 SD 卡</h3>
+              <p>插入或重新插入 SD 卡，然后按重新加载。没有 SD 卡插槽的摄像机将保持此工具禁用。</p>
             </section>
             <div id="cardContent" class="row row-cols-1 row-cols-xl-3 d-none">
               <div class="col mb-3">
-                <h4>Storage overview</h4>
-                <small>Live data pulled directly from the camera.</small>
+                <h4>存储概览</h4>
+                <small>直接从摄像机获取的实时数据。</small>
                 <dl id="deviceSummary" class="row row-cols-1 row-cols-sm-2"></dl>
               </div><!-- .col -->
               <div class="col">
-                <h4>Format SD card</h4>
-                <small class="text-danger">Formatting erases every file on the SD card.</small>
+                <h4>格式化 SD 卡</h4>
+                <small class="text-danger">格式化会擦除 SD 卡上的所有文件。</small>
                 <div id="formatOptions" class="vstack gap-3 mb-3"></div>
-                <div id="formatDisabledNote" class="alert alert-warning d-none">Insert an SD card and refresh to unlock formatting controls.</div>
+                <div id="formatDisabledNote" class="alert alert-warning d-none">插入 SD 卡并刷新以解锁格式化控件。</div>
                 <div class="d-flex flex-wrap gap-3 align-items-center">
                   <button type="submit" class="btn btn-danger" id="formatSubmit" data-confirm-skip="true">
-                    <i class="bi bi-magic me-1"></i>Format SD Card
+                    <i class="bi bi-magic me-1"></i>格式化 SD 卡
                   </button>
                 </div>
                 <div id="formatLogWrap" class="mt-4 d-none">
                   <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#formatLogModal">
-                    <i class="bi bi-window me-1"></i>View log
+                    <i class="bi bi-window me-1"></i>查看日志
                   </button>
                 </div>
               </div><!-- .col -->
@@ -74,27 +74,27 @@
   <div class="modal-dialog modal-dialog-scrollable modal-xl">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="sdDetailsModalLabel">Filesystem details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="sdDetailsModalLabel">文件系统详情</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
       </div>
       <div class="modal-body">
         <div class="mb-4">
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <h6 class="mb-0 text-uppercase small text-secondary">df overview</h6>
+            <h6 class="mb-0 text-uppercase small text-secondary">df 概览</h6>
             <span class="badge text-bg-dark">df -h</span>
           </div>
-          <pre id="partitionOutput" class="terminal">Reading...</pre>
+          <pre id="partitionOutput" class="terminal">正在读取...</pre>
         </div>
         <div>
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <h6 class="mb-0 text-uppercase small text-secondary">Mount points</h6>
+            <h6 class="mb-0 text-uppercase small text-secondary">挂载点</h6>
             <span class="badge text-bg-dark">/proc/mounts</span>
           </div>
-          <pre id="mountOutput" class="terminal">Reading...</pre>
+          <pre id="mountOutput" class="terminal">正在读取...</pre>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
       </div>
     </div>
   </div>
@@ -104,17 +104,17 @@
   <div class="modal-dialog modal-dialog-scrollable modal-xl">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="formatLogModalLabel">Formatter output</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="formatLogModalLabel">格式化程序输出</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
       </div>
       <div class="modal-body">
-        <pre id="formatLog" class="terminal ansi-log">Formatter output will appear here.</pre>
+        <pre id="formatLog" class="terminal ansi-log">格式化程序输出将显示在这里。</pre>
       </div>
       <div class="modal-footer justify-content-between flex-wrap">
         <button type="button" class="btn btn-outline-secondary" id="copyFormatLog" disabled>
-          <i class="bi bi-clipboard me-1"></i>Copy raw log
+          <i class="bi bi-clipboard me-1"></i>复制原始日志
         </button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
       </div>
     </div>
   </div>
@@ -124,17 +124,17 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="formatConfirmModalLabel">Confirm formatting</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="formatConfirmModalLabel">确认格式化</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
       </div>
       <div class="modal-body">
-        <p class="mb-2">Formatting erases every file on the SD card.</p>
-        <p class="mb-0">Continue with <strong><span id="formatConfirmFilesystem">ExFAT</span></strong>?</p>
+        <p class="mb-2">格式化会擦除 SD 卡上的所有文件。</p>
+        <p class="mb-0">继续使用 <strong><span id="formatConfirmFilesystem">ExFAT</span></strong> 吗？</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="formatConfirmCancel">Cancel</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="formatConfirmCancel">取消</button>
         <button type="button" class="btn btn-danger" id="formatConfirmBtn">
-          <i class="bi bi-exclamation-triangle me-1"></i>Erase and format
+          <i class="bi bi-exclamation-triangle me-1"></i>擦除并格式化
         </button>
       </div>
     </div>

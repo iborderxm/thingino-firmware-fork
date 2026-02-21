@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · GPIO Settings</title>
+  <title>thingino · GPIO 引脚</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,10 +26,10 @@
       <form id="gpioForm" class="needs-validation" novalidate autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">GPIO Settings</h2>
-	          <small>Requires reboot after changes.</small>
-            <button type="button" class="btn btn-outline-secondary" id="gpio-reload" title="Reload values from camera">
-              <i class="bi bi-arrow-clockwise"></i> Reload
+            <h2 class="card-title">GPIO 设置</h2>
+	          <small>更改后需要重启。</small>
+            <button type="button" class="btn btn-outline-secondary" id="gpio-reload" title="从相机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
@@ -37,12 +37,12 @@
           </div><!-- .card-body -->
         </div><!-- .card -->
 
-        <button type="submit" id="gpio_submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Save changes</button>
+        <button type="submit" id="gpio_submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> 保存更改</button>
       </form>
     </section>
 
     <section class="ui-debug d-none">
-      <p>Run <code>fw_printenv | grep -E ^(gpio|pwm_ch)_</code>, <code>jct /etc/thingino.json get gpio</code>, or <code>pwm-ctrl -l | grep ^GPIO</code> over SSH for deeper troubleshooting.</p>
+      <p>通过 SSH 运行 <code>fw_printenv | grep -E ^(gpio|pwm_ch)_</code>、<code>jct /etc/thingino.json get gpio</code> 或 <code>pwm-ctrl -l | grep ^GPIO</code> 进行更深入的故障排除。</p>
     </section>
   </div>
 </main>
@@ -53,15 +53,15 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">IR cut GPIO</h5>
+        <h5 class="modal-title">IR 切换 GPIO</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p>The IR cut filter is typically controlled by a combination of two GPIO pins that define the voltage polarity and direction of movement.</p>
+        <p>IR 切换滤光片通常由两个 GPIO 引脚的组合控制，用于定义电压极性和移动方向。</p>
         <p class="mb-0"><a href="https://github.com/themactep/thingino-firmware/wiki/Configuration:-Night-Mode#infrared-cut-filter" target="_blank">Thingino Wiki</a></p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
       </div>
     </div>
   </div>

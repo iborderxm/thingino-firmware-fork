@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>thingino · System usage</title>
+  <title>thingino · 系统使用情况</title>
   <script src="/a/theme-init.js"></script>
   <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,12 +27,12 @@
     <section class="card shadow-sm mb-4">
       <div class="card-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
         <div>
-          <h5 class="mb-0">System usage</h5>
-          <p class="text-secondary small mb-0">Live memory, overlay, and extras storage metrics pulled directly from prudynt.</p>
+          <h5 class="mb-0">系统使用情况</h5>
+          <p class="text-secondary small mb-0">从 prudynt 直接获取的实时内存、覆盖和额外存储指标。</p>
         </div>
         <div class="d-flex gap-2">
           <button type="button" class="btn btn-outline-secondary" id="usage-refresh">
-            <i class="bi bi-arrow-clockwise"></i> Reload
+            <i class="bi bi-arrow-clockwise"></i> 重新加载
           </button>
         </div>
       </div>
@@ -40,13 +40,13 @@
         <div id="usage-error" class="alert alert-danger d-none"></div>
         <div id="usage-spinner" class="text-center text-secondary py-4">
           <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
-          <span>Loading usage metrics...</span>
+          <span>加载使用指标中...</span>
         </div>
         <div id="usage-content" class="d-none">
           <div class="usage-section mb-4" id="usageMemorySection">
             <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
-              <h6 class="mb-0">Memory</h6>
-              <small class="text-secondary" id="usage-memory-summary">Waiting for data...</small>
+              <h6 class="mb-0">内存</h6>
+              <small class="text-secondary" id="usage-memory-summary">等待数据...</small>
             </div>
             <div class="progress progress-stacked memory my-2">
               <div class="progress-bar progress-bar-striped progress-bar-animated usage-bar-active" id="pb-memory-active" style="width: 0%"></div>
@@ -59,8 +59,8 @@
 
           <div class="usage-section mb-4" id="usageOverlaySection">
             <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
-              <h6 class="mb-0">Overlay partition</h6>
-              <small class="text-secondary" id="usage-overlay-summary">Waiting for data...</small>
+              <h6 class="mb-0">覆盖分区</h6>
+              <small class="text-secondary" id="usage-overlay-summary">等待数据...</small>
             </div>
             <div class="progress progress-stacked overlay my-2">
               <div class="progress-bar progress-bar-striped progress-bar-animated usage-bar-overlay" id="pb-overlay-used" style="width: 0%"></div>
@@ -70,8 +70,8 @@
 
           <div class="usage-section mb-2" id="usageExtrasSection">
             <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
-              <h6 class="mb-0">Extras storage</h6>
-              <small class="text-secondary" id="usage-extras-summary">Waiting for data...</small>
+              <h6 class="mb-0">额外存储</h6>
+              <small class="text-secondary" id="usage-extras-summary">等待数据...</small>
             </div>
             <div class="progress progress-stacked extras my-2">
               <div class="progress-bar progress-bar-striped progress-bar-animated usage-bar-extras" id="pb-extras-used" style="width: 0%"></div>
@@ -79,7 +79,7 @@
             <div class="d-flex flex-wrap gap-2 small text-secondary" id="extras-legend"></div>
           </div>
 
-          <div class="text-secondary small" id="usage-updated-at">Data not loaded yet.</div>
+          <div class="text-secondary small" id="usage-updated-at">数据尚未加载。</div>
         </div>
       </div>
     </section>
