@@ -3,7 +3,6 @@
 . /usr/share/common
 
 PRUDYNT_CONFIG="/etc/prudynt.json"
-LIST_FILE="persondetection.list"
 PIDFILE="/var/run/send2email_persondetection.pid"
 CHECK_INTERVAL=5
 
@@ -134,6 +133,13 @@ daemon_loop() {
 }
 
 start() {
+	# 检查是否已经开启邮件通知persondetection.json
+	email_enable=$(jct "persondetection.json" get "enable" 2>/dev/null)
+	if [ -z "$email_enable" ] || [ "$email_enable" = "false" ]; then
+		echo_error "Email notification for persondetection is not enabled in persondetection.json"
+		return 1
+	fi
+
 	if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
 		echo_info "send2email_persondetection is already running"
 		return 0
