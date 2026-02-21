@@ -1,0 +1,194 @@
+#!/bin/env sh
+
+. /usr/share/common
+
+PRUDYNT_CONFIG="/etc/prudynt.json"
+LIST_FILE="persondetection.list"
+PIDFILE="/var/run/send2email_persondetection.pid"
+CHECK_INTERVAL=5
+
+show_help() {
+	echo "Usage: $0 {start|stop|restart|status}
+Where:
+	start         Start the daemon
+	stop          Stop the daemon
+	restart       Restart the daemon
+	status        Show daemon status
+" >&2
+	exit 0
+}
+
+read_save_path() {
+	if [ ! -f "$PRUDYNT_CONFIG" ]; then
+		echo_error "Config file $PRUDYNT_CONFIG not found"
+		return 1
+	fi
+
+	save_path=$(jct "$PRUDYNT_CONFIG" get "persondetection.save_path" 2>/dev/null)
+
+	if [ -z "$save_path" ]; then
+		echo_error "persondetection.save_path not configured"
+		return 1
+	fi
+
+	if [ ! -d "$save_path" ]; then
+		echo_error "Save path directory does not exist: $save_path"
+		return 1
+	fi
+
+	return 0
+}
+
+send_video_email() {
+	local video_file="$1"
+
+	if [ ! -f "$video_file" ]; then
+		echo_warning "Video file not found: $video_file"
+		return 1
+	fi
+
+	local tmpfile=$(mktemp -u).mp4
+	cp "$video_file" "$tmpfile"
+
+	local filename=$(basename "$video_file")
+	local start_time=""
+	local end_time=""
+
+	if echo "$filename" | grep -q "^persondetect_[0-9]\{6\}-[0-9]\{6\}\.mp4$"; then
+		local time_part=$(echo "$filename" | sed 's/^persondetect_\(.*\)\.mp4$/\1/')
+		start_time=$(echo "$time_part" | cut -d'-' -f1)
+		end_time=$(echo "$time_part" | cut -d'-' -f2)
+
+		local start_formatted=$(echo "$start_time" | sed 's/\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1:\2:\3/')
+		local end_formatted=$(echo "$end_time" | sed 's/\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1:\2:\3/')
+
+		local body="检测到有人员通过,视频录制时间:$start_formatted - $end_formatted"
+		local cmd="/usr/sbin/send2email -V -b \"$body\""
+
+		if MOTION_VIDEO_FILE="$tmpfile" sh -c "$cmd"; then
+			rm -f "$tmpfile"
+			return 0
+		else
+			rm -f "$tmpfile"
+			return 1
+		fi
+	fi
+
+	local cmd="/usr/sbin/send2email -V"
+
+	if MOTION_VIDEO_FILE="$tmpfile" sh -c "$cmd"; then
+		rm -f "$tmpfile"
+		return 0
+	else
+		rm -f "$tmpfile"
+		return 1
+	fi
+}
+
+process_video_list() {
+	local list_file="$save_path/$LIST_FILE"
+
+	if [ ! -f "$list_file" ]; then
+		return 0
+	fi
+
+	local count=0
+	local processed_lines=""
+
+	while IFS= read -r video_path || [ -n "$video_path" ]; do
+		[ -z "$video_path" ] && continue
+		[ "${video_path#\#}" != "$video_path" ] && continue
+
+		if send_video_email "$video_path"; then
+			count=$((count + 1))
+		else
+			processed_lines="$processed_lines$video_path"$'\n'
+		fi
+	done < "$list_file"
+
+	if [ $count -gt 0 ]; then
+		echo_info "Sent $count video(s)"
+		
+		if [ -n "$processed_lines" ]; then
+			printf '%s' "$processed_lines" > "$list_file"
+		else
+			rm -f "$list_file"
+		fi
+	fi
+
+	return $count
+}
+
+daemon_loop() {
+	trap 'rm -f "$PIDFILE"; exit 0' TERM INT
+
+	while true; do
+		if read_save_path; then
+			process_video_list
+		fi
+		sleep "$CHECK_INTERVAL"
+	done
+}
+
+start() {
+	if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
+		echo_info "send2email_persondetection is already running"
+		return 0
+	fi
+
+	if ! read_save_path; then
+		echo_error "Failed to read save_path, cannot start daemon"
+		return 1
+	fi
+
+	echo_title "Starting send2email_persondetection daemon"
+	daemon_loop &
+	echo $! > "$PIDFILE"
+	echo_info "Daemon started with PID $(cat $PIDFILE)"
+}
+
+stop() {
+	if [ -f "$PIDFILE" ]; then
+		echo_info "Stopping send2email_persondetection daemon..."
+		kill $(cat "$PIDFILE") 2>/dev/null
+		rm -f "$PIDFILE"
+		echo_info "Daemon stopped"
+	else
+		echo_info "send2email_persondetection is not running"
+	fi
+}
+
+status() {
+	if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
+		echo_info "send2email_persondetection is running (PID: $(cat $PIDFILE))"
+		return 0
+	else
+		echo_info "send2email_persondetection is not running"
+		return 1
+	fi
+}
+
+
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		sleep 1
+		start
+		;;
+	status)
+		status
+		;;
+
+	*)
+		show_help
+		;;
+esac
+
+exit 0

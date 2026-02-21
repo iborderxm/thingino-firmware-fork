@@ -1,0 +1,42 @@
+#!/bin/sh
+
+. /usr/share/common
+
+DAEMON="/usr/sbin/send2email_persondetection"
+PIDFILE="/var/run/send2email_persondetection.pid"
+
+start() {
+	if [ ! -x "$DAEMON" ]; then
+		echo_warning "$DAEMON not found or not executable"
+		return 1
+	fi
+
+	"$DAEMON" start
+}
+
+stop() {
+	"$DAEMON" stop
+}
+
+case "$1" in
+	start)
+		starting "send2email_persondetection"
+		start
+		;;
+	stop)
+		stopping "send2email_persondetection"
+		stop
+		;;
+	restart)
+		stopping "send2email_persondetection"
+		stop
+		sleep 1
+		starting "send2email_persondetection"
+		start
+		;;
+	*)
+		usage "{start|stop|restart}"
+		;;
+esac
+
+exit 0
