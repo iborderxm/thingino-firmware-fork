@@ -557,6 +557,9 @@ jobs:
             echo "FULL_FW_SHA=${FULL_FW}.sha256sum" >> ${GITHUB_ENV}
             echo "UPDATE_FW=${UPDATE_FW}" >> ${GITHUB_ENV}
             echo "UPDATE_FW_SHA=${UPDATE_FW}.sha256sum" >> ${GITHUB_ENV}
+            
+            UPDATE_FW_DATETIME=$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')
+            echo "UPDATE_FW_DATETIME=${UPDATE_FW_DATETIME}" >> ${GITHUB_ENV}
           else
             echo "Matching .bin files not found."
             exit 1
@@ -573,7 +576,7 @@ jobs:
       - name: Upload compiled firmware artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: thingino-${{ matrix.thingino-version }}-firmware--$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')"
+          name: thingino-${{ matrix.thingino-version }}-firmware-${{ env.UPDATE_FW_DATETIME }}
           path: |
             ${{ env.FULL_FW }}
             ${{ env.FULL_FW_UBOOT }}
