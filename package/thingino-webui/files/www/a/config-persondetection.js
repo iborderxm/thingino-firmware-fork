@@ -16,6 +16,7 @@
     'init_time',
     'min_time',
     'recording_duration',
+    'recording_detection_interval',
     'monitor_stream',
     'recording_stream',
     'frame_width',

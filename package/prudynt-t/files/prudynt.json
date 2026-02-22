@@ -139,6 +139,7 @@
     "recording_duration": 15,
     "save_path": "",
     "recording_stream": 1,
+    "recording_detection_interval": 5,
     "enable_perm": false,
     "enable_move": false,
     "permcnt": 1
