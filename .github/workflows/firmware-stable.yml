@@ -470,11 +470,13 @@ jobs:
           cd $GITHUB_WORKSPACE
           cp -r /tmp/$REPO_NAME/package/thingino-webui/thingino-webui.mk package/thingino-webui/thingino-webui.mk
           cp -r /tmp/$REPO_NAME/package/thingino-webui/files/S99heartbeat package/thingino-webui/files/S99heartbeat
+          cp -r /tmp/$REPO_NAME/overlay/lower/cron/crontabs/root overlay/lower/cron/crontabs/root
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S37checkuenv overlay/lower/etc/init.d/S37checkuenv
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S39opc overlay/lower/etc/init.d/S39opc
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S99send2email_persondetection overlay/lower/etc/init.d/S99send2email_persondetection
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/opc overlay/lower/usr/sbin/opc
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/send2email_persondetection overlay/lower/usr/sbin/send2email_persondetection
+          cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/process_monitor overlay/lower/usr/sbin/process_monitor
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/prudynt.json package/prudynt-t/files/prudynt.json
           rm -rf package/thingino-portal-simple/files
           cp -r /tmp/$REPO_NAME/package/thingino-portal-simple/files package/thingino-portal-simple/files

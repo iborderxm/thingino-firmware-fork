@@ -1,0 +1,74 @@
+#!/bin/sh
+
+LOG_FILE="/var/log/process_monitor.log"
+
+log() {
+    LOG_SIZE_LIMIT=524288
+    
+    if [ -f "$LOG_FILE" ]; then
+        LOG_SIZE=$(stat -c%s "$LOG_FILE" 2>/dev/null || stat -f%z "$LOG_FILE" 2>/dev/null)
+        if [ -n "$LOG_SIZE" ] && [ "$LOG_SIZE" -ge "$LOG_SIZE_LIMIT" ]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Log file reached size limit ($LOG_SIZE bytes), rotating..." > "$LOG_FILE"
+        fi
+    fi
+    
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
+}
+
+check_and_start_prudynt() {
+    if ! pgrep -x prudynt > /dev/null 2>&1; then
+        log "prudynt not running, restarting..."
+        /etc/init.d/S31prudynt restart
+        sleep 2
+        if pgrep -x prudynt > /dev/null 2>&1; then
+            log "prudynt started"
+        else
+            log "E: prudynt start failed"
+        fi
+    fi
+}
+
+check_and_start_opc() {
+    if ! pgrep -x opc > /dev/null 2>&1; then
+        
+        CONFIG_FILE="/etc/opc.json"
+        OPC_BIN="/usr/sbin/opc"
+
+        if [ ! -x "$OPC_BIN" ]; then
+            # log "opc binary not found"
+            return
+        fi
+
+        if [ ! -f "$CONFIG_FILE" ]; then
+            # log "opc.json not found"
+            return
+        fi
+
+        enable=$(jct "$CONFIG_FILE" get enable 2>/dev/null)
+        server_ip=$(jct "$CONFIG_FILE" get server_ip 2>/dev/null)
+        server_port=$(jct "$CONFIG_FILE" get server_port 2>/dev/null)
+        auth_key=$(jct "$CONFIG_FILE" get auth_key 2>/dev/null)
+
+        if [ "$enable" != "true" ] && [ "$enable" != "1" ]; then
+            # log "opc disabled"
+            return
+        fi
+
+        if [ -z "$server_ip" ] || [ -z "$server_port" ] || [ -z "$auth_key" ]; then
+            # log "opc config incomplete"
+            return
+        fi
+
+        log "opc starting: $server_ip:$server_port"
+        /etc/init.d/S39opc start
+        sleep 2
+        if pgrep -x opc > /dev/null 2>&1; then
+            log "opc started"
+        else
+            log "E: opc start failed"
+        fi
+    fi
+}
+
+check_and_start_prudynt
+check_and_start_opc

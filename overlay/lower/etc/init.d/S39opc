@@ -20,9 +20,16 @@ start() {
     fi
 
     # Read configuration from opc.json
+    enable=$(jct "$CONFIG_FILE" get enable 2>/dev/null)
     server_ip=$(jct "$CONFIG_FILE" get server_ip 2>/dev/null)
     server_port=$(jct "$CONFIG_FILE" get server_port 2>/dev/null)
     auth_key=$(jct "$CONFIG_FILE" get auth_key 2>/dev/null)
+
+    # Check if opc is enabled
+    if [ "$enable" != "true" ] && [ "$enable" != "1" ]; then
+        echo "opc service is disabled in config, skipping"
+        return 0
+    fi
 
     # Check if all required parameters exist and have values
     if [ -z "$server_ip" ] || [ -z "$server_port" ] || [ -z "$auth_key" ]; then

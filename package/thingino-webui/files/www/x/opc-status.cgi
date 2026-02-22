@@ -38,6 +38,7 @@ if [ -n "$PID" ]; then
   connected="false"
   
   if [ -f "/etc/opc.json" ]; then
+    enable=$(jct /etc/opc.json get enable 2>/dev/null)
     server_ip=$(jct /etc/opc.json get server_ip 2>/dev/null)
     server_port=$(jct /etc/opc.json get server_port 2>/dev/null)
     
@@ -53,4 +54,10 @@ else
   connected="false"
 fi
 
-send_json "{\"running\":$running,\"pid\":\"$pid\",\"connected\":$connected}"
+if [ "$enable" = "true" ] || [ "$enable" = "1" ]; then
+  enabled="true"
+else
+  enabled="false"
+fi
+
+send_json "{\"running\":$running,\"pid\":\"$pid\",\"connected\":$connected,\"enabled\":$enabled}"

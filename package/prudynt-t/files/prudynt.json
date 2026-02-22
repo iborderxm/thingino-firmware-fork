@@ -58,7 +58,7 @@
     "imp_polling_timeout": 500,
     "loglevel": "INFO",
     "memory_monitoring_enabled": true,
-    "osd_pool_size": 1200,
+    "osd_pool_size": 1000,
     "timestamp_validation_enabled": true
   },
   "http": {
@@ -136,7 +136,7 @@
     "init_time": 5,
     "min_time": 2,
     "ivs_polling_timeout": 1000,
-    "recording_duration": 0,
+    "recording_duration": 15,
     "save_path": "",
     "recording_stream": 1,
     "enable_perm": false,
@@ -152,7 +152,7 @@
     "filename": "%Y%m%d/%H-%M-%S",
     "limit": 15,
     "mount": "",
-    "prebuffer_enabled": true,
+    "prebuffer_enabled": false,
     "prebuffer_keyframe_only": true,
     "prebuffer_max_memory_mb": 2,
     "prebuffer_seconds": 5
@@ -165,11 +165,11 @@
     "audio_only_info": "audio from the microphone",
     "est_bitrate": 5000,
     "name": "thingino prudynt",
-    "out_buffer_size": 500000,
+    "out_buffer_size": 450000,
     "packet_loss_threshold": 0.05,
     "password": "thingino",
     "port": 554,
-    "send_buffer_size": 307200,
+    "send_buffer_size": 287200,
     "session_reclaim": 65,
     "username": "thingino"
   },
@@ -189,7 +189,7 @@
     "enabled": true,
     "format": "H264",
     "fps": 0,
-    "gop": 30,
+    "gop": 60,
     "height": 0,
     "qp_init": -1,
     "qp_min": -1,
@@ -214,7 +214,7 @@
         "stroke_color": "#000000CC"
       },
       "logo": {
-        "enabled": true,
+        "enabled": false,
         "height": 30,
         "path": "/usr/share/images/thingino_100x30.bgra",
         "position": "-20,-20",
@@ -254,7 +254,7 @@
         "stroke_color": "#000000CC"
       },
       "usertext": {
-        "enabled": true,
+        "enabled": false,
         "fill_color": "#FFFFFFCC",
         "format": "%hostname",
         "position": "0,10",
@@ -305,7 +305,7 @@
         "stroke_color": "#000000CC"
       },
       "logo": {
-        "enabled": true,
+        "enabled": false,
         "path": "/usr/share/images/thingino_100x30.bgra",
         "position": "-5,-5",
         "rotation": 0,
@@ -345,7 +345,7 @@
         "stroke_color": "#000000CC"
       },
       "usertext": {
-        "enabled": true,
+        "enabled": false,
         "fill_color": "#FFFFFFCC",
         "format": "%hostname",
         "position": "0,5",
@@ -365,7 +365,7 @@
   },
   "stream2": {
     "enabled": true,
-    "fps": 15,
+    "fps": 5,
     "jpeg_channel": 0,
     "jpeg_idle_fps": 1,
     "jpeg_path": "/tmp/snapshot.jpg",
@@ -373,7 +373,7 @@
   },
   "stream3": {
     "enabled": true,
-    "fps": 15,
+    "fps": 5,
     "jpeg_channel": 1,
     "jpeg_idle_fps": 1,
     "jpeg_path": "/tmp/snapshot_ch1.jpg",

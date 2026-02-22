@@ -2,7 +2,7 @@
   'use strict';
 
   const endpoint = '/x/json-config-opc.cgi';
-  const opcParams = ['server_ip', 'server_port', 'auth_key'];
+  const opcParams = ['enable', 'server_ip', 'server_port', 'auth_key'];
 
   const alertArea = $('#opc-alerts');
   const reloadButton = $('#opc-reload');
@@ -101,7 +101,11 @@
         if (Object.prototype.hasOwnProperty.call(config, param)) {
           const el = $('#opc_' + param);
           if (!el) return;
-          el.value = config[param] || '';
+          if (param === 'enable') {
+            el.checked = config[param] === true || config[param] === '1' || config[param] === 'true';
+          } else {
+            el.value = config[param] || '';
+          }
         }
       });
     } finally {
@@ -148,7 +152,11 @@
     opcParams.forEach(param => {
       const el = $('#opc_' + param);
       if (el) {
-        config[param] = el.value;
+        if (param === 'enable') {
+          config[param] = el.checked;
+        } else {
+          config[param] = el.value;
+        }
       }
     });
 
@@ -186,13 +194,21 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       
+      let statusText = '';
+      if (data.enabled) {
+        statusText += '已启用, ';
+      } else {
+        statusText += '已禁用, ';
+      }
+      
       if (data.running) {
         statusIndicator.innerHTML = '<span class="badge bg-success">运行中</span>';
-        statusMessage.textContent = `PID: ${data.pid}, 连接: ${data.connected ? '已连接' : '未连接'}`;
+        statusText += `PID: ${data.pid}, 连接: ${data.connected ? '已连接' : '未连接'}`;
       } else {
         statusIndicator.innerHTML = '<span class="badge bg-danger">未运行</span>';
-        statusMessage.textContent = 'OPC 服务未运行';
+        statusText += 'OPC 服务未运行';
       }
+      statusMessage.textContent = statusText;
     } catch (err) {
       console.error('Failed to check OPC status', err);
       statusIndicator.innerHTML = '<span class="badge bg-secondary">未知</span>';
