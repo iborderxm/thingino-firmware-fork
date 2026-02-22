@@ -203,6 +203,38 @@ function escape(str) {
   printf '[%s]' "$json"
 }
 
+list_date_folders() {
+  local target="$1" json
+  [ -d "$target" ] || return 1
+
+  json=$(LC_ALL=C find "$target" -maxdepth 1 -type d -name "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" -printf '%p|%T@\n' 2>/dev/null | sort -t'|' -k2 -rn | awk -v base="$target" '
+BEGIN { count=0 }
+function escape(str) {
+  gsub(/\\/, "\\\\", str)
+  gsub(/"/, "\\\"", str)
+  gsub(/\r/, "\\r", str)
+  gsub(/\n/, "\\n", str)
+  return str
+}
+{
+  split($0, parts, "|")
+  path=parts[1]
+  timestamp=parts[2]
+  
+  name=path
+  sub(/^.*\//, "", name)
+  
+  path=escape(path)
+  name=escape(name)
+  
+  if (count++) printf(",")
+  printf("{\"name\":\"%s\",\"path\":\"%s\",\"time\":%s}", name, path, timestamp)
+}
+') || return 1
+
+  printf '[%s]' "$json"
+}
+
 get_save_path() {
   local save_path=""
   if [ -f "$PRUDYNT_CONFIG" ]; then
@@ -228,17 +260,35 @@ fi
 save_path=$(get_save_path)
 
 if [ -z "$save_path" ] || [ ! -d "$save_path" ]; then
-  send_json "{\"save_path\":\"$(json_escape "$save_path")\",\"videos\":[]}"
+  send_json "{\"save_path\":\"$(json_escape "$save_path")\",\"folders\":[],\"videos\":[]}"
 fi
 
-videos_json=$(list_videos "$save_path") || json_error 500 "无法列出视频"
+folder_param=$(get_param "folder")
 
-payload=$(cat <<EOF
+if [ -z "$folder_param" ]; then
+  folders_json=$(list_date_folders "$save_path") || json_error 500 "无法列出日期文件夹"
+  payload=$(cat <<EOF
 {
   "save_path": "$(json_escape "$save_path")",
+  "folders": $folders_json,
+  "videos": []
+}
+EOF
+  send_json "$payload"
+else
+  if [ ! -d "$folder_param" ]; then
+    json_error 404 "文件夹不存在"
+  fi
+  videos_json=$(list_videos "$folder_param") || json_error 500 "无法列出视频"
+  folder_name=$(basename "$folder_param")
+  payload=$(cat <<EOF
+{
+  "save_path": "$(json_escape "$save_path")",
+  "current_folder": "$(json_escape "$folder_name")",
+  "current_folder_path": "$(json_escape "$folder_param")",
+  "folders": [],
   "videos": $videos_json
 }
 EOF
-)
-
-send_json "$payload"
+  send_json "$payload"
+fi

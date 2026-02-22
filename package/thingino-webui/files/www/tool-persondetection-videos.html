@@ -43,9 +43,15 @@
         <span id="pathInfoText">正在加载路径信息...</span>
       </div>
 
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb" id="breadcrumb">
+          <li class="breadcrumb-item"><a href="#" id="breadcrumbRoot">人形检测视频</a></li>
+        </ol>
+      </nav>
+
       <div class="table-responsive">
         <table class="table align-middle" id="videoTable">
-          <thead>
+          <thead id="tableHead">
             <tr>
               <th scope="col">文件名</th>
               <th scope="col" class="text-end">大小</th>
