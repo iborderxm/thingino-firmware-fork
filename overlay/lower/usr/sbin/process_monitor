@@ -16,11 +16,11 @@ log() {
 }
 
 check_and_start_prudynt() {
-    if ! pgrep -x prudynt > /dev/null 2>&1; then
+    if ! pgrep prudynt > /dev/null 2>&1; then
         log "prudynt not running, restarting..."
         /etc/init.d/S31prudynt restart
         sleep 2
-        if pgrep -x prudynt > /dev/null 2>&1; then
+        if pgrep prudynt > /dev/null 2>&1; then
             log "prudynt started"
         else
             log "E: prudynt start failed"
@@ -29,7 +29,7 @@ check_and_start_prudynt() {
 }
 
 check_and_start_opc() {
-    if ! pgrep -x opc > /dev/null 2>&1; then
+    if ! pgrep opc > /dev/null 2>&1; then
         
         CONFIG_FILE="/etc/opc.json"
         OPC_BIN="/usr/sbin/opc"
@@ -62,7 +62,7 @@ check_and_start_opc() {
         log "opc starting: $server_ip:$server_port"
         /etc/init.d/S39opc start
         sleep 2
-        if pgrep -x opc > /dev/null 2>&1; then
+        if pgrep opc > /dev/null 2>&1; then
             log "opc started"
         else
             log "E: opc start failed"

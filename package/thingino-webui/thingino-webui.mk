@@ -112,6 +112,8 @@ define THINGINO_WEBUI_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/var/www/streamer-substream.html
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/tool-file-manager.html \
 		$(TARGET_DIR)/var/www/tool-file-manager.html
+	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/tool-persondetection-videos.html \
+		$(TARGET_DIR)/var/www/tool-persondetection-videos.html
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/tool-ping-trace.html \
 		$(TARGET_DIR)/var/www/tool-ping-trace.html
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/tool-record.html \
@@ -212,6 +214,8 @@ define THINGINO_WEBUI_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/var/www/a/theme-init.js
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/tool-file-manager.js \
 		$(TARGET_DIR)/var/www/a/tool-file-manager.js
+	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/tool-persondetection-videos.js \
+		$(TARGET_DIR)/var/www/a/tool-persondetection-videos.js
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/tool-ping-trace.js \
 		$(TARGET_DIR)/var/www/a/tool-ping-trace.js
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/tool-record.js \
@@ -391,6 +395,8 @@ define THINGINO_WEBUI_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/var/www/x/texteditor.cgi
 	$(INSTALL) -D -m 0755 $(THINGINO_WEBUI_PKGDIR)/files/www/x/tool-file-manager.cgi \
 		$(TARGET_DIR)/var/www/x/tool-file-manager.cgi
+	$(INSTALL) -D -m 0755 $(THINGINO_WEBUI_PKGDIR)/files/www/x/tool-persondetection-videos.cgi \
+		$(TARGET_DIR)/var/www/x/tool-persondetection-videos.cgi
 	$(INSTALL) -D -m 0755 $(THINGINO_WEBUI_PKGDIR)/files/www/x/tool-ping-trace.cgi \
 		$(TARGET_DIR)/var/www/x/tool-ping-trace.cgi
 	$(INSTALL) -D -m 0755 $(THINGINO_WEBUI_PKGDIR)/files/www/x/tool-record.cgi \

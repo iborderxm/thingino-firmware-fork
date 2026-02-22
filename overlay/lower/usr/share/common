@@ -299,7 +299,13 @@ is_streamer_disabled() {
 }
 
 is_streamer_running() {
-	pidof prudynt > /dev/null
+	local pidfile="/run/prudynt.pid"
+	if [ -f "$pidfile" ]; then
+		pid=$(cat "$pidfile" 2>/dev/null)
+		[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
+	else
+		pidof prudynt > /dev/null
+	fi
 }
 
 is_gateway_reachable() {
@@ -357,6 +363,19 @@ start_daemon() {
 	command="${COMMAND:-$DAEMON_FULL} -- $DAEMON_ARGS"
 	echo_command "$command"
 	if [ -n "$PIDFILE" ] && [ -f "$PIDFILE" ]; then
+		pid=$(cat "$PIDFILE" 2>/dev/null)
+		if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+			echo_error "$DAEMON_SHORT is already running with PID $pid"
+			return 1
+		else
+			rm -f "$PIDFILE"
+		fi
+	fi
+	if pidof $DAEMON_SHORT > /dev/null 2>&1; then
+		echo_error "$DAEMON_SHORT is already running"
+		return 1
+	fi
+	if [ -n "$PIDFILE" ]; then
 		start-stop-daemon -b -S -m -p $PIDFILE -x $command 2>&1
 	else
 		start-stop-daemon -b -S -x $command 2>&1
