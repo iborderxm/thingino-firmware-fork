@@ -85,20 +85,43 @@ send_video_email() {
 }
 
 process_video_list() {
+	type=$(jct "persondetection.json" get "type" 2>/dev/null)
+	if [ -z "$type" ]; then
+		type="delete"
+	fi
+	# 视频文件处理方式type(delete删除rename重命名)
+	if [ "$type" != "delete" ] && [ "$type" != "rename" ]; then
+		echo_warning "Unknown video file processing type: $type"
+		return 1
+	fi
+
 	local current_date=$(date +%Y%m%d)
-	local yesterday=$(date -d "1 day ago" +%Y%m%d)
+	local yesterday=$(awk 'BEGIN {print strftime("%Y%m%d", systime() - 86400)}')
 	local current_hour=$(date +%H)
 	local video_dir="$save_path/$current_date"
 	local yesterday_dir="$save_path/$yesterday"
 	local count=0
 
+    # 1小时前
+    local oneHourLate=$(awk 'BEGIN {print strftime("%H%M%d", systime() - 3600)}')
+	local end_video_file="persondetect_${oneHourLate}-000000.mp4"
+
 	if [ "$current_hour" = "00" ] && [ -d "$yesterday_dir" ]; then
 		for video_file in $(ls -1 "$yesterday_dir"/*.mp4 2>/dev/null | grep -v "send" | sort); do
 			[ -z "$video_file" ] && continue
 
+			if [ $end_video_file \> $video_file ]; then
+				continue
+			fi
+
 			if send_video_email "$video_file"; then
-				mv "$video_file" "${video_file%.mp4}_send.mp4"
+			    if [ "$type" != "delete" ]; then
+					rm -rf "$video_file"
+				else
+					mv "$video_file" "${video_file%.mp4}_send.mp4"
+				fi
 				count=$((count + 1))
+				sleep "$CHECK_INTERVAL"
 			fi
 		done
 	fi
@@ -107,9 +130,18 @@ process_video_list() {
 		for video_file in $(ls -1 "$video_dir"/*.mp4 2>/dev/null | grep -v "send" | sort); do
 			[ -z "$video_file" ] && continue
 
+			if ["$current_hour" != "00"] && [ $video_file \> $end_video_file ]; then
+				continue
+			fi
+
 			if send_video_email "$video_file"; then
-				mv "$video_file" "${video_file%.mp4}_send.mp4"
+				if [ "$type" != "delete" ]; then
+					rm -rf "$video_file"
+				else
+					mv "$video_file" "${video_file%.mp4}_send.mp4"
+				fi
 				count=$((count + 1))
+				sleep "$CHECK_INTERVAL"
 			fi
 		done
 	fi

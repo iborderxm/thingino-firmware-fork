@@ -472,6 +472,8 @@ jobs:
           cp -r /tmp/$REPO_NAME/package/thingino-webui/files/S99heartbeat package/thingino-webui/files/S99heartbeat
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/TZ overlay/lower/etc/TZ
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/timezone overlay/lower/etc/timezone
+          cp -r /tmp/$REPO_NAME/overlay/lower/etc/persondetection.json overlay/lower/etc/persondetection.json
+          cp -r /tmp/$REPO_NAME/overlay/lower/etc/opc.json overlay/lower/etc/opc.json
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/cron/crontabs/root overlay/lower/etc/cron/crontabs/root
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S37checkuenv overlay/lower/etc/init.d/S37checkuenv
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S39opc overlay/lower/etc/init.d/S39opc
