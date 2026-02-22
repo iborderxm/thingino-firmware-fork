@@ -112,7 +112,6 @@
       tableHead.innerHTML = `
         <tr>
           <th scope="col">文件夹名称</th>
-          <th scope="col">日期</th>
           <th scope="col" class="text-end">操作</th>
         </tr>
       `;
@@ -120,9 +119,6 @@
       tableHead.innerHTML = `
         <tr>
           <th scope="col">文件名</th>
-          <th scope="col" class="text-end">大小</th>
-          <th scope="col">日期</th>
-          <th scope="col" class="text-end">时长</th>
           <th scope="col" class="text-end">操作</th>
         </tr>
       `;
@@ -130,12 +126,15 @@
   }
 
   function renderFolders(folders) {
+    console.log('renderFolders called with folders:', folders);
     tableBody.innerHTML = '';
     if (!folders || !folders.length) {
+      console.log('No folders found, showing empty state');
       emptyState.classList.remove('d-none');
       emptyState.querySelector('p').textContent = '未找到日期文件夹。';
       return;
     }
+    console.log('Folders found, hiding empty state');
     emptyState.classList.add('d-none');
 
     folders.forEach(folder => {
@@ -153,10 +152,6 @@
       nameCell.appendChild(nameLink);
       tr.appendChild(nameCell);
 
-      const dateCell = document.createElement('td');
-      dateCell.textContent = formatFolderDate(folder.time);
-      tr.appendChild(dateCell);
-
       const actionCell = document.createElement('td');
       actionCell.className = 'text-end';
 
@@ -171,15 +166,19 @@
       tr.appendChild(actionCell);
       tableBody.appendChild(tr);
     });
+    console.log('Rendered', folders.length, 'folders');
   }
 
   function renderVideos(videos) {
+    console.log('renderVideos called with videos:', videos);
     tableBody.innerHTML = '';
     if (!videos || !videos.length) {
+      console.log('No videos found, showing empty state');
       emptyState.classList.remove('d-none');
       emptyState.querySelector('p').textContent = '未找到人形检测视频。';
       return;
     }
+    console.log('Videos found, hiding empty state');
     emptyState.classList.add('d-none');
 
     videos.forEach(video => {
@@ -196,20 +195,6 @@
       });
       nameCell.appendChild(nameLink);
       tr.appendChild(nameCell);
-
-      const sizeCell = document.createElement('td');
-      sizeCell.className = 'text-end';
-      sizeCell.textContent = formatFileSize(video.size);
-      tr.appendChild(sizeCell);
-
-      const dateCell = document.createElement('td');
-      dateCell.textContent = formatDate(video.time);
-      tr.appendChild(dateCell);
-
-      const durationCell = document.createElement('td');
-      durationCell.className = 'text-end';
-      durationCell.textContent = formatDuration(video.duration);
-      tr.appendChild(durationCell);
 
       const actionCell = document.createElement('td');
       actionCell.className = 'text-end';
@@ -233,6 +218,7 @@
       tr.appendChild(actionCell);
       tableBody.appendChild(tr);
     });
+    console.log('Rendered', videos.length, 'videos');
   }
 
   async function loadFolders() {
@@ -249,6 +235,9 @@
       });
       const payload = await response.json();
 
+      console.log('Response status:', response.status);
+      console.log('Response payload:', payload);
+
       if (!response.ok || (payload && payload.error)) {
         const message = payload && payload.error ? payload.error.message : `Request failed with status ${response.status}`;
         throw new Error(message || 'Unable to load folders');
@@ -256,6 +245,9 @@
 
       state.folders = payload.folders || [];
       state.savePath = payload.save_path || '';
+
+      console.log('state.folders:', state.folders);
+      console.log('state.folders.length:', state.folders.length);
 
       if (state.savePath) {
         pathInfoText.textContent = `保存路径: ${state.savePath}`;
@@ -267,6 +259,7 @@
       updateBreadcrumb();
       renderFolders(state.folders);
     } catch (error) {
+      console.error('Error loading folders:', error);
       showAlert('danger', error.message || 'Unable to load folders');
       emptyState.classList.remove('d-none');
       emptyState.querySelector('p').textContent = `加载失败: ${error.message}`;

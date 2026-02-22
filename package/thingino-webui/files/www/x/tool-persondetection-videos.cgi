@@ -10,66 +10,52 @@ PRUDYNT_CONFIG="/etc/prudynt.json"
 VIDEO_EXTENSIONS="mp4 avi mov mkv webm"
 
 json_escape() {
-  printf '%s' "$1" | sed \
+  input="$1"
+  result=$(printf '%s' "$input" | sed \
     -e 's/\\/\\\\/g' \
     -e 's/"/\\"/g' \
     -e "s/\r/\\r/g" \
-    -e "s/\n/\\n/g"
+    -e "s/\n/\\n/g")
+  printf '%s' "$result"
 }
 
 send_json() {
-  status="${2:-200 OK}"
+  status="$2"
+  [ -z "$status" ] && status="200 OK"
   printf 'Status: %s\n' "$status"
-  cat <<EOF
-Content-Type: application/json
-Cache-Control: no-store
-Pragma: no-cache
-
-$1
-EOF
+  printf 'Content-Type: application/json\n'
+  printf 'Cache-Control: no-store\n'
+  printf 'Pragma: no-cache\n'
+  printf '\n'
+  printf '%s\n' "$1"
   exit 0
 }
 
 json_error() {
-  code="${1:-400}"
+  code="$1"
   message="$2"
-  send_json "{\"error\":{\"code\":$code,\"message\":\"$(json_escape "$message")\"}}" "${3:-400 Bad Request}"
+  status="$3"
+  [ -z "$code" ] && code="400"
+  [ -z "$status" ] && status="400 Bad Request"
+  send_json "{\"error\":{\"code\":$code,\"message\":\"$(json_escape "$message")\"}}" "$status"
 }
 
 urldecode() {
-  local data="${1//+/ }"
-  printf '%b' "${data//%/\\x}"
+  data=$(echo "$1" | sed 's/+/ /g')
+  printf '%b' "$(echo "$data" | sed 's/%\([0-9A-F][0-9A-F]\)/\\x\1/g')"
 }
 
 get_param() {
-  local key="$1" qs="$QUERY_STRING" pair value
-  [ -z "$qs" ] && return 1
+  key="$1" qs="$QUERY_STRING"
+  [ -z "$qs" ] && return 0
 
-  local oldifs="$IFS"
-  IFS='&'
-  for pair in $qs; do
-    IFS="$oldifs"
-    case "$pair" in
-      "$key"=*)
-        value="${pair#*=}"
-        urldecode "$value"
-        IFS="$oldifs"
-        return 0
-        ;;
-      "$key")
-        printf ''
-        IFS="$oldifs"
-        return 0
-        ;;
-    esac
-    IFS='&'
-  done
-  IFS="$oldifs"
-  return 1
+  value=$(echo "$qs" | sed -n "s/^.*${key}=\([^&]*\).*$/\1/p")
+  [ -n "$value" ] && urldecode "$value"
+  return 0
 }
 
 handle_range_response() {
-  local file="$1"
+  file="$1"
   if [ ! -f "$file" ]; then
     printf 'Status: 404 Not Found\r\n'
     printf 'Content-Type: text/plain\r\n\r\n'
@@ -77,7 +63,7 @@ handle_range_response() {
     exit 0
   fi
 
-  local length start end blocksize
+  length start end blocksize
   length=$(stat -c%s "$file") || length=0
 
   if ! env | grep -q '^HTTP_RANGE'; then
@@ -121,7 +107,7 @@ handle_range_response() {
 }
 
 handle_download() {
-  local file="$1"
+  file="$1"
   if [ ! -f "$file" ]; then
     printf 'Status: 404 Not Found\r\n'
     printf 'Content-Type: text/plain\r\n\r\n'
@@ -129,7 +115,7 @@ handle_download() {
     exit 0
   fi
 
-  local length modified timestamp server
+  length modified timestamp server
   length=$(stat -c%s "$file") || length=0
   modified=$(stat -c%Y "$file") || modified=0
   timestamp=$(TZ=GMT0 date +"%a, %d %b %Y %T %Z" --date="@$modified")
@@ -149,8 +135,8 @@ handle_download() {
 }
 
 is_video_file() {
-  local filename="$1"
-  local ext="${filename##*.}"
+  filename="$1"
+  ext="${filename##*.}"
   ext=$(echo "$ext" | tr '[:upper:]' '[:lower:]')
   case "$ext" in
     mp4|avi|mov|mkv|webm) return 0 ;;
@@ -159,8 +145,8 @@ is_video_file() {
 }
 
 get_video_duration() {
-  local file="$1"
-  local duration=0
+  file="$1"
+  duration=0
   
   if command -v ffprobe >/dev/null 2>&1; then
     duration=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$file" 2>/dev/null)
@@ -171,74 +157,96 @@ get_video_duration() {
 }
 
 list_videos() {
-  local target="$1" json
-  [ -d "$target" ] || return 1
+  target="$1"
+  
+  target=$(echo "$target" | sed 's:/*$::')
+  
+  [ -d "$target" ] || { return 1; }
 
-  json=$(LC_ALL=C find "$target" -type f \( -iname "*.mp4" -o -iname "*.avi" -o -iname "*.mov" -o -iname "*.mkv" -o -iname "*.webm" \) -printf '%p|%s|%T@\n' 2>/dev/null | sort -t'|' -k3 -rn | awk -v base="$target" '
-BEGIN { count=0 }
-function escape(str) {
-  gsub(/\\/, "\\\\", str)
-  gsub(/"/, "\\\"", str)
-  gsub(/\r/, "\\r", str)
-  gsub(/\n/, "\\n", str)
-  return str
+  find_output=$(LC_ALL=C find "$target" -type f \( -iname "*.mp4" -o -iname "*.avi" -o -iname "*.mov" -o -iname "*.mkv" -o -iname "*.webm" \) ! -iname "*temp*" 2>/dev/null | sort -r)
+  
+  if [ -z "$find_output" ]; then
+    echo "[]"
+    return 0
+  fi
+  
+  echo "$find_output" | LC_ALL=C awk -v base="$target" '
+BEGIN { 
+  count=0
+  printf "["
 }
 {
-  split($0, parts, "|")
-  path=parts[1]
-  size=parts[2]
-  timestamp=parts[3]
-  
+  path=$0
   name=path
   sub(/^.*\//, "", name)
   
-  path=escape(path)
-  name=escape(name)
+  gsub(/\\/, "\\\\", path)
+  gsub(/"/, "\\\"", path)
+  gsub(/\r/, "\\r", path)
+  gsub(/\n/, "\\n", path)
+  
+  gsub(/\\/, "\\\\", name)
+  gsub(/"/, "\\\"", name)
+  gsub(/\r/, "\\r", name)
+  gsub(/\n/, "\\n", name)
   
   if (count++) printf(",")
-  printf("{\"name\":\"%s\",\"path\":\"%s\",\"size\":%s,\"time\":%s}", name, path, size, timestamp)
+  printf("{\"name\":\"%s\",\"path\":\"%s\",\"size\":0,\"time\":0}", name, path)
 }
-') || return 1
-
-  printf '[%s]' "$json"
+END {
+  printf "]"
+}'
 }
 
 list_date_folders() {
-  local target="$1" json
-  [ -d "$target" ] || return 1
+  target="$1"
+  
+  target=$(echo "$target" | sed 's:/*$::')
+  
+  [ -d "$target" ] || { return 1; }
 
-  json=$(LC_ALL=C find "$target" -maxdepth 1 -type d -name "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" -printf '%p|%T@\n' 2>/dev/null | sort -t'|' -k2 -rn | awk -v base="$target" '
-BEGIN { count=0 }
-function escape(str) {
-  gsub(/\\/, "\\\\", str)
-  gsub(/"/, "\\\"", str)
-  gsub(/\r/, "\\r", str)
-  gsub(/\n/, "\\n", str)
-  return str
+  find_output=$(LC_ALL=C find "$target" -maxdepth 1 -type d -name "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" 2>/dev/null | sort -r)
+  
+  if [ -z "$find_output" ]; then
+    echo "[]"
+    return 0
+  fi
+  
+  echo "$find_output" | LC_ALL=C awk -v base="$target" '
+BEGIN { 
+  count=0
+  printf "["
 }
 {
-  split($0, parts, "|")
-  path=parts[1]
-  timestamp=parts[2]
-  
+  path=$0
   name=path
   sub(/^.*\//, "", name)
   
-  path=escape(path)
-  name=escape(name)
+  gsub(/\\/, "\\\\", path)
+  gsub(/"/, "\\\"", path)
+  gsub(/\r/, "\\r", path)
+  gsub(/\n/, "\\n", path)
+  
+  gsub(/\\/, "\\\\", name)
+  gsub(/"/, "\\\"", name)
+  gsub(/\r/, "\\r", name)
+  gsub(/\n/, "\\n", name)
   
   if (count++) printf(",")
-  printf("{\"name\":\"%s\",\"path\":\"%s\",\"time\":%s}", name, path, timestamp)
+  printf("{\"name\":\"%s\",\"path\":\"%s\",\"time\":0}", name, path)
 }
-') || return 1
-
-  printf '[%s]' "$json"
+END {
+  printf "]"
+}'
 }
 
 get_save_path() {
-  local save_path=""
+  save_path=""
   if [ -f "$PRUDYNT_CONFIG" ]; then
     save_path=$(jct "$PRUDYNT_CONFIG" get persondetection.save_path 2>/dev/null)
+  fi
+  if [ -z "$save_path" ]; then
+    save_path="/mnt/mmc/persondetection"
   fi
   echo "$save_path"
 }
@@ -259,36 +267,29 @@ fi
 
 save_path=$(get_save_path)
 
-if [ -z "$save_path" ] || [ ! -d "$save_path" ]; then
+if [ ! -d "$save_path" ]; then
+  mkdir -p "$save_path" 2>/dev/null
+fi
+
+if [ ! -d "$save_path" ]; then
   send_json "{\"save_path\":\"$(json_escape "$save_path")\",\"folders\":[],\"videos\":[]}"
 fi
 
 folder_param=$(get_param "folder")
 
-if [ -z "$folder_param" ]; then
-  folders_json=$(list_date_folders "$save_path") || json_error 500 "无法列出日期文件夹"
-  payload=$(cat <<EOF
-{
-  "save_path": "$(json_escape "$save_path")",
-  "folders": $folders_json,
-  "videos": []
-}
-EOF
-  send_json "$payload"
-else
-  if [ ! -d "$folder_param" ]; then
-    json_error 404 "文件夹不存在"
-  fi
-  videos_json=$(list_videos "$folder_param") || json_error 500 "无法列出视频"
-  folder_name=$(basename "$folder_param")
-  payload=$(cat <<EOF
-{
-  "save_path": "$(json_escape "$save_path")",
-  "current_folder": "$(json_escape "$folder_name")",
-  "current_folder_path": "$(json_escape "$folder_param")",
-  "folders": [],
-  "videos": $videos_json
-}
-EOF
-  send_json "$payload"
-fi
+case "$folder_param" in
+  "")
+    folders_json=$(list_date_folders "$save_path")
+    payload=$(printf '{"save_path":"%s","folders":%s,"videos":[]}' "$(json_escape "$save_path")" "$folders_json")
+    send_json "$payload"
+    ;;
+  *)
+    [ ! -d "$folder_param" ] && {
+      json_error 404 "文件夹不存在"
+    }
+    videos_json=$(list_videos "$folder_param")
+    folder_name=$(basename "$folder_param")
+    payload=$(printf '{"save_path":"%s","current_folder":"%s","current_folder_path":"%s","folders":[],"videos":%s}' "$(json_escape "$save_path")" "$(json_escape "$folder_name")" "$(json_escape "$folder_param")" "$videos_json")
+    send_json "$payload"
+    ;;
+esac
