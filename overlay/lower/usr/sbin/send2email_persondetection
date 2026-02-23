@@ -115,7 +115,7 @@ process_video_list() {
 			fi
 
 			if send_video_email "$video_file"; then
-			    if [ "$type" != "delete" ]; then
+			    if [ "$type" == "delete" ]; then
 					rm -rf "$video_file"
 				else
 					mv "$video_file" "${video_file%.mp4}_send.mp4"
@@ -135,7 +135,7 @@ process_video_list() {
 			fi
 
 			if send_video_email "$video_file"; then
-				if [ "$type" != "delete" ]; then
+				if [ "$type" == "delete" ]; then
 					rm -rf "$video_file"
 				else
 					mv "$video_file" "${video_file%.mp4}_send.mp4"
