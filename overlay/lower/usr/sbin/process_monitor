@@ -1,6 +1,7 @@
 #!/bin/sh
 
 LOG_FILE="/var/log/process_monitor.log"
+DISK_THRESHOLD_KB=15360
 
 log() {
     LOG_SIZE_LIMIT=524288
@@ -83,5 +84,97 @@ check_and_start_opc() {
     fi
 }
 
+check_disk_space() {
+    local path="$1"
+    local available_kb=$(df -k "$path" 2>/dev/null | awk 'NR==2 {print $4}')
+    if [ -n "$available_kb" ] && [ "$available_kb" -lt "$DISK_THRESHOLD_KB" ]; then
+        return 1
+    fi
+    return 0
+}
+
+cleanup_old_videos() {
+    local save_path="$1"
+    
+    if [ ! -d "$save_path" ]; then
+        return
+    fi
+    
+    local current_date=$(date +%Y%m%d)
+    local cleaned=0
+    
+    log "checking disk space for $save_path"
+    
+    if check_disk_space "$save_path"; then
+        log "disk space sufficient"
+        return
+    fi
+    
+    log "disk space low, starting cleanup"
+    
+    for date_dir in "$save_path"/*; do
+        if [ -d "$date_dir" ]; then
+            local dir_name=$(basename "$date_dir")
+            
+            if [ "$dir_name" != "$current_date" ]; then
+                log "removing old date directory: $dir_name"
+                rm -rf "$date_dir"
+                cleaned=1
+            fi
+        fi
+    done
+    
+    if [ "$cleaned" -eq 1 ]; then
+        log "removed old date directories"
+    fi
+    
+    if check_disk_space "$save_path"; then
+        log "disk space sufficient after cleanup"
+        return
+    fi
+    
+    local today_dir="$save_path/$current_date"
+    if [ -d "$today_dir" ]; then
+        log "cleaning old videos in current date directory: $current_date"
+        for video in "$today_dir"/persondetect_*.mp4; do
+            if [ -f "$video" ]; then
+                rm -f "$video"
+                log "removed video: $(basename "$video")"
+                
+                if check_disk_space "$save_path"; then
+                    log "disk space sufficient after video cleanup"
+                    return
+                fi
+            fi
+        done
+    fi
+    
+    log "cleanup completed"
+}
+
+check_prudynt_save_path() {
+    PRUDYNT_CONFIG="/etc/prudynt.json"
+    
+    if [ ! -f "$PRUDYNT_CONFIG" ]; then
+        return
+    fi
+    
+    save_path=$(jct "$PRUDYNT_CONFIG" get "persondetection.save_path" 2>/dev/null)
+    
+    if [ -z "$save_path" ]; then
+        return
+    fi
+    
+    case "$save_path" in
+        /tmp*)
+            log "save_path in /tmp, checking disk space: $save_path"
+            cleanup_old_videos "$save_path"
+            ;;
+        *)
+            ;;
+    esac
+}
+
 check_and_start_prudynt
 check_and_start_opc
+check_prudynt_save_path
