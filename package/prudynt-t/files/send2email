@@ -19,8 +19,8 @@ Where:
 	-b body      Letter body
 	-k           Ignore SSL certificate validity
 	-v           Verbose output
-	-S           Send photo
-	-V           Send video
+	-S [path]    Send photo (optional path)
+	-V [path]    Send video (optional path)
 " >&2
 	exit 0
 }
@@ -44,7 +44,7 @@ read_config() {
 
 read_config
 
-while getopts b:f:h:kp:s:t:u:vP:SV flag; do
+while getopts b:f:h:kp:s:t:u:vP:S:V: flag; do
 	case "$flag" in
 		b) body=$OPTARG ;;
 		f) from_address=$OPTARG ;;
@@ -56,8 +56,8 @@ while getopts b:f:h:kp:s:t:u:vP:SV flag; do
 		u) username=$OPTARG ;;
 		v) verbose="true" ;;
 		P) password=$OPTARG ;;
-		S) send_photo="true" ;;
-		V) send_video="true" ;;
+		S) send_photo="true"; photo_path="$OPTARG" ;;
+		V) send_video="true"; video_path="$OPTARG" ;;
 		*) show_help ;;
 	esac
 done
@@ -126,12 +126,20 @@ command="$command -F '=(;type=multipart/mixed'"
 command="$command -F \"=${body};type=text/plain\""
 
 if [ "true" = "$send_photo" ]; then
-	photo=$(copy_photo)
+	if [ -n "$photo_path" ]; then
+		photo="$photo_path"
+	else
+		photo=$(copy_photo)
+	fi
 	command="$command -F 'snapshot=@$photo;type=image/jpeg;encoder=base64'"
 fi
 
 if [ "true" = "$send_video" ]; then
-	video="$(copy_video)"
+	if [ -n "$video_path" ]; then
+		video="$video_path"
+	else
+		video="$(copy_video)"
+	fi
 	case "${video##*.}" in
 		mkv) mime="video/matroska" ;;
 		mov) mime="video/quicktime" ;;

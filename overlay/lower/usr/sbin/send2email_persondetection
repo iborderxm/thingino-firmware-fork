@@ -61,8 +61,8 @@ send_video_email() {
 		local start_formatted=$(echo "$start_time" | sed 's/\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1:\2:\3/')
 		local end_formatted=$(echo "$end_time" | sed 's/\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1:\2:\3/')
 
-		local body="[$start_formatted - $end_formatted]检测到有人员通过"
-		local cmd="/usr/sbin/send2email -V -b \"$body\""
+		local body="[$start_formatted - $end_formatted]检测到行人经过"
+		local cmd="/usr/sbin/send2email -V $tmpfile -b \"$body\""
 
 		if MOTION_VIDEO_FILE="$tmpfile" sh -c "$cmd"; then
 			rm -f "$tmpfile"
@@ -85,7 +85,7 @@ send_video_email() {
 }
 
 process_video_list() {
-	type=$(jct "persondetection.json" get "type" 2>/dev/null)
+	type=$(jct "/etc/persondetection.json" get "type" 2>/dev/null)
 	if [ -z "$type" ]; then
 		type="delete"
 	fi
@@ -107,7 +107,7 @@ process_video_list() {
 	local end_video_file="persondetect_${oneHourLate}-000000.mp4"
 
 	if [ "$current_hour" = "00" ] && [ -d "$yesterday_dir" ]; then
-		for video_file in $(ls -1 "$yesterday_dir"/*.mp4 2>/dev/null | grep -v "send" | sort); do
+		for video_file in $(ls -1 "$yesterday_dir"/*.mp4 2>/dev/null | grep -v "send" | grep -v "temp" | sort); do
 			[ -z "$video_file" ] && continue
 
 			if [ $end_video_file \> $video_file ]; then
@@ -127,7 +127,7 @@ process_video_list() {
 	fi
 	
 	if [ -d "$video_dir" ]; then
-		for video_file in $(ls -1 "$video_dir"/*.mp4 2>/dev/null | grep -v "send" | sort); do
+		for video_file in $(ls -1 "$video_dir"/*.mp4 2>/dev/null | grep -v "send" | grep -v "temp" | sort); do
 			[ -z "$video_file" ] && continue
 
 			if ["$current_hour" != "00"] && [ $video_file \> $end_video_file ]; then
@@ -166,7 +166,7 @@ daemon_loop() {
 
 start() {
 	# 检查是否已经开启邮件通知persondetection.json
-	email_enable=$(jct "persondetection.json" get "enable" 2>/dev/null)
+	email_enable=$(jct "/etc/persondetection.json" get "enable" 2>/dev/null)
 	if [ -z "$email_enable" ] || [ "$email_enable" = "false" ]; then
 		echo_error "Email notification for persondetection is not enabled in persondetection.json"
 		return 1
