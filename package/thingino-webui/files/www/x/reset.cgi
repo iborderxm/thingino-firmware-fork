@@ -37,13 +37,13 @@ build_payload() {
   "actions": [
     {
       "id": "reboot",
-      "title": "重新启动摄像机",
-      "description_html": "重新启动摄像机以应用新设置。这也会清除内存支持分区（如 /tmp）中的临时数据。",
+      "title": "Reboot camera",
+      "description_html": "Reboot the camera to apply new settings. This also clears temporary data in memory-backed partitions such as /tmp.",
       "cta": {
         "type": "form",
         "method": "POST",
         "action": "/x/reboot.cgi",
-        "button": "重新启动摄像机",
+        "button": "Reboot camera",
         "variant": "danger",
         "fields": [
           {"name": "action", "value": "reboot"}
@@ -52,23 +52,23 @@ build_payload() {
     },
     {
       "id": "wipeoverlay",
-      "title": "清除覆盖分区",
-      "description_html": "删除所有<a href=\"/info-overlay.html\">存储在覆盖分区中的文件</a>。大多数自定义内容将丢失。",
+      "title": "Wipe overlay",
+      "description_html": "Remove all <a href=\"/info-overlay.html\">files stored in the overlay partition</a>. Most customizations will be lost.",
       "cta": {
         "type": "link",
         "href": "/firmware-reset.html?action=wipeoverlay",
-        "text": "清除覆盖分区",
+        "text": "Wipe overlay",
         "variant": "danger"
       }
     },
     {
       "id": "fullreset",
-      "title": "重置固件",
-      "description_html": "将固件恢复到出厂状态。所有设置和覆盖文件将被删除。",
+      "title": "Reset firmware",
+      "description_html": "Restore firmware to its factory state. All settings and overlay files will be removed.",
       "cta": {
         "type": "link",
         "href": "/firmware-reset.html?action=fullreset",
-        "text": "重置固件",
+        "text": "Reset firmware",
         "variant": "danger"
       }
     }

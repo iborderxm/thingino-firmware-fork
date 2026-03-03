@@ -7,21 +7,30 @@
 
 API_KEY_FILE="/etc/thingino-api.key"
 
-# Verify API key from header (X-API-Key: your-key-here)
+# Verify API key from header (X-API-Key: your-key-here) or ?token= query param
 # Returns 0 if valid, 1 if invalid
 verify_api_key() {
   local provided_key="$HTTP_X_API_KEY"
-  
+
+  # Fall back to ?token= query parameter (used by ONVIF snapshot URLs)
+  if [ -z "$provided_key" ]; then
+    case "$QUERY_STRING" in
+      token=*) provided_key="${QUERY_STRING#token=}" ;;
+      *token=*) provided_key="${QUERY_STRING##*token=}" ;;
+    esac
+    provided_key="${provided_key%%&*}"
+  fi
+
   [ -z "$provided_key" ] && return 1
-  
+
   # Check if API key file exists
   [ ! -f "$API_KEY_FILE" ] && return 1
-  
+
   # Read stored API key
   local stored_key=$(cat "$API_KEY_FILE" 2>/dev/null | tr -d '\n\r ')
-  
+
   [ -z "$stored_key" ] && return 1
-  
+
   # Compare keys
   [ "$provided_key" = "$stored_key" ] && return 0
   return 1
@@ -32,7 +41,7 @@ verify_api_key() {
 require_auth() {
   # First try session-based auth
   local session_id=$(get_session_from_cookie)
-  
+
   if [ -n "$session_id" ] && validate_session "$session_id"; then
     # Session is valid - export session data for use in script
     export SESSION_ID="$session_id"
@@ -40,7 +49,7 @@ require_auth() {
     export SESSION_IS_DEFAULT_PASSWORD=$(get_session_data "$session_id" "is_default_password")
     return 0
   fi
-  
+
   # No valid session - try API key
   if verify_api_key; then
     # API key is valid
@@ -48,7 +57,7 @@ require_auth() {
     export SESSION_IS_DEFAULT_PASSWORD="false"
     return 0
   fi
-  
+
   # No valid authentication - check if this is a browser request
   if echo "$HTTP_ACCEPT" | grep -q "text/html"; then
     # Browser request - redirect to login page
@@ -69,7 +78,7 @@ require_auth() {
 # For HTML pages, use this to check auth and redirect if needed
 require_auth_html() {
   local session_id=$(get_session_from_cookie)
-  
+
   if [ -z "$session_id" ] || ! validate_session "$session_id"; then
     # Not authenticated - send HTML redirect
     cat <<'EOF'
@@ -86,7 +95,7 @@ require_auth_html() {
 EOF
     exit 0
   fi
-  
+
   # Session is valid
   export SESSION_ID="$session_id"
   export SESSION_USER=$(get_session_data "$session_id" "username")

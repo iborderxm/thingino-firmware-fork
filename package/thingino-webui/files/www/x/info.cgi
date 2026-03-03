@@ -47,8 +47,7 @@ json_error() {
 }
 
 urldecode() {
-  local data="${1//+/ }"
-  printf '%b' "${data//%/\\x}"
+  printf '%b' "$(echo "$1" | sed 's/+/ /g; s/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')"
 }
 
 button_restore_from_rom() {
@@ -56,11 +55,11 @@ button_restore_from_rom() {
   [ -f "/rom/$target" ] || return 0
 
   if diff -q "/rom/$target" "$target" >/dev/null 2>&1; then
-    printf '<p class="small fst-italic">文件与 ROM 中的版本匹配。</p>'
+    printf '<p class="small fst-italic">File matches the version in ROM.</p>'
     return 0
   fi
 
-  printf '<p><a class="btn btn-danger" href="/x/restore.cgi?f=%s">用 ROM 中的版本替换 %s</a></p>' "$target" "$target"
+  printf '<p><a class="btn btn-danger" href="/x/restore.cgi?f=%s">Replace %s with its version from ROM</a></p>' "$target" "$target"
 }
 
 collect_outputs() {
@@ -137,8 +136,8 @@ resolve_commands() {
     crontab)
       cmd="crontab -l"
       extras=$(cat <<'EOF'
-<p><a href="https://devhints.io/cron">Cron 语法速查表</a></p>
-<p><button class="btn btn-warning" onclick="editFile('/etc/cron/crontabs/root')">编辑文件</button></p>
+<p><a href="https://devhints.io/cron">Cron syntax cheatsheet</a></p>
+<p><button class="btn btn-warning" onclick="editFile('/etc/cron/crontabs/root')">Edit file</button></p>
 EOF
 )
       ;;

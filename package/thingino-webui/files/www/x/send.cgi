@@ -66,8 +66,7 @@ redirect_back() {
 }
 
 urldecode() {
-  local data="${1//+/ }"
-  printf '%b' "${data//%/\\x}"
+  printf '%b' "$(echo "$1" | sed 's/+/ /g; s/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')"
 }
 
 set_param_value() {
@@ -214,7 +213,7 @@ case "$target" in
       json_ok "Sent to $target"
     fi
     ;;
-  email | ftp | gphotos | mqtt | nfty | storage | webhook)
+  email | ftp | gphotos | mqtt | ntfy | storage | webhook)
     webui_log "send.cgi: target=$target, type=$type, opts='$opts', verbose_flag='$verbose_flag'"
     if [ -n "$verbose_flag" ]; then
       if [ -n "$opts" ]; then

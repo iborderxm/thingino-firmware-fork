@@ -34,8 +34,7 @@ json_error() {
 }
 
 urldecode() {
-  local data="${1//+/ }"
-  printf '%b' "${data//%/\\x}"
+  printf '%b' "$(echo "$1" | sed 's/+/ /g; s/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')"
 }
 
 get_param() {
@@ -239,16 +238,16 @@ if [ -n "$dl_param" ]; then
 fi
 
 if [ -n "$REQUEST_METHOD" ] && [ "$REQUEST_METHOD" != "GET" ]; then
-  json_error 405 "不允许的方法" "405 Method Not Allowed"
+  json_error 405 "Method not allowed" "405 Method Not Allowed"
 fi
 
 cd_param=$(get_param "cd")
 target_dir="${cd_param:-/}"
 
-resolved_dir=$(cd "$target_dir" 2>/dev/null && pwd -P) || json_error 404 "未找到目录" "404 Not Found"
+resolved_dir=$(cd "$target_dir" 2>/dev/null && pwd -P) || json_error 404 "Directory not found" "404 Not Found"
 dir=$(printf '%s' "$resolved_dir" | sed 's#///*#/#g')
 
-entries_json=$(list_entries "$dir") || json_error 500 "无法列出目录"
+entries_json=$(list_entries "$dir") || json_error 500 "Unable to list directory"
 breadcrumbs_json=$(build_breadcrumbs "$dir")
 parent=$(dirname "$dir")
 [ -n "$parent" ] || parent="/"

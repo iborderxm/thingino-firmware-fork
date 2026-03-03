@@ -145,8 +145,7 @@ is_non_negative_int() {
 }
 
 urldecode() {
-  local data="${1//+/ }"
-  printf '%b' "${data//%/\\x}"
+  printf '%b' "$(echo "$1" | sed 's/+/ /g; s/%\([0-9A-Fa-f][0-9A-Fa-f]\)/\\x\1/g')"
 }
 
 read_request_body() {
@@ -320,7 +319,7 @@ send_state_response() {
 
 update_timelapse_cron() {
   local tmpfile
-  tmpfile=$(mktemp) || json_error 500 "无法更新延时摄影计划"
+  tmpfile=$(mktemp) || json_error 500 "Unable to update timelapse schedule"
   if [ -f "$CRONTABS" ]; then
     cat "$CRONTABS" > "$tmpfile"
   else
@@ -335,7 +334,7 @@ update_timelapse_cron() {
   fi
   if ! mv "$tmpfile" "$CRONTABS"; then
     rm -f "$tmpfile"
-    json_error 500 "无法写入延时摄影计划"
+    json_error 500 "Unable to write timelapse schedule"
   fi
 }
 
@@ -353,16 +352,16 @@ process_video_form() {
   vr_autostart=$(normalize_bool "$vr_autostart")
   case "$vr_channel" in 0|1) : ;; *) vr_channel=0 ;; esac
   if ! is_positive_int "$vr_duration"; then
-    json_error 422 "片段持续时间必须为正整数"
+    json_error 422 "Clip duration must be a positive integer"
   fi
   if ! is_positive_int "$vr_limit"; then
-    json_error 422 "存储限制必须为正整数"
+    json_error 422 "Storage limit must be a positive integer"
   fi
-  [ -z "$vr_mount" ] && json_error 422 "录像挂载点不能为空。"
+  [ -z "$vr_mount" ] && json_error 422 "Record mount cannot be empty."
   case "$vr_filename" in
     /*) vr_filename="${vr_filename#/}" ;;
   esac
-  [ -z "$vr_filename" ] && json_error 422 "录像文件名不能为空。"
+  [ -z "$vr_filename" ] && json_error 422 "Record filename cannot be empty."
 
   vr_set_value autostart "$vr_autostart"
   vr_set_value channel "$vr_channel"
@@ -374,11 +373,11 @@ process_video_form() {
 
   if ! jct "$vr_config_file" import "$vr_temp_config_file"; then
     rm -f "$vr_temp_config_file"
-    json_error 500 "无法更新视频录像机配置"
+    json_error 500 "Failed to update video recorder configuration"
   fi
   rm -f "$vr_temp_config_file"
   update_caminfo
-  send_state_response "视频录像机设置已更新。"
+  send_state_response "Video recorder settings updated."
 }
 
 process_timelapse_form() {
@@ -409,14 +408,14 @@ process_timelapse_form() {
   esac
 
   if ! is_positive_int "$tl_interval"; then
-    json_error 422 "快照间隔必须为正整数"
+    json_error 422 "Snapshot interval must be a positive integer"
   fi
   if ! is_non_negative_int "$tl_keep_days"; then
-    json_error 422 "保留天数必须为零或更大"
+    json_error 422 "Retention days must be zero or greater"
   fi
   if [ "$tl_enabled" = "true" ]; then
-    [ -z "$tl_mount" ] && json_error 422 "延时摄影挂载点不能为空。"
-    [ -z "$tl_filename" ] && json_error 422 "延时摄影文件名不能为空。"
+    [ -z "$tl_mount" ] && json_error 422 "Timelapse mount cannot be empty."
+    [ -z "$tl_filename" ] && json_error 422 "Timelapse filename cannot be empty."
   fi
 
   tl_set_value enabled "$tl_enabled"
@@ -434,11 +433,11 @@ process_timelapse_form() {
 
   if ! jct "$tl_config_file" import "$tl_temp_config_file"; then
     rm -f "$tl_temp_config_file"
-    json_error 500 "无法更新延时摄影配置"
+    json_error 500 "Failed to update timelapse configuration"
   fi
   rm -f "$tl_temp_config_file"
   update_timelapse_cron
-  send_state_response "延时摄影录像机设置已更新。"
+  send_state_response "Timelapse recorder settings updated."
 }
 
 REQUEST_METHOD=${REQUEST_METHOD:-GET}
