@@ -41,8 +41,8 @@
     "switch_above_percent": 80,
     "switch_below_percent": 15,
     "tolerance_percent": 50,
-    "total_gain_day_threshold": 300,
-    "total_gain_night_threshold": 3000,
+    "total_gain_day_threshold": 500,
+    "total_gain_night_threshold": 15000,
     "controls": {
       "binswitch": true,
       "color": true,
