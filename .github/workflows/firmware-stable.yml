@@ -471,18 +471,18 @@ jobs:
           
           cp -r /tmp/$REPO_NAME/configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv.uenv.txt configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv.uenv.txt
           cp -r /tmp/$REPO_NAME/package/thingino-webui/files/S99heartbeat package/thingino-webui/files/S99heartbeat
-          cp -r /tmp/$REPO_NAME/overlay/lower/etc/TZ overlay/lower/etc/TZ
-          cp -r /tmp/$REPO_NAME/overlay/lower/etc/timezone overlay/lower/etc/timezone
-          cp -r /tmp/$REPO_NAME/overlay/lower/etc/persondetection.json overlay/lower/etc/persondetection.json
-          cp -r /tmp/$REPO_NAME/overlay/lower/etc/opc.json overlay/lower/etc/opc.json
-          cp -r /tmp/$REPO_NAME/overlay/lower/etc/cron/crontabs/root overlay/lower/etc/cron/crontabs/root
-          cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S37checkuenv overlay/lower/etc/init.d/S37checkuenv
-          cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S39opc overlay/lower/etc/init.d/S39opc
-          cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S99send2email_persondetection overlay/lower/etc/init.d/S99send2email_persondetection
-          cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/opc overlay/lower/usr/sbin/opc
-          cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/send2email_persondetection overlay/lower/usr/sbin/send2email_persondetection
-          cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/process_monitor overlay/lower/usr/sbin/process_monitor
-          cp -r /tmp/$REPO_NAME/overlay/lower/usr/share/common overlay/lower/usr/share/common
+          cp -r /tmp/$REPO_NAME/overlay/lower/etc/TZ overlay/etc/TZ
+          cp -r /tmp/$REPO_NAME/overlay/lower/etc/timezone overlay/etc/timezone
+          cp -r /tmp/$REPO_NAME/overlay/lower/etc/persondetection.json overlay/etc/persondetection.json
+          cp -r /tmp/$REPO_NAME/overlay/lower/etc/opc.json overlay/etc/opc.json
+          cp -r /tmp/$REPO_NAME/overlay/lower/etc/cron/crontabs/root overlay/etc/cron/crontabs/root
+          cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S37checkuenv overlay/etc/init.d/S37checkuenv
+          cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S39opc overlay/etc/init.d/S39opc
+          cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S99send2email_persondetection overlay/etc/init.d/S99send2email_persondetection
+          cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/opc overlay/usr/sbin/opc
+          cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/send2email_persondetection overlay/usr/sbin/send2email_persondetection
+          cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/process_monitor overlay/usr/sbin/process_monitor
+          cp -r /tmp/$REPO_NAME/overlay/lower/usr/share/common overlay/usr/share/common
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/prudynt.json package/prudynt-t/files/prudynt.json
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/send2email package/prudynt-t/files/send2email
           rm -rf package/thingino-portal-simple/files
