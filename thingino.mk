@@ -1,5 +1,8 @@
 $(info --- FILE: thingino.mk)
 
+# Define qstrip if not already defined (usually defined by Buildroot)
+qstrip ?= $(strip $(subst ",,$(1)))
+
 SIZE_1G := 1073741824
 SIZE_512M := 536870912
 SIZE_256M := 268435456
@@ -508,14 +511,39 @@ export KERNEL_VERSION_4
 # IMAGE SENSOR
 #
 
-SENSOR_1_MODEL := $(BR2_SENSOR_1_NAME)
-SENSOR_2_MODEL := $(BR2_SENSOR_2_NAME)
-SENSOR_3_MODEL := $(BR2_SENSOR_3_NAME)
-SENSOR_4_MODEL := $(BR2_SENSOR_4_NAME)
+SENSOR_1_MODEL := $(call qstrip,$(BR2_SENSOR_1_NAME))
+SENSOR_2_MODEL := $(call qstrip,$(BR2_SENSOR_2_NAME))
+SENSOR_3_MODEL := $(call qstrip,$(BR2_SENSOR_3_NAME))
+SENSOR_4_MODEL := $(call qstrip,$(BR2_SENSOR_4_NAME))
+
+# Filter out "none" values
+ifeq ($(SENSOR_1_MODEL),none)
+SENSOR_1_MODEL :=
+endif
+ifeq ($(SENSOR_2_MODEL),none)
+SENSOR_2_MODEL :=
+endif
+ifeq ($(SENSOR_3_MODEL),none)
+SENSOR_3_MODEL :=
+endif
+ifeq ($(SENSOR_4_MODEL),none)
+SENSOR_4_MODEL :=
+endif
+
+SENSOR_1_PARAMS := $(call qstrip,$(BR2_SENSOR_1_PARAMS))
+SENSOR_2_PARAMS := $(call qstrip,$(BR2_SENSOR_2_PARAMS))
+SENSOR_3_PARAMS := $(call qstrip,$(BR2_SENSOR_3_PARAMS))
+SENSOR_4_PARAMS := $(call qstrip,$(BR2_SENSOR_4_PARAMS))
+
 export SENSOR_1_MODEL
 export SENSOR_2_MODEL
 export SENSOR_3_MODEL
 export SENSOR_4_MODEL
+
+export SENSOR_1_PARAMS
+export SENSOR_2_PARAMS
+export SENSOR_3_PARAMS
+export SENSOR_4_PARAMS
 
 #
 # ISP

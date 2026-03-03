@@ -1,7 +1,6 @@
 LIGHTNVR_SITE_METHOD = git
 LIGHTNVR_SITE = https://github.com/opensensor/lightNVR
-LIGHTNVR_SITE_BRANCH = main
-LIGHTNVR_VERSION = 72865cf2a3b7ee2470af1fb48397f60e50c891f7
+LIGHTNVR_VERSION = 4746e1b75112de64ddcc2aa11e5fa61c47e68ccf
 
 LIGHTNVR_LICENSE = MIT
 LIGHTNVR_LICENSE_FILES = COPYING
@@ -9,7 +8,7 @@ LIGHTNVR_LICENSE_FILES = COPYING
 LIGHTNVR_INSTALL_STAGING = YES
 
 # Dependencies
-LIGHTNVR_DEPENDENCIES = thingino-ffmpeg thingino-libcurl sqlite host-nodejs cjson libuv
+LIGHTNVR_DEPENDENCIES = thingino-ffmpeg thingino-libcurl sqlite host-nodejs cjson libuv go2rtc
 HOST_LIGHTNVR_DEPENDENCIES = host-nodejs
 
 ifeq ($(BR2_PACKAGE_MBEDTLS),y)
@@ -22,12 +21,14 @@ endif
 
 # Enable SOD with dynamic linking and go2rtc, use bundled cJSON
 LIGHTNVR_CONF_OPTS = \
-	-DENABLE_SOD=ON \
+	-DENABLE_SOD=OFF \
 	-DSOD_DYNAMIC_LINK=ON \
 	-DENABLE_GO2RTC=ON \
 	-DGO2RTC_BINARY_PATH=/bin/go2rtc \
 	-DGO2RTC_CONFIG_DIR=/etc/lightnvr/go2rtc \
-	-DGO2RTC_API_PORT=1984
+	-DGO2RTC_API_PORT=1984 \
+	-DCMAKE_BUILD_TYPE=Release
+
 
 # Build web assets before CMake configuration
 # Web assets are no longer checked into git, so we build them here
@@ -67,6 +68,8 @@ define LIGHTNVR_INSTALL_APP_FILES
 	$(INSTALL) -m 755 -d $(TARGET_DIR)/opt/lightnvr/models
 	$(INSTALL) -m 0755 -D $(@D)/bin/lightnvr $(TARGET_DIR)/usr/bin/lightnvr
 	$(INSTALL) -m 0755 -D $(LIGHTNVR_PKGDIR)/files/S95lightnvr $(TARGET_DIR)/etc/init.d/S95lightnvr
+	# lightnvr manages go2rtc directly; remove standalone go2rtc init script if present
+	rm -f $(TARGET_DIR)/etc/init.d/S97go2rtc
 endef
 
 # SOD shared libraries installation - specifically using the src/sod version
@@ -80,7 +83,6 @@ endef
 # The complete target installation command set
 define LIGHTNVR_INSTALL_TARGET_CMDS
 	$(LIGHTNVR_INSTALL_APP_FILES)
-	$(LIGHTNVR_INSTALL_LIBSOD)
 endef
 
 $(eval $(cmake-package))

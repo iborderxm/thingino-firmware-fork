@@ -1,9 +1,5 @@
-#THINGINO_FFMPEG_VERSION = dc39a576ad8c489bf229c4acdf5c347b1dd264b2
-#THINGINO_FFMPEG_SITE = https://github.com/FFmpeg/FFmpeg.git
-#THINGINO_FFMPEG_SITE_METHOD = git
-
 THINGINO_FFMPEG_VERSION = 8.0.1
-THINGINO_FFMPEG_SOURCE = ffmpeg-$(FFMPEG_VERSION).tar.xz
+THINGINO_FFMPEG_SOURCE = ffmpeg-$(THINGINO_FFMPEG_VERSION).tar.xz
 THINGINO_FFMPEG_SITE = https://ffmpeg.org/releases
 
 THINGINO_FFMPEG_LICENSE = LGPL-2.1+, libjpeg license
@@ -86,19 +82,33 @@ THINGINO_FFMPEG_CONF_OPTS = \
 	--enable-avformat \
 	--enable-avcodec \
 	--enable-network \
-	--enable-static \
 	--enable-ffmpeg \
 	--enable-protocol=file \
 	--enable-protocol=tcp \
 	--enable-protocol=udp
 
 # Apply different base configurations based on variant
-ifneq ($(BR2_PACKAGE_THINGINO_FFMPEG_DEV),y)
+ifeq ($(BR2_PACKAGE_THINGINO_FFMPEG_LIGHTNVR),y)
+# LIGHTNVR: build shared libraries so lightnvr binary links dynamically
+THINGINO_FFMPEG_CONF_OPTS += \
+	$(THINGINO_FFMPEG_DISABLE_JUNK) \
+	--enable-muxer=segment \
+	--enable-shared \
+	--disable-static \
+	--extra-cflags="-Os -flto-partition=none" \
+	--extra-ldflags="-z max-page-size=0x1000 -flto-partition=none -Wl,--gc-sections" \
+	--disable-libx264 \
+	--disable-libx265 \
+	--disable-libdav1d \
+	--disable-libvpx \
+	--disable-libopus
+else ifneq ($(BR2_PACKAGE_THINGINO_FFMPEG_DEV),y)
 # For IPC and NVR: use minimal configuration with selective enabling
 THINGINO_FFMPEG_CONF_OPTS += \
 	$(THINGINO_FFMPEG_DISABLE_JUNK) \
 	--enable-muxer=segment \
 	--disable-shared \
+	--enable-static \
 	--extra-cflags="-Os -flto-partition=none" \
 	--extra-ldflags="-z max-page-size=0x1000 -flto-partition=none -Wl,--gc-sections" \
 	--disable-libx264 \

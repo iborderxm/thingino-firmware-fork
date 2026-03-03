@@ -25,12 +25,8 @@ endif
 IP ?= 192.168.1.10
 CAMERA_IP_ADDRESS := $(IP)
 
-# Device of SD card
-SDCARD_DEVICE ?= /dev/sdf
-
 # TFTP server IP address to upload compiled images to (leave empty to disable TFTP copy)
 TFTP_IP_ADDRESS ?=
-
 # TFTP server root directory for local server
 TFTP_ROOT ?= /srv/tftp
 
@@ -40,7 +36,7 @@ SCRIPTS_DIR := $(BR2_EXTERNAL)/scripts
 
 # Buildroot downloads directory
 # can be reused from environment, just export the value:
-# export BR2_DL_DIR = /path/to/your/local/storage
+# export BR2_DL_DIR=/path/to/your/local/storage
 BR2_DL_DIR ?= $(BR2_EXTERNAL)/dl
 
 # repo data
@@ -51,8 +47,6 @@ BUILD_DATE = "$(shell env -u SOURCE_DATE_EPOCH TZ=UTC date '+%Y-%m-%d %H:%M:%S %
 
 ifeq ($(GROUP),github)
 	CAMERA_SUBDIR := configs/github
-else ifeq ($(GROUP),modules)
-	CAMERA_SUBDIR := configs/modules
 else ifeq ($(GROUP),)
 	CAMERA_SUBDIR := configs/cameras
 else
@@ -80,9 +74,6 @@ HOST_DIR = $(OUTPUT_DIR)/host
 CONFIG_PARTITION_DIR = $(OUTPUT_DIR)/config
 export CONFIG_PARTITION_DIR
 
-STDOUT_LOG ?= $(OUTPUT_DIR)/compilation.log
-STDERR_LOG ?= $(OUTPUT_DIR)/compilation-errors.log
-
 # include thingino makefile only when board configuration is available
 ifeq ($(SKIP_BOARD_SELECTION),)
 include $(BR2_EXTERNAL)/thingino.mk
@@ -98,24 +89,10 @@ else
 FIGLET := $(shell command -v figlet) -t -f pagga
 endif
 
-SIZE_1G := 1073741824
-SIZE_512M := 536870912
-SIZE_256M := 268435456
-SIZE_128M := 134217728
-SIZE_32M := 33554432
-SIZE_16M := 16777216
 SIZE_8M := 8388608
-SIZE_320K := 327680
-SIZE_288K := 294912
 SIZE_256K := 262144
-SIZE_224K := 229376
-SIZE_192K := 196608
-SIZE_128K := 131072
 SIZE_64K := 65536
 SIZE_32K := 32768
-SIZE_16K := 16384
-SIZE_8K := 8192
-SIZE_4K := 4096
 
 ALIGN_BLOCK := $(SIZE_32K)
 
@@ -129,6 +106,15 @@ endif
 
 U_BOOT_ENV_TXT = $(OUTPUT_DIR)/uenv.txt
 export U_BOOT_ENV_TXT
+
+FLASH_SIZE_KB  := $(shell echo $$(($(FLASH_SIZE_MB) * 1024)))
+FLASH_SIZE     := $(shell echo $$((($(FLASH_SIZE_KB) * 1024))))
+FLASH_SIZE_HEX := $(shell printf '0x%x' $(FLASH_SIZE))
+
+# fixed size partitions
+U_BOOT_SIZE_KB := 256
+UB_ENV_SIZE_KB := 32
+CONFIG_SIZE_KB := 224
 
 UB_ENV_BIN := $(OUTPUT_DIR)/images/u-boot-env.bin
 CONFIG_BIN := $(OUTPUT_DIR)/images/config.jffs2
@@ -163,17 +149,27 @@ ROOTFS_BIN_SIZE_ALIGNED = $(shell echo $$((($(ROOTFS_BIN_SIZE) + $(ALIGN_BLOCK) 
 EXTRAS_BIN_SIZE_ALIGNED = $(shell echo $$((($(EXTRAS_BIN_SIZE) + $(ALIGN_BLOCK) - 1) / $(ALIGN_BLOCK) * $(ALIGN_BLOCK))))
 
 # fixed size partitions
-U_BOOT_PARTITION_SIZE := $(SIZE_256K)
-UB_ENV_PARTITION_SIZE := $(SIZE_32K)
-CONFIG_PARTITION_SIZE := $(SIZE_224K)
+U_BOOT_PARTITION_SIZE := $(shell echo $$(($(U_BOOT_SIZE_KB) * 1024)))
+UB_ENV_PARTITION_SIZE := $(shell echo $$(($(UB_ENV_SIZE_KB) * 1024)))
+CONFIG_PARTITION_SIZE := $(shell echo $$(($(CONFIG_SIZE_KB) * 1024)))
 KERNEL_PARTITION_SIZE = $(KERNEL_BIN_SIZE_ALIGNED)
 ROOTFS_PARTITION_SIZE = $(ROOTFS_BIN_SIZE_ALIGNED)
 
-FIRMWARE_FULL_SIZE = $(shell echo $$((($(FLASH_SIZE_MB) * 1024 * 1024))))
-FIRMWARE_NOBOOT_SIZE = $(shell echo $$(($(FIRMWARE_FULL_SIZE) - $(U_BOOT_PARTITION_SIZE) - $(UB_ENV_PARTITION_SIZE) - $(CONFIG_PARTITION_SIZE))))
+export U_BOOT_PARTITION_SIZE
+export UB_ENV_PARTITION_SIZE
+export CONFIG_PARTITION_SIZE
+export ALIGN_BLOCK
+
+# Partition sizes in KB for mtdparts
+KERNEL_SIZE_KB  = $(shell echo $$(($(KERNEL_PARTITION_SIZE) / 1024)))
+ROOTFS_SIZE_KB  = $(shell echo $$(($(ROOTFS_PARTITION_SIZE) / 1024)))
+
+FIRMWARE_NOBOOT_SIZE = $(shell echo $$(($(FLASH_SIZE) - $(U_BOOT_PARTITION_SIZE) - $(UB_ENV_PARTITION_SIZE) - $(CONFIG_PARTITION_SIZE))))
+
+UPGRADE_SIZE_KB = $(shell echo $$(($(FLASH_SIZE_KB) - $(U_BOOT_SIZE_KB) - $(UB_ENV_SIZE_KB) - $(CONFIG_SIZE_KB))))
 
 # dynamic partitions
-EXTRAS_PARTITION_SIZE = $(shell echo $$(($(FIRMWARE_FULL_SIZE) - $(EXTRAS_OFFSET))))
+EXTRAS_PARTITION_SIZE = $(shell echo $$(($(FLASH_SIZE) - $(EXTRAS_OFFSET))))
 EXTRAS_LLIMIT := $(shell echo $$(($(ALIGN_BLOCK) * 5)))
 
 # partition offsets
@@ -186,6 +182,10 @@ EXTRAS_OFFSET = $(shell echo $$(($(ROOTFS_OFFSET) + $(ROOTFS_PARTITION_SIZE))))
 
 # special case with no uboot nor env
 EXTRAS_OFFSET_NOBOOT = $(shell echo $$(($(KERNEL_PARTITION_SIZE) + $(ROOTFS_PARTITION_SIZE))))
+
+
+export CONFIG_OFFSET
+export FLASH_SIZE_MB
 
 RELEASE = 0
 
@@ -202,13 +202,15 @@ define edit_file
 endef
 
 # make command for buildroot
-BR2_MAKE = $(MAKE) -C $(BR2_EXTERNAL)/buildroot BR2_EXTERNAL=$(BR2_EXTERNAL) O=$(OUTPUT_DIR) BR2_DL_DIR=$(BR2_DL_DIR)
+BR2_MAKE = $(MAKE) -C $(BR2_EXTERNAL)/buildroot \
+	BR2_EXTERNAL=$(BR2_EXTERNAL) \
+	O=$(OUTPUT_DIR) \
+	BR2_DL_DIR=$(BR2_DL_DIR)
 
 .PHONY: all bootstrap build build_fast clean clean-nfs-debug cleanbuild defconfig distclean \
 	dev fast help info pack release remove_bins repack sdk toolchain update upboot-ota \
 	upload_tftp upgrade_ota br-% check-config force-config show-config-deps clean-config \
-	tftpd-start tftpd-stop tftpd-restart tftpd-status tftpd-logs \
-	agent-info show-vars
+	tftpd-start tftpd-stop tftpd-restart tftpd-status tftpd-logs show-vars
 
 # Default: fast parallel incremental build
 all: defconfig build_fast pack
@@ -225,6 +227,17 @@ dev: defconfig build pack
 # Clean build from scratch with parallel compilation
 cleanbuild: distclean defconfig build_fast pack
 	$(info -------------------------------- $@)
+ifneq ($(TFTP_IP_ADDRESS),)
+	@echo "Copying images to TFTP root..."
+	@sudo mkdir -p $(TFTP_ROOT)
+	@sudo cp -f $(FIRMWARE_BIN_FULL) $(TFTP_ROOT)/$(FIRMWARE_NAME_FULL)
+	@sudo cp -f $(FIRMWARE_BIN_NOBOOT) $(TFTP_ROOT)/$(FIRMWARE_NAME_NOBOOT)
+	@sudo cp -f $(FIRMWARE_BIN_FULL).sha256sum $(TFTP_ROOT)/$(FIRMWARE_NAME_FULL).sha256sum 2>/dev/null || true
+	@sudo cp -f $(FIRMWARE_BIN_NOBOOT).sha256sum $(TFTP_ROOT)/$(FIRMWARE_NAME_NOBOOT).sha256sum 2>/dev/null || true
+	@echo "TFTP: $(TFTP_ROOT)/$(FIRMWARE_NAME_FULL)"
+	@echo "TFTP: $(TFTP_ROOT)/$(FIRMWARE_NAME_NOBOOT)"
+endif
+	@date +%T
 
 release: RELEASE=1
 release: distclean defconfig build_fast pack
@@ -262,18 +275,15 @@ build_fast: $(U_BOOT_ENV_TXT)
 
 ### Configuration
 
-FRAGMENTS = $(shell awk '/FRAG:/ {$$1=$$1;gsub(/^.+:\s*/,"");print}' $(MODULE_CONFIG_REAL))
+FRAGMENTS = $(shell awk '/FRAG:/ {$$1=$$1;gsub(/^.+:\s*/,"");print}' $(CAMERA_CONFIG_REAL))
 
 # Configuration dependency files
 CONFIG_DEPS_FILE = $(OUTPUT_DIR)/.config.deps
 CONFIG_FRAGMENT_FILES = $(addprefix configs/fragments/,$(addsuffix .fragment,$(FRAGMENTS)))
-CONFIG_INPUT_FILES = $(CONFIG_FRAGMENT_FILES) $(MODULE_CONFIG_REAL)
-ifneq ($(CAMERA_CONFIG_REAL),$(MODULE_CONFIG_REAL))
-CONFIG_INPUT_FILES += $(CAMERA_CONFIG_REAL)
-endif
+CONFIG_INPUT_FILES = $(CONFIG_FRAGMENT_FILES) $(CAMERA_CONFIG_REAL)
 ifeq ($(RELEASE),0)
-ifneq ($(wildcard $(BR2_EXTERNAL)/configs/local.fragment),)
-CONFIG_INPUT_FILES += $(BR2_EXTERNAL)/configs/local.fragment
+ifneq ($(wildcard $(BR2_EXTERNAL)/user/local.fragment),)
+CONFIG_INPUT_FILES += $(BR2_EXTERNAL)/user/local.fragment
 endif
 ifneq ($(wildcard $(BR2_EXTERNAL)/local.mk),)
 CONFIG_INPUT_FILES += $(BR2_EXTERNAL)/local.mk
@@ -315,22 +325,18 @@ force-config: buildroot/Makefile $(OUTPUT_DIR)/.keep $(CONFIG_PARTITION_DIR)/.ke
 	$(info * remove existing .config file)
 	rm -rvf $(OUTPUT_DIR)/.config
 	# add fragments of a new config
-	$(info * add fragments FRAGMENTS=$(FRAGMENTS) from $(MODULE_CONFIG_REAL))
+	$(info * add fragments FRAGMENTS=$(FRAGMENTS) from $(CAMERA_CONFIG_REAL))
 	for i in $(FRAGMENTS); do \
 		echo "** add configs/fragments/$$i.fragment"; \
 		echo "# $$i.fragment" >> $(OUTPUT_DIR)/.config; \
 		sed 's/$$(BR2_HOSTARCH)/$(BR2_HOSTARCH)/g; s/$$(INGENIC_ARCH)/$(INGENIC_ARCH)/g' configs/fragments/$$i.fragment >>$(OUTPUT_DIR)/.config; \
 		echo >>$(OUTPUT_DIR)/.config; \
 	done
-	# add module configuration
-	cat $(MODULE_CONFIG_REAL) >>$(OUTPUT_DIR)/.config
-ifneq ($(CAMERA_CONFIG_REAL),$(MODULE_CONFIG_REAL))
 	# add camera configuration
 	cat $(CAMERA_CONFIG_REAL) >>$(OUTPUT_DIR)/.config
-endif
 	if [ $(RELEASE) -ne 1 ]; then \
-		if [ -f $(BR2_EXTERNAL)/configs/local.fragment ]; then \
-			cat $(BR2_EXTERNAL)/configs/local.fragment >>$(OUTPUT_DIR)/.config; \
+		if [ -f $(BR2_EXTERNAL)/user/local.fragment ]; then \
+			cat $(BR2_EXTERNAL)/user/local.fragment >>$(OUTPUT_DIR)/.config; \
 		fi; \
 		if [ -f $(BR2_EXTERNAL)/local.mk ]; then \
 			cp -f $(BR2_EXTERNAL)/local.mk $(OUTPUT_DIR)/local.mk; \
@@ -379,10 +385,10 @@ edit:
 			"2") FILE="$(MODULE_CONFIG_REAL)" ;; \
 			"3") FILE="$(BR2_EXTERNAL)/$(CAMERA_SUBDIR)/$(CAMERA)/$(CAMERA).config" ;; \
 			"4") FILE="$(BR2_EXTERNAL)/$(CAMERA_SUBDIR)/$(CAMERA)/$(CAMERA).uenv.txt" ;; \
-			"5") FILE="$(BR2_EXTERNAL)/configs/local.fragment" ;; \
-			"6") FILE="$(BR2_EXTERNAL)/configs/local.config" ;; \
+			"5") FILE="$(BR2_EXTERNAL)/user/local.fragment" ;; \
+			"6") FILE="$(BR2_EXTERNAL)/user/local.config" ;; \
 			"7") FILE="$(BR2_EXTERNAL)/local.mk" ;; \
-			"8") FILE="$(BR2_EXTERNAL)/configs/local.uenv.txt" ;; \
+			"8") FILE="$(BR2_EXTERNAL)/user/local.uenv.txt" ;; \
 			*) echo "Invalid option"; continue ;; \
 		esac; \
 		\
@@ -405,13 +411,13 @@ edit-localmk:
 	$(call edit_file,$@,$(BR2_EXTERNAL)/local.mk)
 
 edit-localconfig:
-	$(call edit_file,$@,$(BR2_EXTERNAL)/configs/local.config)
+	$(call edit_file,$@,$(BR2_EXTERNAL)/user/local.config)
 
 edit-localfragment:
-	$(call edit_file,$@,$(BR2_EXTERNAL)/configs/local.fragment)
+	$(call edit_file,$@,$(BR2_EXTERNAL)/user/local.fragment)
 
 edit-localuenv:
-	$(call edit_file,$@,$(BR2_EXTERNAL)/configs/local.uenv.txt)
+	$(call edit_file,$@,$(BR2_EXTERNAL)/user/local.uenv.txt)
 
 # Configuration debugging and maintenance targets
 show-config-deps:
@@ -499,7 +505,6 @@ clean: clean-nfs-debug
 	rm -f $(ROOTFS_BIN) $(ROOTFS_TAR) $(EXTRAS_BIN) $(CONFIG_BIN)
 #	$(UB_ENV_BIN) $(KERNEL_BIN)
 
-
 # remove all build files
 distclean: clean-nfs-debug
 	$(info -------------------------------- $@)
@@ -540,24 +545,13 @@ pack: $(FIRMWARE_BIN_FULL) $(FIRMWARE_BIN_NOBOOT)
 	@$(FIGLET) $(GIT_BRANCH)
 	@if [ "$(RELEASE)" -ne 1 ]; then $(FIGLET) "NON-SECURE"; fi
 	@if [ $(EXTRAS_PARTITION_SIZE) -lt $(EXTRAS_LLIMIT) ]; then $(FIGLET) "EXTRAS PARTITION IS TOO SMALL"; fi
-	@if [ $(FIRMWARE_BIN_FULL_SIZE) -gt $(FIRMWARE_FULL_SIZE) ]; then $(FIGLET) "OVERSIZE"; else $(FIGLET) "FINE"; fi
-	@date +%T
+	@if [ $(FIRMWARE_BIN_FULL_SIZE) -gt $(FLASH_SIZE) ]; then $(FIGLET) "OVERSIZE"; else $(FIGLET) "FINE"; fi
 	@echo "--------------------------------"
 	@echo "Full Image:"
 	@echo "$(FIRMWARE_BIN_FULL)"
 	@echo "Update Image:"
 	@echo "$(FIRMWARE_BIN_NOBOOT)"
 	@echo "--------------------------------"
-ifneq ($(TFTP_IP_ADDRESS),)
-	@echo "Copying images to TFTP root..."
-	@sudo mkdir -p $(TFTP_ROOT)
-	@sudo cp -f $(FIRMWARE_BIN_FULL) $(TFTP_ROOT)/$(FIRMWARE_NAME_FULL)
-	@sudo cp -f $(FIRMWARE_BIN_NOBOOT) $(TFTP_ROOT)/$(FIRMWARE_NAME_NOBOOT)
-	@sudo cp -f $(FIRMWARE_BIN_FULL).sha256sum $(TFTP_ROOT)/$(FIRMWARE_NAME_FULL).sha256sum 2>/dev/null || true
-	@sudo cp -f $(FIRMWARE_BIN_NOBOOT).sha256sum $(TFTP_ROOT)/$(FIRMWARE_NAME_NOBOOT).sha256sum 2>/dev/null || true
-	@echo "TFTP: $(TFTP_ROOT)/$(FIRMWARE_NAME_FULL)"
-	@echo "TFTP: $(TFTP_ROOT)/$(FIRMWARE_NAME_NOBOOT)"
-endif
 
 # rebuild a package with smart configuration check
 rebuild-%: check-config
@@ -647,7 +641,8 @@ tftpd-logs:
 # download buildroot cache bundle from latest github release
 download-cache:
 	$(info -------------------------------- $@)
-	BR2_EXTERNAL=$(CURDIR) BR2_DL_DIR=$(BR2_DL_DIR) $(CURDIR)/scripts/dl_buildroot_cache.sh
+	BR2_EXTERNAL=$(CURDIR) BR2_DL_DIR=$(BR2_DL_DIR) \
+		$(CURDIR)/scripts/dl_buildroot_cache.sh
 
 ### Buildroot
 
@@ -691,16 +686,22 @@ $(U_BOOT_ENV_TXT): $(OUTPUT_DIR)/.config
 	touch $@
 	grep -v '^#' $(BR2_EXTERNAL)/configs/common.uenv.txt | awk NF | tee -a $@
 	grep -v '^#' $(BR2_EXTERNAL)/$(CAMERA_SUBDIR)/$(CAMERA)/$(CAMERA).uenv.txt | awk NF | tee -a $@
-	grep -v '^#' $(BR2_EXTERNAL)/configs/local.uenv.txt | awk NF | tee -a $@
+	grep -v '^#' $(BR2_EXTERNAL)/user/local.uenv.txt | awk NF | tee -a $@
 	sort -u -o $@ $@
 
 $(FIRMWARE_BIN_FULL): $(U_BOOT_BIN) $(UB_ENV_BIN) $(CONFIG_BIN) $(KERNEL_BIN) $(ROOTFS_BIN) $(EXTRAS_BIN)
 	$(info -------------------------------- $@)
+	# create a blank slab
 	dd if=/dev/zero bs=$(SIZE_8M) skip=0 count=1 status=none | tr '\000' '\377' > $@
+	# add bootloader partition
 	dd if=$(U_BOOT_BIN) bs=$(U_BOOT_BIN_SIZE) seek=$(U_BOOT_OFFSET)B count=1 of=$@ conv=notrunc status=none
+	# add config partition
 	dd if=$(CONFIG_BIN) bs=$(CONFIG_BIN_SIZE) seek=$(CONFIG_OFFSET)B count=1 of=$@ conv=notrunc status=none
+	# add kernel partition
 	dd if=$(KERNEL_BIN) bs=$(KERNEL_BIN_SIZE) seek=$(KERNEL_OFFSET)B count=1 of=$@ conv=notrunc status=none
+	# add rootfs partition
 	dd if=$(ROOTFS_BIN) bs=$(ROOTFS_BIN_SIZE) seek=$(ROOTFS_OFFSET)B count=1 of=$@ conv=notrunc status=none
+	# add extras partition
 	@if [ $(EXTRAS_BIN_SIZE) -gt 0 ]; then \
 	  dd if=$(EXTRAS_BIN) bs=$(EXTRAS_BIN_SIZE) seek=$(EXTRAS_OFFSET)B count=1 of=$@ conv=notrunc status=none; \
 	fi
@@ -719,7 +720,7 @@ $(CONFIG_BIN): $(CONFIG_PARTITION_DIR)/.keep
 	# remove older image if present
 	if [ -f $@ ]; then rm $@; fi
 	# syncronize overlay files
-	$(RSYNC) --delete $(BR2_EXTERNAL)/overlay/upper/ $(CONFIG_PARTITION_DIR)/
+	$(RSYNC) --delete $(BR2_EXTERNAL)/user/overlay/ $(CONFIG_PARTITION_DIR)/
 	# delete stub files
 	find $(CONFIG_PARTITION_DIR)/ -name ".*keep" -o -name ".empty" -delete
 	# pack the config partition image
@@ -737,7 +738,7 @@ $(EXTRAS_BIN): $(ROOTFS_BIN) $(U_BOOT_BIN)
 	# empty /opt/ in the rootfs
 	rm -rf $(OUTPUT_DIR)/target/opt/*
 	# copy common files
-	$(RSYNC) --exclude='.gitkeep' $(BR2_EXTERNAL)/overlay/opt/ $(OUTPUT_DIR)/extras/
+	$(RSYNC) --exclude='.gitkeep' $(BR2_EXTERNAL)/user/opt/ $(OUTPUT_DIR)/extras/
 	# pack the extras partition image if directory has content, otherwise it will be created on first use
 	if [ -n "$$(find $(OUTPUT_DIR)/extras/ -type f 2>/dev/null)" ]; then \
 		$(HOST_DIR)/sbin/mkfs.jffs2 --little-endian --squash --output=$@ --root=$(OUTPUT_DIR)/extras/ \
@@ -796,7 +797,8 @@ info: defconfig
 	$(info ISP_CH0_PRE_DEQUEUE_INTERRUP_PROCESS: $(ISP_CH0_PRE_DEQUEUE_INTERRUPT_PROCESS))
 	$(info ISP_CH0_PRE_DEQUEUE_VALID_LINES: $(ISP_CH0_PRE_DEQUEUE_VALID_LINES))
 	$(info FLASH_SIZE_MB: $(FLASH_SIZE_MB))
-	$(info FIRMWARE_FULL_SIZE: $(FIRMWARE_FULL_SIZE))
+	$(info FLASH_SIZE_KB: $(FLASH_SIZE_KB))
+	$(info FLASH_SIZE: $(FLASH_SIZE))
 	$(info UBOOT_BOARDNAME: $(UBOOT_BOARDNAME))
 	$(info UBOOT_REPO: $(UBOOT_REPO))
 	$(info UBOOT_REPO_BRANCH: $(UBOOT_REPO_BRANCH))
@@ -827,7 +829,6 @@ help:
 	  make clean          clean before reassembly\n\
 	  make distclean      start building from scratch\n\
 	  make rebuild-<pkg>  perform a clean package rebuild for <pkg>\n\
-	  make agent-info     show rebuild conventions and key vars\n\
 	  make show-vars      print key build variables\n\
 	  make help           print this help\n\
 	  \n\
@@ -851,25 +852,6 @@ help:
 	                      upload full firmware image to the camera\n\
 	                        over network, and flash it\n\n\
 	"
-# Show conventions and quick project introspection for assistants/tools
-agent-info:
-	$(info -------------------------------- $@)
-	@echo "Conventions:";
-	@echo "  - Rebuild pattern: rebuild-% => %-dirclean then %";
-	@echo "  - Buildroot helpers: br-% and br-%-dirclean";
-	@echo "Examples:";
-	@echo "  make rebuild-telegrambot    # clean + build telegrambot";
-	@echo "  make br-telegrambot         # just build the package";
-	@echo "  make br-telegrambot-dirclean# clean only the package";
-	@if [ -f .agent/project.yml ]; then \
-		echo "Agent memory file: .agent/project.yml"; \
-	else \
-		echo "Agent memory file not found (.agent/project.yml). Optional: add one for assistant hints."; \
-	fi;
-	@if [ -f docs/agent-memory.md ]; then \
-		echo "Project memory doc: docs/agent-memory.md"; \
-	fi;
-	@$(MAKE) --no-print-directory show-vars
 
 # Print key variables commonly needed for tooling
 show-vars:

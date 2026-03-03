@@ -84,8 +84,6 @@ make
 
 ### Advanced Variables
 
-**`SDCARD_DEVICE`** - SD card device for flashing (default: `/dev/sdf`)
-
 **`RELEASE`** - Build release firmware without local overrides
 ```bash
 make release  # Sets RELEASE=1
@@ -218,9 +216,9 @@ Thingino uses a layered configuration system:
 2. **Module config** - SoC/sensor specific configuration
 3. **Camera config** - Camera-specific overrides
 4. **Local overrides** (optional, ignored in release builds):
-   - `configs/local.fragment` - Local Buildroot config additions
-   - `configs/local.config` - Local system config
-   - `configs/local.uenv.txt` - Local U-Boot environment
+   - `user/local.fragment` - Local Buildroot config additions
+   - `user/local.config` - Local system config
+   - `user/local.uenv.txt` - Local U-Boot environment
    - `local.mk` - Local Makefile overrides
 
 ### Configuration Targets
