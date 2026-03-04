@@ -483,6 +483,9 @@ jobs:
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/send2email_persondetection overlay/usr/sbin/send2email_persondetection
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/process_monitor overlay/usr/sbin/process_monitor
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/share/common overlay/usr/share/common
+          # TODO 临时方案，等 Prudynt 新版本解决编译问题后再删除
+          cp -r /tmp/$REPO_NAME/package/prudynt-t package/prudynt-t
+          
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/prudynt.json package/prudynt-t/files/prudynt.json
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/send2email package/prudynt-t/files/send2email
           # rm -rf package/thingino-portal-simple/files
