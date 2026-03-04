@@ -540,12 +540,6 @@ jobs:
       - name: Update prudynt-t.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
-          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
-          # Update prudynt-t.mk file with correct repository information
-          sed -i '138i\\tls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/' package/prudynt-t/prudynt-t.mk
-          sed -n '130,145p' package/prudynt-t/prudynt-t.mk
-          echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-
           sed -i 's/^PRUDYNT_T_SITE/# PRUDYNT_T_SITE/' package/prudynt-t/prudynt-t.mk
           sed -i 's/^PRUDYNT_T_VERSION/# PRUDYNT_T_VERSION/' package/prudynt-t/prudynt-t.mk
           sed -i 's/^PRUDYNT_T_GIT_SUBMODULES/# PRUDYNT_T_GIT_SUBMODULES/' package/prudynt-t/prudynt-t.mk
