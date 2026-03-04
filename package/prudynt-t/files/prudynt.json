@@ -25,7 +25,6 @@
   },
   "daynight": {
     "day_count_threshold": 4,
-    "day_bin_path": "",
     "enabled": true,
     "ev_day_low_primary": 0,
     "ev_day_low_secondary": 0,
@@ -33,7 +32,6 @@
     "gb_gain_absolute": 145,
     "gb_gain_delta": 15,
     "loglevel": "INFO",
-    "night_bin_path": "",
     "night_count_threshold": 6,
     "sample_interval_ms": 1000,
     "script_path": "/sbin/daynight",
@@ -44,12 +42,16 @@
     "total_gain_day_threshold": 500,
     "total_gain_night_threshold": 15000,
     "controls": {
-      "binswitch": true,
       "color": true,
       "ircut": true,
       "ir850": true,
       "ir940": false,
       "white": false
+    },
+    "schedule": {
+      "enabled": false,
+      "start_at": "",
+      "stop_at": ""
     }
   },
   "general": {
@@ -190,7 +192,7 @@
     "enabled": true,
     "format": "H264",
     "fps": 0,
-    "gop": 60,
+    "gop": 30,
     "height": 0,
     "qp_init": -1,
     "qp_min": -1,
@@ -208,10 +210,10 @@
       "stroke_size": 4,
       "brightness": {
         "enabled": false,
-        "format": "%b%%(%a%%) %m",
-        "position": "10,70",
-        "rotation": 0,
         "fill_color": "#FFFFFFCC",
+        "format": "%b",
+        "position": "10,-10",
+        "rotation": 0,
         "stroke_color": "#000000CC"
       },
       "logo": {
@@ -300,19 +302,19 @@
       "brightness": {
         "enabled": false,
         "fill_color": "#FFFFFFCC",
-        "format": "%b%%(%a%%) %m",
+        "format": "%b",
         "position": "5,-5",
         "rotation": 0,
         "stroke_color": "#000000CC"
       },
       "logo": {
         "enabled": false,
+        "height": 30,
         "path": "/usr/share/images/thingino_100x30.bgra",
         "position": "-5,-5",
         "rotation": 0,
-        "width": 100,
-        "height": 30,
-        "transparency": 128
+        "transparency": 128,
+        "width": 100
       },
       "privacy": {
         "enabled": true,
