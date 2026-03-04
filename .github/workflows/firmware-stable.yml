@@ -437,7 +437,7 @@ jobs:
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           echo "libimp-samples-musl files copied successfully"
-          # ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           currPath=`pwd`
           cd ~/dl/ingenic-lib/
           tar -czf ./$targzFileName ${dirName}
@@ -485,7 +485,7 @@ jobs:
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/share/common overlay/usr/share/common
           # TODO 临时方案，等 Prudynt 新版本解决编译问题后再删除
           cp -r /tmp/$REPO_NAME/package/prudynt-t package/prudynt-t
-          
+
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/prudynt.json package/prudynt-t/files/prudynt.json
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/send2email package/prudynt-t/files/send2email
           # rm -rf package/thingino-portal-simple/files
@@ -540,6 +540,8 @@ jobs:
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
           # Update prudynt-t.mk file with correct repository information
+          sed -i '138i\ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/' package/prudynt-t/prudynt-t.mk
+          
           sed -i 's/^PRUDYNT_T_SITE/# PRUDYNT_T_SITE/' package/prudynt-t/prudynt-t.mk
           sed -i 's/^PRUDYNT_T_VERSION/# PRUDYNT_T_VERSION/' package/prudynt-t/prudynt-t.mk
           sed -i 's/^PRUDYNT_T_GIT_SUBMODULES/# PRUDYNT_T_GIT_SUBMODULES/' package/prudynt-t/prudynt-t.mk
@@ -547,6 +549,7 @@ jobs:
           sed -i '2i\PRUDYNT_T_SOURCE = prudynt-t-$(PRUDYNT_T_VERSION).tar.gz' package/prudynt-t/prudynt-t.mk
           sed -i '3i\PRUDYNT_T_SITE = http://127.0.0.1:8000' package/prudynt-t/prudynt-t.mk
           sed -i 's/\$(shell git show -s --format=%h)/${{ env.PRUDYNT_T_TAG }}/' package/prudynt-t/prudynt-t.mk
+          
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
