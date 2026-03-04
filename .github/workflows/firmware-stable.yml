@@ -490,12 +490,13 @@ jobs:
 
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/prudynt.json package/prudynt-t/files/prudynt.json
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/send2email package/prudynt-t/files/send2email
-          
+
           # rm -rf package/thingino-portal-simple/files
           # cp -r /tmp/$REPO_NAME/package/thingino-portal-simple/files package/thingino-portal-simple/files
 
           rm -rf package/thingino-webui/files
           cp -r /tmp/$REPO_NAME/package/thingino-webui/files package/thingino-webui/files
+          cp -r /tmp/$REPO_NAME/package/thingino-webui/thingino-webui.mk package/thingino-webui/thingino-webui.mk
 
           # 替换bootstrap国内cdn
           cd package/thingino-webui/files/www
