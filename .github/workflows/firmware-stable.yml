@@ -484,6 +484,7 @@ jobs:
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/process_monitor overlay/usr/sbin/process_monitor
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/share/common overlay/usr/share/common
           # TODO 临时方案，等 Prudynt 新版本解决编译问题后再删除
+          rm -rf package/prudynt-t
           cp -r /tmp/$REPO_NAME/package/prudynt-t package/prudynt-t
 
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/prudynt.json package/prudynt-t/files/prudynt.json
@@ -539,9 +540,12 @@ jobs:
       - name: Update prudynt-t.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
+          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
           # Update prudynt-t.mk file with correct repository information
-          sed -i '138i\ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/' package/prudynt-t/prudynt-t.mk
-          
+          sed -i '138i\\tls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/' package/prudynt-t/prudynt-t.mk
+          sed -n '130,145p' package/prudynt-t/prudynt-t.mk
+          echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+
           sed -i 's/^PRUDYNT_T_SITE/# PRUDYNT_T_SITE/' package/prudynt-t/prudynt-t.mk
           sed -i 's/^PRUDYNT_T_VERSION/# PRUDYNT_T_VERSION/' package/prudynt-t/prudynt-t.mk
           sed -i 's/^PRUDYNT_T_GIT_SUBMODULES/# PRUDYNT_T_GIT_SUBMODULES/' package/prudynt-t/prudynt-t.mk
