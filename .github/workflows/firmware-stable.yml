@@ -540,7 +540,7 @@ jobs:
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
           sed -i 's/gtxaspec/iborderxm/' package/ingenic-lib/ingenic-lib.mk
-          sed -i 's/master/iborderx/' package/ingenic-lib/ingenic-lib.mk
+          sed -i 's/master/iborder/' package/ingenic-lib/ingenic-lib.mk
           sed -i 's/^PRUDYNT_T_VERSION/# PRUDYNT_T_VERSION/' package/ingenic-lib/ingenic-lib.mk
           sed -i '4i\INGENIC_LIB_VERSION = $(shell git ls-remote $(INGENIC_LIB_SITE) $(INGENIC_LIB_SITE_BRANCH) | head -1 | cut -f1)' package/ingenic-lib/ingenic-lib.mk
           
