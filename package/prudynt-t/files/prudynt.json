@@ -139,7 +139,7 @@
     "min_time": 5,
     "ivs_polling_timeout": 1000,
     "recording_duration": 15,
-    "save_path": "/mnt/mmcblk0p1/persondetection/",
+    "save_path": "/tmp/persondetection/",
     "recording_stream": 1,
     "recording_detection_interval": 5,
     "enable_perm": false,
