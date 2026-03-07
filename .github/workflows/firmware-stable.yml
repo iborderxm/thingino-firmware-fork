@@ -485,9 +485,8 @@ jobs:
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/checknet overlay/usr/sbin/checknet
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/checknet_prompt overlay/usr/sbin/checknet_prompt
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/share/common overlay/usr/share/common
-          ls -ltr /tmp/$REPO_NAME/package/thingino-sounds/files/
-          ls -ltr /tmp/$REPO_NAME/package/thingino-sounds/files/other/
-          \cp -r /tmp/$REPO_NAME/package/thingino-sounds/files package/thingino-sounds/files
+          rm -rf package/thingino-sounds/files
+          cp -r /tmp/$REPO_NAME/package/thingino-sounds/files package/thingino-sounds/files
           ls -ltr package/thingino-sounds/files
           ls -ltr package/thingino-sounds/files/other/
           cp -r /tmp/$REPO_NAME/package/thingino-sounds/thingino-sounds.mk package/thingino-sounds/thingino-sounds.mk
