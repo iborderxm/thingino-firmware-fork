@@ -1,0 +1,68 @@
+#!/bin/sh
+
+. /usr/share/common
+
+# 检查是否已有实例在运行
+if [ -f /tmp/network_check.lock ]; then
+    exit 0
+fi
+
+# 创建锁文件
+echo $$ > /tmp/network_check.lock
+trap 'rm -f /tmp/network_check.lock' EXIT
+
+# 播报ip
+playip() {
+    ip=$1
+    # 检查是不是192.168开头
+    if echo "$ip" | grep -q "^192.168"; then
+        # 是192.168开头
+        play /usr/share/sounds/other/192.168.opus append=1
+        # ip值删除192.168.
+        ip=${ip#192.168.}
+    fi
+    # 播报ip的每个字符
+    echo "$ip" | while IFS= read -r -n1 char; do
+        [ -n "$char" ] && play /usr/share/sounds/other/${char}.opus append=1
+    done
+}
+
+# 获取当前ip
+ip=$(ip addr show wlan0 | grep "inet " | awk '{print $2}' | cut -d/ -f1)
+
+# 有ip
+if [ -n "$ip" ]; then
+    # 播报ip
+    playip "$ip"
+fi
+
+# 超时时间
+timeout=10
+# 目标网站
+target1=https://www.ntsc.ac.cn
+target2=https://www.baidu.com
+
+# 获取响应状态码
+get_status() {
+    curl -I -s --connect-timeout ${timeout} --retry 3 ${1} -w %{http_code} | tail -n1
+}
+
+target1_ret_code=$(get_status "$target1")
+
+if [ "x$target1_ret_code" = "x200" ]; then
+    # 网络正常
+    play /usr/share/sounds/other/networknormal.opus
+else
+    target2_ret_code=$(get_status "$target2")
+    if [ "x$target2_ret_code" = "x200" ]; then
+        # 网络正常
+        play /usr/share/sounds/other/networknormal.opus
+    else
+        # 没有网络连接
+        play /usr/share/sounds/other/nonetwork.opus
+    fi
+fi
+
+sleep 2
+
+exit 0

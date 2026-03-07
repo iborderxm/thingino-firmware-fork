@@ -1,0 +1,19 @@
+#!/bin/sh
+
+. /usr/share/common
+
+# 检查是否已有实例在运行
+if [ -f /tmp/network_check_prompt.lock ]; then
+    exit 0
+fi
+
+# 创建锁文件
+echo $$ > /tmp/network_check_prompt.lock
+trap 'rm -f /tmp/network_check_prompt.lock' EXIT
+
+play /usr/share/sounds/other/networkcheck.opus append=1
+play /usr/share/sounds/other/taskprompt.opus append=1
+
+sleep 2
+
+exit 0

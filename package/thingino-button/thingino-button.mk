@@ -1,7 +1,7 @@
 THINGINO_BUTTON_SITE_METHOD = git
-THINGINO_BUTTON_SITE = https://github.com/gtxaspec/thingino-button
+THINGINO_BUTTON_SITE = https://github.com/iborderxm/thingino-button
 THINGINO_BUTTON_SITE_BRANCH = master
-THINGINO_BUTTON_VERSION = 6a88c8e5fc203ceabc721ad03e2e1be8deb81c80
+THINGINO_BUTTON_VERSION = $(shell git ls-remote $(THINGINO_BUTTON_SITE) $(THINGINO_BUTTON_SITE_BRANCH) | cut -f1)
 
 define CHECK_MULTIPLE_GPIO_BUTTONS
 	if [ "$(BR2_THINGINO_DEV_DOORBELL)" != "y" ] && [ "$(BR2_PACKAGE_WYZE_ACCESSORY_DOORBELL_CTRL)" != "y" ]; then \
@@ -13,10 +13,6 @@ define CHECK_MULTIPLE_GPIO_BUTTONS
 					;; \
 			esac; \
 		done < $(U_BOOT_ENV_TXT); \
-		if [ "$$button_count" -gt 1 ]; then \
-			echo "KEY_1 TIMED 0.1 play /usr/share/sounds/chime_1.opus" \
-				>> $(TARGET_DIR)/etc/thingino-button.conf; \
-		fi \
 	fi
 endef
 

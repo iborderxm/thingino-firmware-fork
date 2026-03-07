@@ -482,6 +482,8 @@ jobs:
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/opc overlay/usr/sbin/opc
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/send2email_persondetection overlay/usr/sbin/send2email_persondetection
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/process_monitor overlay/usr/sbin/process_monitor
+          cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/checknet overlay/usr/sbin/checknet
+          cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/checknet_prompt overlay/usr/sbin/checknet_prompt
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/share/common overlay/usr/share/common
           cp -r /tmp/$REPO_NAME/package/thingino-sounds/files/other package/thingino-sounds/files/other
           sed -i '12i\$(INSTALL) -m 0755 -d $(TARGET_DIR)/usr/share/sounds/other' package/thingino-sounds/thingino-sounds.mk
