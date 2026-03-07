@@ -10,10 +10,8 @@ define THINGINO_SOUNDS_INSTALL_TARGET_CMDS
 	$(INSTALL) -m 0755 -d $(TARGET_DIR)/usr/share/sounds
 	mkdir -p $(TARGET_DIR)/usr/share/sounds/other
 	$(INSTALL) -m 0755 -d $(TARGET_DIR)/usr/share/sounds/other
+	ls -ltr $(TARGET_DIR)/usr/share/sounds/other/
 	ls -ltr $(THINGINO_SOUNDS_PKGDIR)/files/other/
-	cp $(THINGINO_SOUNDS_PKGDIR)/files/other/* $(TARGET_DIR)/usr/share/sounds/other/
-	$(INSTALL) -m 0644 -t $(TARGET_DIR)/usr/share/sounds/other \
-		$(THINGINO_SOUNDS_PKGDIR)/files/other/*.$(THINGINO_SOUNDS_FORMAT);
 
 	# welcome message
 	if [ "$(BR2_PACKAGE_THINGINO_SOUNDS_STARTUP)" = "y" ]; then \
