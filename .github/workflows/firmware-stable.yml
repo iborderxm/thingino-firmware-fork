@@ -476,13 +476,16 @@ jobs:
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/persondetection.json overlay/etc/persondetection.json
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/opc.json overlay/etc/opc.json
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/cron/crontabs/root overlay/etc/cron/crontabs/root
-          cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S37checkuenv overlay/etc/init.d/S37checkuenv
+          # cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S37checkuenv overlay/etc/init.d/S37checkuenv
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S39opc overlay/etc/init.d/S39opc
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/init.d/S99send2email_persondetection overlay/etc/init.d/S99send2email_persondetection
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/opc overlay/usr/sbin/opc
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/send2email_persondetection overlay/usr/sbin/send2email_persondetection
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/process_monitor overlay/usr/sbin/process_monitor
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/share/common overlay/usr/share/common
+          cp -r /tmp/$REPO_NAME/package/thingino-sounds/files/other package/thingino-sounds/files/other
+          sed -i '12i\$(INSTALL) -m 0755 -d $(TARGET_DIR)/usr/share/sounds/other' package/thingino-sounds/thingino-sounds.mk
+          sed -i '13i\$(INSTALL) -m 0644 -t $(TARGET_DIR)/usr/share/sounds/other $(THINGINO_SOUNDS_PKGDIR)/files/other/*;' package/thingino-sounds/thingino-sounds.mk
 
           # TODO 临时方案，等 Prudynt 新版本解决编译问题后再删除
           # rm -rf package/prudynt-t
