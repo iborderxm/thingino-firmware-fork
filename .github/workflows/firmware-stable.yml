@@ -493,6 +493,9 @@ jobs:
           # rm -rf package/prudynt-t
           # cp -r /tmp/$REPO_NAME/package/prudynt-t package/prudynt-t
 
+          rm -rf package/thingino-button
+          cp -r /tmp/$REPO_NAME/package/thingino-button package/thingino-button
+
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/prudynt.json package/prudynt-t/files/prudynt.json
           cp -r /tmp/$REPO_NAME/package/prudynt-t/files/send2email package/prudynt-t/files/send2email
 
@@ -545,6 +548,7 @@ jobs:
           sed -i "s|GMT0|CST-8|g" $GITHUB_WORKSPACE/overlay/etc/init.d/S01timezone
 
           cd $GITHUB_WORKSPACE
+      
       - name: Update ingenic-lib.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
