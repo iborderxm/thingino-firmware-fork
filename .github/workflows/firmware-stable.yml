@@ -36,6 +36,11 @@ on:
         type: string
         description: 'Comma-separated list of boards to build (e.g. board1,board2)'
         required: true
+      create_release:
+        type: boolean
+        description: 'Create GitHub release'
+        required: false
+        default: false
 
 env:
   BR2_DL_DIR: ~/dl
@@ -142,6 +147,7 @@ jobs:
           fi
 
       - name: Create release
+        if: github.event.inputs.create_release == 'true'
         continue-on-error: true
         run: |
           TAG_NAME="${{ env.TAG_NAME }}"
@@ -662,37 +668,41 @@ jobs:
           path: |
             ~/output/${{ github.event.inputs.branch }}/${{ matrix.thingino-version }}/graphs/build.hist-duration.pdf
 
-      - name: Upload compiled firmware artifacts
+      - name: Encrypt firmware artifacts with 7z
+        run: |
+          mkdir -p encrypted-artifacts
+          7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z \
+            "${{ env.FULL_FW }}" \
+            "${{ env.FULL_FW_UBOOT }}" \
+            "${{ env.FULL_FW_KERNEL }}" \
+            "${{ env.FULL_FW_ROOTFS }}" \
+            "${{ env.FULL_FW_ROOTFS_TAR }}" \
+            "${{ env.FULL_FW_SHA }}" \
+            "${{ env.UPDATE_FW }}" \
+            "${{ env.UPDATE_FW_SHA }}"
+
+      - name: Upload encrypted firmware artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: thingino-${{ matrix.thingino-version }}-firmware-${{ env.UPDATE_FW_DATETIME }}
-          path: |
-            ${{ env.FULL_FW }}
-            ${{ env.FULL_FW_UBOOT }}
-            ${{ env.FULL_FW_KERNEL }}
-            ${{ env.FULL_FW_ROOTFS }}
-            ${{ env.FULL_FW_ROOTFS_TAR }}
-            ${{ env.FULL_FW_SHA }}
-            ${{ env.UPDATE_FW }}
-            ${{ env.UPDATE_FW_SHA }}
+          name: thingino-${{ matrix.thingino-version }}-firmware-encrypted-${{ env.UPDATE_FW_DATETIME }}
+          path: encrypted-artifacts/firmware.7z
 
       - name: Post compiled firmware artifacts to release
+        if: github.event.inputs.create_release == 'true'
         uses: softprops/action-gh-release@v2.1.0
         with:
           tag_name: ${{ env.TAG_NAME }}
           make_latest: false
           prerelease: true
           files: |
-            ${{ env.FULL_FW }}
-            ${{ env.FULL_FW_SHA }}
-            ${{ env.UPDATE_FW_SHA }}
+            encrypted-artifacts/firmware.7z
 
 
 
   finalize-release:
     needs: [buildroot, prepare-release, check-updates]
     runs-on: ubuntu-24.04
-    if: always() && needs.check-updates.outputs.should_build == 'true'
+    if: always() && needs.check-updates.outputs.should_build == 'true' && github.event.inputs.create_release == 'true'
     steps:
       - name: Set timezone
         run: |
