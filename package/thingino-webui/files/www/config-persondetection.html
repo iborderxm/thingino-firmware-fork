@@ -44,11 +44,6 @@
                     <label for="persondetection_enabled" class="form-check-label">启用人形检测</label>
                   </p>
                   <p class="form-switch mb-0">
-                    <input type="hidden" id="persondetection_enable_perm-false" name="persondetection_enable_perm" value="false">
-                    <input type="checkbox" id="persondetection_enable_perm" name="persondetection_enable_perm" value="true" role="switch" class="form-check-input">
-                    <label for="persondetection_enable_perm" class="form-check-label">启用权限区域</label>
-                  </p>
-                  <p class="form-switch mb-0">
                     <input type="hidden" id="persondetection_enable_move-false" name="persondetection_enable_move" value="false">
                     <input type="checkbox" id="persondetection_enable_move" name="persondetection_enable_move" value="true" role="switch" class="form-check-input">
                     <label for="persondetection_enable_move" class="form-check-label">启用移动检测</label>
@@ -221,6 +216,11 @@
             <small>配置检测区域多边形</small>
           </div>
           <div class="card-body">
+            <p class="form-switch mb-4">
+              <input type="hidden" id="persondetection_enable_perm-false" name="persondetection_enable_perm" value="false">
+              <input type="checkbox" id="persondetection_enable_perm" name="persondetection_enable_perm" value="true" role="switch" class="form-check-input">
+              <label for="persondetection_enable_perm" class="form-check-label">启用权限区域</label>
+            </p>
             <div id="persondetection-perms-container">
               <div class="alert alert-info" role="alert">
                 权限区域配置需要在启用权限区域后设置
