@@ -263,7 +263,7 @@ jobs:
         run: |
           echo "Verifying thingino-button binary..."
           ls -ltr /github/home/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/thingino-button/
-          THINGINO_BUTTON_BIN=$(find /github/home/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/thingino-button/ -name "thingino-button" 2>/dev/null | head -n 1)
+          THINGINO_BUTTON_BIN=$(find /github/home/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/thingino-button/ -type f -name "thingino-button" 2>/dev/null | head -n 1)
           if [ -z "$THINGINO_BUTTON_BIN" ]; then
             echo "ERROR: thingino-button binary not found"
             exit 1
@@ -272,7 +272,7 @@ jobs:
           ls -lh "$THINGINO_BUTTON_BIN"
           file "$THINGINO_BUTTON_BIN"
           mkdir -p output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin
-          cp -a "$(dirname "$THINGINO_BUTTON_BIN")/"* output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/
+          cp $THINGINO_BUTTON_BIN output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/
           ls -ltr output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/
 
       - name: Upload thingino-button binary as artifact
