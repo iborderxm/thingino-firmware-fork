@@ -411,8 +411,16 @@ jobs:
           find ~/dl -type f | wc -l
           echo "DL cache restored successfully"
 
-      - name: download libimp-samples-musl
+      - name: Restore libimp-samples-musl cache
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        id: cache-libimp
+        uses: actions/cache@v4
+        with:
+          path: ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz
+          key: libimp-samples-musl-${{ runner.os }}-${{ hashFiles('~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz') }}
+
+      - name: download libimp-samples-musl
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' && steps.cache-libimp.outputs.cache-hit != 'true' }}
         run: |
           gh repo clone gtxaspec/libimp-samples-musl /tmp/libimp-samples-musl
           echo "libimp-samples-musl cloned successfully"
