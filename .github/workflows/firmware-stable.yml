@@ -94,10 +94,6 @@ jobs:
       fail-fast: false
       matrix: ${{fromJson(needs.generate-matrix.outputs.matrix)}}
     steps:
-      - name: Update package manager sources
-        run: |
-          apt-get update
-
       - name: Install GitHub CLI to container
         run: |
           apt-get update
@@ -309,6 +305,20 @@ jobs:
           echo "Buildroot DL cache not available, downloading sources..."
           BOARD=${{ matrix.thingino-version }} make source WORKFLOW=1
           echo "Source download completed"
+
+      
+      - name: Update ingenic-lib.mk configuration
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        run: |
+          sed -i 's/gtxaspec/iborderxm/' package/ingenic-lib/ingenic-lib.mk
+          sed -i 's/master/iborder/' package/ingenic-lib/ingenic-lib.mk
+          sed -i 's/^INGENIC_LIB_VERSION/# INGENIC_LIB_VERSION/' package/ingenic-lib/ingenic-lib.mk
+          sed -i '4i\INGENIC_LIB_VERSION = $(shell git ls-remote $(INGENIC_LIB_SITE) $(INGENIC_LIB_SITE_BRANCH) | head -1 | cut -f1)' package/ingenic-lib/ingenic-lib.mk
+          
+          # Verify the changes
+          echo "Updated ingenic-lib.mk file:"
+          pwd
+          cat package/ingenic-lib/ingenic-lib.mk | head -10
 
       - name: Update prudynt-t.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
