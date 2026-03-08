@@ -142,9 +142,16 @@
     "save_path": "/tmp/persondetection/",
     "recording_stream": 1,
     "recording_detection_interval": 5,
-    "enable_perm": false,
     "enable_move": false,
-    "permcnt": 1
+    "enable_perm": true,
+    "permcnt": 1,
+    "perms": [
+        {
+          "pcnt": 4,
+          "points_x": [0, 640, 640, 0],
+          "points_y": [0, 0, 360, 360]
+        }
+    ]
   },
   "recorder": {
     "autostart": false,

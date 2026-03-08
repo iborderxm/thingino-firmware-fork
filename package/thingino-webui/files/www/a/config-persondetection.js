@@ -10,6 +10,7 @@
     'skip_frame_count',
     'detect_distance',
     'permcnt',
+    'perms',
     'debounce_time',
     'post_time',
     'cooldown_time',
@@ -113,7 +114,12 @@
     try {
       personDetectionParams.forEach(param => {
         if (Object.prototype.hasOwnProperty.call(persondetection, param)) {
-          setValue(persondetection, 'persondetection', param);
+          if (param === 'perms') {
+            // 特殊处理权限区域配置
+            updatePermsContainer(persondetection.perms);
+          } else {
+            setValue(persondetection, 'persondetection', param);
+          }
         }
       });
       personDetectionStringParams.forEach(param => {
@@ -127,6 +133,48 @@
     } finally {
       updatingFromBackend = false;
     }
+  }
+
+  function updatePermsContainer(perms = []) {
+    const container = $('#persondetection-perms-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (perms.length === 0) {
+      const alert = document.createElement('div');
+      alert.className = 'alert alert-info';
+      alert.role = 'alert';
+      alert.textContent = '权限区域配置需要在启用权限区域后设置';
+      container.appendChild(alert);
+      return;
+    }
+    
+    perms.forEach((perm, index) => {
+      const permCard = document.createElement('div');
+      permCard.className = 'card mb-2';
+      
+      const cardHeader = document.createElement('div');
+      cardHeader.className = 'card-header';
+      cardHeader.textContent = `权限区域 ${index + 1}`;
+      permCard.appendChild(cardHeader);
+      
+      const cardBody = document.createElement('div');
+      cardBody.className = 'card-body';
+      
+      const pcntDiv = document.createElement('div');
+      pcntDiv.className = 'mb-2';
+      pcntDiv.innerHTML = `<label>点数：</label> <span>${perm.pcnt || 4}</span>`;
+      cardBody.appendChild(pcntDiv);
+      
+      const pointsDiv = document.createElement('div');
+      pointsDiv.className = 'mb-2';
+      pointsDiv.innerHTML = `<label>坐标：</label> <pre class="bg-dark text-light p-2 rounded">${JSON.stringify({ points_x: perm.points_x, points_y: perm.points_y }, null, 2)}</pre>`;
+      cardBody.appendChild(pointsDiv);
+      
+      permCard.appendChild(cardBody);
+      container.appendChild(permCard);
+    });
   }
 
   async function loadPersonDetectionConfig(options = {}) {
@@ -180,6 +228,11 @@
   }
 
   async function savePersonDetectionParam(param) {
+    if (param === 'perms') {
+      // 权限区域配置需要特殊处理，这里暂时跳过
+      return;
+    }
+    
     const el = $('#persondetection_' + param);
     if (!el) return;
     let value;

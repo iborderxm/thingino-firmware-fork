@@ -34,92 +34,94 @@
           </div>
           <div class="card-body">
             <div class="row g-4">
-              <div class="col-12 col-lg-4">
+              <div class="col-6 col-lg-12">
                 <h4>通用设置</h4>
                 <small>基本检测配置</small>
-                <p class="form-switch">
-                  <input type="hidden" id="persondetection_enabled-false" name="persondetection_enabled" value="false">
-                  <input type="checkbox" id="persondetection_enabled" name="persondetection_enabled" value="true" role="switch" class="form-check-input">
-                  <label for="persondetection_enabled" class="form-check-label">启用人形检测</label>
-                </p>
-                <p class="form-switch">
-                  <input type="hidden" id="persondetection_enable_perm-false" name="persondetection_enable_perm" value="false">
-                  <input type="checkbox" id="persondetection_enable_perm" name="persondetection_enable_perm" value="true" role="switch" class="form-check-input">
-                  <label for="persondetection_enable_perm" class="form-check-label">启用权限区域</label>
-                </p>
-                <p class="form-switch">
-                  <input type="hidden" id="persondetection_enable_move-false" name="persondetection_enable_move" value="false">
-                  <input type="checkbox" id="persondetection_enable_move" name="persondetection_enable_move" value="true" role="switch" class="form-check-input">
-                  <label for="persondetection_enable_move" class="form-check-label">启用移动检测</label>
-                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                  <p class="form-switch mb-0">
+                    <input type="hidden" id="persondetection_enabled-false" name="persondetection_enabled" value="false">
+                    <input type="checkbox" id="persondetection_enabled" name="persondetection_enabled" value="true" role="switch" class="form-check-input">
+                    <label for="persondetection_enabled" class="form-check-label">启用人形检测</label>
+                  </p>
+                  <p class="form-switch mb-0">
+                    <input type="hidden" id="persondetection_enable_perm-false" name="persondetection_enable_perm" value="false">
+                    <input type="checkbox" id="persondetection_enable_perm" name="persondetection_enable_perm" value="true" role="switch" class="form-check-input">
+                    <label for="persondetection_enable_perm" class="form-check-label">启用权限区域</label>
+                  </p>
+                  <p class="form-switch mb-0">
+                    <input type="hidden" id="persondetection_enable_move-false" name="persondetection_enable_move" value="false">
+                    <input type="checkbox" id="persondetection_enable_move" name="persondetection_enable_move" value="true" role="switch" class="form-check-input">
+                    <label for="persondetection_enable_move" class="form-check-label">启用移动检测</label>
+                  </p>
+                </div>
               </div>
-              <div class="col-12 col-lg-4">
+              <div class="col-15 col-lg-6">
                 <h4>检测参数</h4>
                 <small>灵敏度和时间设置</small>
                 <p class="number-range">
-                  <label for="persondetection_sensitivity">灵敏度</label>
+                  <label for="persondetection_sensitivity">检测灵敏度(0最不灵敏,5最灵敏)</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_sensitivity" name="persondetection_sensitivity" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="100" data-step="1">
+                    <input type="text" id="persondetection_sensitivity" name="persondetection_sensitivity" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="5" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
                 <p class="number-range">
-                  <label for="persondetection_skip_frame_count">跳帧计数</label>
+                  <label for="persondetection_skip_frame_count">跳帧计数(检测跳过的帧数,每秒15帧,可以减小CPU负载)</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_skip_frame_count" name="persondetection_skip_frame_count" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="100" data-step="1">
+                    <input type="text" id="persondetection_skip_frame_count" name="persondetection_skip_frame_count" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="15" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
                 <p class="number-range">
-                  <label for="persondetection_detect_distance">检测距离</label>
+                  <label for="persondetection_detect_distance">检测距离阈值(0:6米,1:8米,2:10米,3:11米,4:13米)</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_detect_distance" name="persondetection_detect_distance" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="100" data-step="1">
+                    <input type="text" id="persondetection_detect_distance" name="persondetection_detect_distance" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="4" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
                 <p class="number-range">
-                  <label for="persondetection_permcnt">权限区域数量</label>
+                  <label for="persondetection_permcnt">权限区域数量(1-4个区域)</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_permcnt" name="persondetection_permcnt" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="1" data-max="10" data-step="1">
+                    <input type="text" id="persondetection_permcnt" name="persondetection_permcnt" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="1" data-max="4" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
               </div>
-              <div class="col-12 col-lg-4">
+              <div class="col-15 col-lg-6">
                 <h4>时间设置</h4>
-                <small>防抖和冷却时间（秒）</small>
+                <small>防抖和冷却时间</small>
                 <p class="number-range">
-                  <label for="persondetection_debounce_time">防抖时间</label>
+                  <label for="persondetection_debounce_time">防抖:触发前所需的连续检测次数(防止误报)</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_debounce_time" name="persondetection_debounce_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="3600" data-step="1">
+                    <input type="text" id="persondetection_debounce_time" name="persondetection_debounce_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="5" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
                 <p class="number-range">
-                  <label for="persondetection_post_time">后续时间</label>
+                  <label for="persondetection_post_time">人员离开后继续录制的最短时间,没有sdcard不能大于180,单位秒</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_post_time" name="persondetection_post_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="3600" data-step="1">
+                    <input type="text" id="persondetection_post_time" name="persondetection_post_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="300" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
                 <p class="number-range">
-                  <label for="persondetection_cooldown_time">冷却时间</label>
+                  <label for="persondetection_cooldown_time">冷却时间(检测结束后过了冷却期才可以触发新检测,单位秒)</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_cooldown_time" name="persondetection_cooldown_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="3600" data-step="1">
+                    <input type="text" id="persondetection_cooldown_time" name="persondetection_cooldown_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="30" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
                 <p class="number-range">
-                  <label for="persondetection_init_time">初始化时间</label>
+                  <label for="persondetection_init_time">初始化时间(初始启动延迟开启检测,以在系统启动期间忽略检测,单位秒)</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_init_time" name="persondetection_init_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="3600" data-step="1">
+                    <input type="text" id="persondetection_init_time" name="persondetection_init_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="300" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
                 <p class="number-range">
-                  <label for="persondetection_min_time">最小时间</label>
+                  <label for="persondetection_min_time">最小时间(检测开始后必须持续的最短时间,没有sdcard不能大于180)</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_min_time" name="persondetection_min_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="3600" data-step="1">
+                    <input type="text" id="persondetection_min_time" name="persondetection_min_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="300" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
@@ -136,37 +138,37 @@
           <div class="card-body">
             <div class="row g-4">
               <div class="col-12 col-lg-6">
-                <h4>流配置</h4>
+                <h4>通道配置</h4>
                 <p class="form-select">
-                  <label for="persondetection_monitor_stream">监控流</label>
+                  <label for="persondetection_monitor_stream">监控通道</label>
                   <select id="persondetection_monitor_stream" name="persondetection_monitor_stream" class="form-select">
-                    <option value="0">流 0</option>
-                    <option value="1">流 1</option>
-                    <option value="2">流 2</option>
+                    <option value="0">通道 0</option>
+                    <option value="1">通道 1</option>
+                    <option value="2">通道 2</option>
                   </select>
                 </p>
                 <p class="form-select">
-                  <label for="persondetection_recording_stream">录制流</label>
+                  <label for="persondetection_recording_stream">录制通道</label>
                   <select id="persondetection_recording_stream" name="persondetection_recording_stream" class="form-select">
-                    <option value="0">流 0</option>
-                    <option value="1">流 1</option>
-                    <option value="2">流 2</option>
+                    <option value="0">通道 0</option>
+                    <option value="1">通道 1</option>
+                    <option value="2">通道 2</option>
                   </select>
                 </p>
               </div>
               <div class="col-12 col-lg-6">
                 <h4>录制时长</h4>
                 <p class="number-range">
-                  <label for="persondetection_recording_duration">录制时长（秒，0为无限制）</label>
+                  <label for="persondetection_recording_duration">录制时长（最大录制持续时间,0为无限制,没有sdcard不能大于180,单位秒）</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_recording_duration" name="persondetection_recording_duration" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="3600" data-step="1">
+                    <input type="text" id="persondetection_recording_duration" name="persondetection_recording_duration" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="1800" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
                 <p class="number-range">
-                  <label for="persondetection_recording_detection_interval">录制检测间隔（秒，必须小于录制时长）</label>
+                  <label for="persondetection_recording_detection_interval">录制检测间隔（检测到人员后间隔多少秒再次检测,单位秒）</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_recording_detection_interval" name="persondetection_recording_detection_interval" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="1" data-max="60" data-step="1">
+                    <input type="text" id="persondetection_recording_detection_interval" name="persondetection_recording_detection_interval" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="1" data-max="5" data-step="1">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
                   </span>
                 </p>
@@ -204,10 +206,24 @@
                 <p class="number-range">
                   <label for="persondetection_ivs_polling_timeout">IVS轮询超时（毫秒）</label>
                   <span class="input-group">
-                    <input type="text" id="persondetection_ivs_polling_timeout" name="persondetection_ivs_polling_timeout" class="form-control text-end" value="" pattern="[0-9]{1,}" title="数值" data-min="1" data-max="5000" data-step="1">
+                    <input type="text" id="persondetection_ivs_polling_timeout" name="persondetection_ivs_polling_timeout" class="form-control text-end" value="" pattern="[0-9]{1,}" title="数值" data-min="1" data-max="5000" data-step="100">
                     <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="打开滑块"></button>
                   </span>
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title">权限区域</h2>
+            <small>配置检测区域多边形</small>
+          </div>
+          <div class="card-body">
+            <div id="persondetection-perms-container">
+              <div class="alert alert-info" role="alert">
+                权限区域配置需要在启用权限区域后设置
               </div>
             </div>
           </div>
