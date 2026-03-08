@@ -11,8 +11,8 @@ fi
 echo $$ > /tmp/network_check_prompt.lock
 trap 'rm -f /tmp/network_check_prompt.lock' EXIT
 
-play /usr/share/sounds/other/networkcheck.opus append=1
-play /usr/share/sounds/other/taskprompt.opus append=1
+play /usr/share/sounds/other/networkcheck.opus
+play /usr/share/sounds/other/taskprompt.opus
 
 sleep 2
 

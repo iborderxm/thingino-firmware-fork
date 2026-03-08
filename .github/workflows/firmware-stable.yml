@@ -487,9 +487,10 @@ jobs:
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/share/common overlay/usr/share/common
           rm -rf package/thingino-sounds/files
           cp -r /tmp/$REPO_NAME/package/thingino-sounds/files package/thingino-sounds/files
+          ls -ltra package/thingino-sounds/files/other/
           # cp -r /tmp/$REPO_NAME/package/thingino-sounds/thingino-sounds.mk package/thingino-sounds/thingino-sounds.mk
           sed -i '12i\$(INSTALL) -m 0755 -d $(TARGET_DIR)/usr/share/sounds/other' package/thingino-sounds/thingino-sounds.mk
-          sed -i '13i\$(INSTALL) -m 0644 -t $(TARGET_DIR)/usr/share/sounds/other $(THINGINO_SOUNDS_PKGDIR)/files/other/*;' package/thingino-sounds/thingino-sounds.mk
+          sed -i '13i\$(INSTALL) -m 0644 -t $(TARGET_DIR)/usr/share/sounds/other $(THINGINO_SOUNDS_PKGDIR)/files/other/*.opus;' package/thingino-sounds/thingino-sounds.mk
 
           # TODO 临时方案，等 Prudynt 新版本解决编译问题后再删除
           # rm -rf package/prudynt-t
