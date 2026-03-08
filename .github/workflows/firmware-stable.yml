@@ -243,8 +243,10 @@ jobs:
           cd $GITHUB_WORKSPACE
           rm -rf package/thingino-button
           cp -r /tmp/$REPO_NAME/package/thingino-button package/thingino-button
+          # 注释$(CHECK_MULTIPLE_GPIO_BUTTONS)
+          sed -i 's/$(CHECK_MULTIPLE_GPIO_BUTTONS)/# $(CHECK_MULTIPLE_GPIO_BUTTONS)/' package/thingino-button/thingino-button.mk
           cat package/thingino-button/thingino-button.mk
-
+          
       - name: Build thingino-button only
         run: |
           cd $GITHUB_WORKSPACE
