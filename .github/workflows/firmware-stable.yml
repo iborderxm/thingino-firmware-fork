@@ -240,6 +240,7 @@ jobs:
           cd /tmp/$REPO_NAME
           git checkout iborder
 
+          cd $GITHUB_WORKSPACE
           rm -rf package/thingino-button
           cp -r /tmp/$REPO_NAME/package/thingino-button package/thingino-button
           cat package/thingino-button/thingino-button.mk
