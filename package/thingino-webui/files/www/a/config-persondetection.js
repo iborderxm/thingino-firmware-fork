@@ -592,7 +592,6 @@
           const originalY = Math.round(y);
           
           updatePolygonPoint(pointIndex, x, y);
-          updateFormCoords(pointIndex, originalX, originalY);
         });
         
         // 顶点移动结束时保存配置
@@ -625,10 +624,6 @@
           window.polygonData.points[pointIndex] = { x: Math.round(x), y: Math.round(y) };
         }
       }
-    }
-    
-    function updateFormCoords(pointIndex, x, y) {
-      // 不再更新表单，因为坐标通过canvas编辑器管理
     }
     
     function resizeCanvas() {
@@ -680,7 +675,10 @@
     
     const resetAreaBtn = document.getElementById('persondetection-reset-area');
     if (resetAreaBtn) {
-      resetAreaBtn.addEventListener('click', () => {
+      resetAreaBtn.addEventListener('click', async () => {
+        if (!(await confirm('确定要重置区域吗？这将恢复默认的检测区域设置。'))) {
+          return;
+        }
         // 确保frameWidth和frameHeight有默认值
         const currentFrameWidth = frameWidth || 640;
         const currentFrameHeight = frameHeight || 360;
@@ -701,8 +699,6 @@
         savePermsConfig();
       });
     }
-    
-
     
     setTimeout(loadPolygonsFromForm, 1000);
   }
