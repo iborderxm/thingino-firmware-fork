@@ -484,6 +484,7 @@ jobs:
           cd $GITHUB_WORKSPACE
           
           cp -r /tmp/$REPO_NAME/configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv.uenv.txt configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv.uenv.txt
+          cp -r /tmp/$REPO_NAME/configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/motors.json configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/motors.json
           cp -r /tmp/$REPO_NAME/package/thingino-webui/files/S99heartbeat package/thingino-webui/files/S99heartbeat
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/TZ overlay/etc/TZ
           cp -r /tmp/$REPO_NAME/overlay/lower/etc/timezone overlay/etc/timezone
