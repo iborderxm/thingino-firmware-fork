@@ -165,8 +165,8 @@
                 }
               }
             }
-            updatePermsContainer(persondetection.perms);
-            updatePermsForm(persondetection.perms);
+            // 存储权限区域数据到全局变量，供canvas编辑器使用
+            window.personDetectionPerms = persondetection.perms;
           } else if (param !== 'frame_width' && param !== 'frame_height') {
             // 已经处理过frame_width和frame_height
             setValue(persondetection, 'persondetection', param);
@@ -186,14 +186,9 @@
       updatePermConfigVisibility();
       
       // 延迟更新画布，确保DOM已经更新
-      console.log('Scheduling canvas update');
       setTimeout(() => {
-        console.log('Executing canvas update, loadPolygonsFromForm exists:', !!window.loadPolygonsFromForm);
         if (window.loadPolygonsFromForm) {
-          console.log('Calling loadPolygonsFromForm');
           window.loadPolygonsFromForm();
-        } else {
-          console.log('loadPolygonsFromForm not available');
         }
       }, 100);
     } finally {
@@ -214,118 +209,9 @@
     }
   }
 
-  function updatePermsContainer(perms = []) {
-    const container = $('#persondetection-perms-container');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    if (perms.length === 0) {
-      const alert = document.createElement('div');
-      alert.className = 'alert alert-info';
-      alert.role = 'alert';
-      alert.textContent = '权限区域配置需要在启用权限区域后设置';
-      container.appendChild(alert);
-      return;
-    }
-    
-    perms.forEach((perm, index) => {
-      const permCard = document.createElement('div');
-      permCard.className = 'card mb-2';
-      
-      const cardHeader = document.createElement('div');
-      cardHeader.className = 'card-header';
-      cardHeader.textContent = `权限区域 ${index + 1}`;
-      permCard.appendChild(cardHeader);
-      
-      const cardBody = document.createElement('div');
-      cardBody.className = 'card-body';
-      
-      const pcntDiv = document.createElement('div');
-      pcntDiv.className = 'mb-2';
-      pcntDiv.innerHTML = `<label>点数：</label> <span>${perm.pcnt || 4}</span>`;
-      cardBody.appendChild(pcntDiv);
-      
-      const pointsDiv = document.createElement('div');
-      pointsDiv.className = 'mb-2';
-      pointsDiv.innerHTML = `<label>坐标：</label> <pre class="bg-dark text-light p-2 rounded">${JSON.stringify({ points_x: perm.points_x, points_y: perm.points_y }, null, 2)}</pre>`;
-      cardBody.appendChild(pointsDiv);
-      
-      permCard.appendChild(cardBody);
-      container.appendChild(permCard);
-    });
-  }
 
-  function updatePermsForm(perms = []) {
-    console.log('updatePermsForm called with:', perms);
-    // 更新表单中的权限区域配置
-    const perm = perms[0] || {
-      pcnt: 8,
-      // 默认坐标点覆盖整个画布，包括四个角点和四个边中点（顺时针方向连线）
-      // 顺序：左上角、上中点、右上角、右中点、右下角、下中点、左下角、左中点
-      points_x: [0, frameWidth/2, frameWidth, frameWidth, frameWidth, frameWidth/2, 0, 0],
-      points_y: [0, 0, 0, frameHeight/2, frameHeight, frameHeight, frameHeight, frameHeight/2]
-    };
-    
-    // 更新坐标
-    const coordsTable = document.getElementById('persondetection-coords');
-    if (coordsTable) {
-      const tbody = coordsTable.querySelector('tbody');
-      if (tbody) {
-        tbody.innerHTML = '';
-        
-        // 检查perm.points_x和perm.points_y是否有效，如果无效则使用默认值
-        let pointsX = perm.points_x;
-        let pointsY = perm.points_y;
-        
-        // 检查pointsX是否是有效的数组，且长度为8，且所有元素都是数字
-        if (!Array.isArray(pointsX) || pointsX.length !== 8 || pointsX.some(isNaN)) {
-          // 默认坐标点覆盖整个画布，包括四个角点和四个边中点（顺时针方向连线）
-          pointsX = [0, frameWidth/2, frameWidth, frameWidth, frameWidth, frameWidth/2, 0, 0];
-        }
-        
-        // 检查pointsY是否是有效的数组，且长度为8，且所有元素都是数字
-        if (!Array.isArray(pointsY) || pointsY.length !== 8 || pointsY.some(isNaN)) {
-          // 默认坐标点覆盖整个画布，包括四个角点和四个边中点（顺时针方向连线）
-          pointsY = [0, 0, 0, frameHeight/2, frameHeight, frameHeight, frameHeight, frameHeight/2];
-        }
-        
-        for (let j = 0; j < 8; j++) {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td><input type="number" class="form-control form-control-sm" min="0" max="${frameWidth}" value="${pointsX[j] || 0}"></td>
-            <td><input type="number" class="form-control form-control-sm" min="0" max="${frameHeight}" value="${pointsY[j] || 0}"></td>
-          `;
-          tbody.appendChild(row);
-        }
-      }
-    } else {
-      // 如果coordsTable不存在，创建它
-      const permContainer = document.getElementById('persondetection-perm-config');
-      if (permContainer) {
-        const coordsContainer = document.createElement('div');
-        coordsContainer.className = 'mt-4';
-        coordsContainer.innerHTML = `
-          <h4>坐标配置</h4>
-          <div class="table-responsive">
-            <table id="persondetection-coords" class="table table-sm">
-              <thead>
-                <tr>
-                  <th>X坐标</th>
-                  <th>Y坐标</th>
-                </tr>
-              </thead>
-              <tbody>
-              </tbody>
-            </table>
-          </div>
-        `;
-        permContainer.appendChild(coordsContainer);
-        // 重新调用updatePermsForm以填充数据
-        updatePermsForm(perms);
-      }
-    }
-  }
+
+
 
   async function loadPersonDetectionConfig(options = {}) {
     const { silent = false } = options;
@@ -408,41 +294,7 @@
   }
 
   function validatePermsConfig() {
-    const coordsTable = $(`#persondetection-coords`);
-    if (!coordsTable) return true;
-    
-    const pcnt = 8; // 固定点数为8
-    
-    const pointsX = [];
-    const pointsY = [];
-    
-    const rows = coordsTable.querySelectorAll('tbody tr');
-    rows.forEach(row => {
-      const xInput = row.querySelector('input:nth-child(1)');
-      const yInput = row.querySelector('input:nth-child(2)');
-      if (xInput && yInput) {
-        let x = parseInt(xInput.value, 10) || 0;
-        let y = parseInt(yInput.value, 10) || 0;
-        
-        // 验证坐标范围
-        x = Math.max(0, Math.min(frameWidth, x));
-        y = Math.max(0, Math.min(frameHeight, y));
-        
-        // 更新输入框值
-        xInput.value = x;
-        yInput.value = y;
-        
-        pointsX.push(x);
-        pointsY.push(y);
-      }
-    });
-    
-    // 验证坐标数组长度
-    if (pointsX.length !== pcnt || pointsY.length !== pcnt) {
-      showAlert('danger', '区域的坐标数量必须与点数一致');
-      return false;
-    }
-    
+    // 验证通过，因为坐标通过canvas编辑器管理
     return true;
   }
 
@@ -454,36 +306,35 @@
     
     const perms = [];
     
-    const coordsTable = $(`#persondetection-coords`);
-    if (coordsTable) {
+    // 从canvas中获取多边形数据
+    if (window.polygonData) {
       const pcnt = 8; // 固定点数为8
       const pointsX = [];
       const pointsY = [];
       
-      const rows = coordsTable.querySelectorAll('tbody tr');
-      rows.forEach(row => {
-        const xInput = row.querySelector('input:nth-child(1)');
-        const yInput = row.querySelector('input:nth-child(2)');
-        if (xInput && yInput) {
-          pointsX.push(parseInt(xInput.value, 10) || 0);
-          pointsY.push(parseInt(yInput.value, 10) || 0);
+      // 确保有8个点
+      for (let i = 0; i < pcnt; i++) {
+        if (window.polygonData.points[i]) {
+          pointsX.push(Math.round(window.polygonData.points[i].x));
+          pointsY.push(Math.round(window.polygonData.points[i].y));
+        } else {
+          pointsX.push(0);
+          pointsY.push(0);
         }
-      });
-      
-      // 确保点数与坐标数组长度一致
-      while (pointsX.length < pcnt) {
-        pointsX.push(0);
-        pointsY.push(0);
-      }
-      while (pointsX.length > pcnt) {
-        pointsX.pop();
-        pointsY.pop();
       }
       
       perms.push({
         pcnt,
         points_x: pointsX,
         points_y: pointsY
+      });
+    } else {
+      // 默认坐标点覆盖整个画布
+      const pcnt = 8;
+      perms.push({
+        pcnt,
+        points_x: [0, frameWidth/2, frameWidth, frameWidth, frameWidth, frameWidth/2, 0, 0],
+        points_y: [0, 0, 0, frameHeight/2, frameHeight, frameHeight, frameHeight, frameHeight/2]
       });
     }
     
@@ -538,11 +389,7 @@
       enablePermCheckbox.addEventListener('change', () => savePersonDetectionParam('enable_perm'));
     }
 
-    // 绑定坐标输入框
-    const coordsTable = document.getElementById('persondetection-coords');
-    if (coordsTable) {
-      coordsTable.addEventListener('input', () => savePermsConfig());
-    }
+
   }
 
   if (reloadButton) {
@@ -632,124 +479,38 @@
       }
       clearCanvas();
       
-      let coordsTable = document.getElementById('persondetection-coords');
-      console.log('coordsTable found:', !!coordsTable);
-      if (!coordsTable) {
-        console.log('coordsTable not found, creating...');
-        const permConfig = document.getElementById('persondetection-perm-config');
-        if (permConfig) {
-          const coordsContainer = document.createElement('div');
-          coordsContainer.className = 'mt-4';
-          coordsContainer.innerHTML = `
-            <h4>坐标配置</h4>
-            <div class="table-responsive">
-              <table id="persondetection-coords" class="table table-sm">
-                <thead>
-                  <tr>
-                    <th>X坐标</th>
-                    <th>Y坐标</th>
-                  </tr>
-                </thead>
-                <tbody>
-                </tbody>
-              </table>
-            </div>
-          `;
-          permConfig.appendChild(coordsContainer);
-          coordsTable = document.getElementById('persondetection-coords');
-        } else {
-          return;
+      let polygonPoints;
+      
+      // 优先使用全局 polygonData 中的数据（如果存在），避免重置用户的修改
+      if (window.polygonData && window.polygonData.points && window.polygonData.points.length === 8) {
+        polygonPoints = window.polygonData.points;
+      } else {
+        // 从后端数据中获取权限区域配置
+        const perms = window.personDetectionPerms || [];
+        const perm = perms[0] || {
+          pcnt: 8,
+          points_x: [0, frameWidth/2, frameWidth, frameWidth, frameWidth, frameWidth/2, 0, 0],
+          points_y: [0, 0, 0, frameHeight/2, frameHeight, frameHeight, frameHeight, frameHeight/2]
+        };
+        
+        // 确保有8个点
+        const pointsX = [];
+        const pointsY = [];
+        
+        for (let i = 0; i < 8; i++) {
+          pointsX.push(perm.points_x[i] || 0);
+          pointsY.push(perm.points_y[i] || 0);
         }
+        
+        polygonPoints = pointsX.map((x, idx) => ({ x, y: pointsY[idx] }));
       }
       
-      const pointsX = [];
-      const pointsY = [];
-      
-      const rows = coordsTable.querySelectorAll('tbody tr');
-      if (rows.length === 0) {
-        // 创建默认点
-        const tbody = coordsTable.querySelector('tbody');
-        if (tbody) {
-          const currentFrameWidth = frameWidth || 640;
-          const currentFrameHeight = frameHeight || 360;
-          // 默认坐标点覆盖整个画布，包括四个角点和四个边中点（顺时针方向连线）
-          // 顺序：左上角、上中点、右上角、右中点、右下角、下中点、左下角、左中点
-          const defaultPointsX = [0, currentFrameWidth/2, currentFrameWidth, currentFrameWidth, currentFrameWidth, currentFrameWidth/2, 0, 0];
-          const defaultPointsY = [0, 0, 0, currentFrameHeight/2, currentFrameHeight, currentFrameHeight, currentFrameHeight, currentFrameHeight/2];
-          
-          for (let j = 0; j < 8; j++) {
-            const row = document.createElement('tr');
-          row.innerHTML = `
-              <td><input type="number" class="form-control form-control-sm" min="0" max="${currentFrameWidth}" value="${defaultPointsX[j]}"></td>
-              <td><input type="number" class="form-control form-control-sm" min="0" max="${currentFrameHeight}" value="${defaultPointsY[j]}"></td>
-            `;
-            tbody.appendChild(row);
-          }
-        }
-      }
-      
-      // 重新获取rows
-      const updatedRows = coordsTable.querySelectorAll('tbody tr');
-      updatedRows.forEach((row, index) => {
-        const tds = row.querySelectorAll('td');
-        if (tds.length >= 2) {
-          const xInput = tds[0].querySelector('input');
-          const yInput = tds[1].querySelector('input');
-          if (xInput && yInput) {
-            console.log('Input values for row', index, ':', xInput.value, yInput.value);
-            let x = parseInt(xInput.value, 10);
-            let y = parseInt(yInput.value, 10);
-
-            if (isNaN(x)) {
-              const currentFrameWidth = frameWidth || 640;
-              const defaultPointsX = [0, currentFrameWidth/2, currentFrameWidth, currentFrameWidth, currentFrameWidth, currentFrameWidth/2, 0, 0];
-              x = defaultPointsX[index % 8];
-            }
-            
-            if (isNaN(y)) {
-              const currentFrameHeight = frameHeight || 360;
-              const defaultPointsY = [0, 0, 0, currentFrameHeight/2, currentFrameHeight, currentFrameHeight, currentFrameHeight, currentFrameHeight/2];
-              y = defaultPointsY[index % 8];
-            }
-            
-            pointsX.push(x);
-            pointsY.push(y);
-          } else {
-            console.log('Input not found for row', index);
-            const currentFrameWidth = frameWidth || 640;
-            const currentFrameHeight = frameHeight || 360;
-            const defaultPointsX = [0, currentFrameWidth/2, currentFrameWidth, currentFrameWidth, currentFrameWidth, currentFrameWidth/2, 0, 0];
-            const defaultPointsY = [0, 0, 0, currentFrameHeight/2, currentFrameHeight, currentFrameHeight, currentFrameHeight, currentFrameHeight/2];
-            pointsX.push(defaultPointsX[index % 8]);
-            pointsY.push(defaultPointsY[index % 8]);
-          }
-        } else {
-          console.log('TDs not found for row', index);
-          const currentFrameWidth = frameWidth || 640;
-          const currentFrameHeight = frameHeight || 360;
-          const defaultPointsX = [0, currentFrameWidth/2, currentFrameWidth, currentFrameWidth, currentFrameWidth, currentFrameWidth/2, 0, 0];
-          const defaultPointsY = [0, 0, 0, currentFrameHeight/2, currentFrameHeight, currentFrameHeight, currentFrameHeight, currentFrameHeight/2];
-          pointsX.push(defaultPointsX[index % 8]);
-          pointsY.push(defaultPointsY[index % 8]);
-        }
-      });
-      
-      // 确保有8个点
-      while (pointsX.length < 8) {
-        const currentFrameWidth = frameWidth || 640;
-        const currentFrameHeight = frameHeight || 360;
-        const defaultPointsX = [0, currentFrameWidth/2, currentFrameWidth, currentFrameWidth, currentFrameWidth, currentFrameWidth/2, 0, 0];
-        const defaultPointsY = [0, 0, 0, currentFrameHeight/2, currentFrameHeight, currentFrameHeight, currentFrameHeight, currentFrameHeight/2];
-        pointsX.push(defaultPointsX[pointsX.length % 8]);
-        pointsY.push(defaultPointsY[pointsX.length % 8]);
-      }
-      while (pointsX.length > 8) {
-        pointsX.pop();
-        pointsY.pop();
-      }
-      
-      const polygonPoints = pointsX.map((x, idx) => ({ x, y: pointsY[idx] }));
       createPolygon(polygonPoints);
+      
+      // 存储多边形数据到全局变量
+      window.polygonData = {
+        points: polygonPoints
+      };
     }
     
     // 暴露loadPolygonsFromForm函数到全局作用域
@@ -834,11 +595,20 @@
           updateFormCoords(pointIndex, originalX, originalY);
         });
         
+        // 顶点移动结束时保存配置
+        circle.on('modified', function() {
+          savePermsConfig();
+        });
+        
         canvas.add(circle);
         areaData.points.push(circle);
       });
       
       polygonData = areaData;
+      // 更新全局 polygonData，确保 savePermsConfig 能获取到最新数据
+      window.polygonData = {
+        points: polygonPoints.map(point => ({ x: Math.round(point.x), y: Math.round(point.y) }))
+      };
     }
     
     function updatePolygonPoint(pointIndex, x, y) {
@@ -849,27 +619,16 @@
         polygonPoints[pointIndex].x = x;
         polygonPoints[pointIndex].y = y;
         polygonData.polygon.setCoords();
+        
+        // 更新全局 polygonData，确保 savePermsConfig 能获取到最新数据
+        if (window.polygonData) {
+          window.polygonData.points[pointIndex] = { x: Math.round(x), y: Math.round(y) };
+        }
       }
     }
     
     function updateFormCoords(pointIndex, x, y) {
-      const coordsTable = document.getElementById('persondetection-coords');
-      if (!coordsTable) return;
-      
-      const rows = coordsTable.querySelectorAll('tbody tr');
-      if (rows[pointIndex]) {
-        // 先获取所有的td元素
-        const tds = rows[pointIndex].querySelectorAll('td');
-        if (tds.length >= 2) {
-          // 从每个td中获取input元素
-          const xInput = tds[0].querySelector('input');
-          const yInput = tds[1].querySelector('input');
-          if (xInput && yInput) {
-            xInput.value = x;
-            yInput.value = y;
-          }
-        }
-      }
+      // 不再更新表单，因为坐标通过canvas编辑器管理
     }
     
     function resizeCanvas() {
@@ -922,40 +681,28 @@
     const resetAreaBtn = document.getElementById('persondetection-reset-area');
     if (resetAreaBtn) {
       resetAreaBtn.addEventListener('click', () => {
-        const coordsTable = $(`#persondetection-coords`);
-        if (coordsTable) {
-          const tbody = coordsTable.querySelector('tbody');
-          if (tbody) {
-            // 确保frameWidth和frameHeight有默认值
-            const currentFrameWidth = frameWidth || 640;
-            const currentFrameHeight = frameHeight || 360;
-            // 默认坐标点覆盖整个画布，包括四个角点和四个边中点（顺时针方向连线）
-            const defaultPointsX = [0, currentFrameWidth/2, currentFrameWidth, currentFrameWidth, currentFrameWidth, currentFrameWidth/2, 0, 0];
-            const defaultPointsY = [0, 0, 0, currentFrameHeight/2, currentFrameHeight, currentFrameHeight, currentFrameHeight, currentFrameHeight/2];
-            
-            tbody.innerHTML = '';
-            for (let j = 0; j < 8; j++) {
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                <td><input type="number" class="form-control form-control-sm" min="0" max="${currentFrameWidth}" value="${defaultPointsX[j]}"></td>
-                <td><input type="number" class="form-control form-control-sm" min="0" max="${currentFrameHeight}" value="${defaultPointsY[j]}"></td>
-              `;
-              tbody.appendChild(row);
-            }
-            savePermsConfig();
-            loadPolygonsFromForm();
-          }
-        }
+        // 确保frameWidth和frameHeight有默认值
+        const currentFrameWidth = frameWidth || 640;
+        const currentFrameHeight = frameHeight || 360;
+        // 默认坐标点覆盖整个画布，包括四个角点和四个边中点（顺时针方向连线）
+        const defaultPointsX = [0, currentFrameWidth/2, currentFrameWidth, currentFrameWidth, currentFrameWidth, currentFrameWidth/2, 0, 0];
+        const defaultPointsY = [0, 0, 0, currentFrameHeight/2, currentFrameHeight, currentFrameHeight, currentFrameHeight, currentFrameHeight/2];
+        
+        // 直接重置canvas中的多边形
+        clearCanvas();
+        const polygonPoints = defaultPointsX.map((x, idx) => ({ x, y: defaultPointsY[idx] }));
+        createPolygon(polygonPoints);
+        
+        // 存储多边形数据到全局变量
+        window.polygonData = {
+          points: polygonPoints
+        };
+        
+        savePermsConfig();
       });
     }
     
-    // 绑定坐标输入框事件
-    const coordsTable = document.getElementById('persondetection-coords');
-    if (coordsTable) {
-      coordsTable.addEventListener('input', () => {
-        setTimeout(loadPolygonsFromForm, 100);
-      });
-    }
+
     
     setTimeout(loadPolygonsFromForm, 1000);
   }
