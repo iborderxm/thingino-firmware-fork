@@ -27,15 +27,11 @@
   const personDetectionStringParams = ['save_path'];
 
   const alertArea = $('#persondetection-alerts');
-  const contentWrap = $('#persondetection-content');
   const reloadButton = $('#persondetection-reload');
-  const form = $('#persondetection-form');
   const permConfig = $('#persondetection-perm-config');
   const permContainer = $('#persondetection-perms-container');
   const enablePermCheckbox = $('#persondetection_enable_perm');
-  const areaTabs = $('#persondetection-area-tabs');
   let initialLoadComplete = false;
-  let currentAreaIndex = 0;
   let frameWidth = 640;
   let frameHeight = 360;
 
@@ -188,7 +184,6 @@
       
       // 处理权限区域显示/隐藏
       updatePermConfigVisibility();
-      console.log('Updated perm config visibility');
       
       // 延迟更新画布，确保DOM已经更新
       console.log('Scheduling canvas update');
@@ -348,7 +343,6 @@
       }
       applyPersonDetectionConfig(data.persondetection);
       if (!initialLoadComplete) {
-        if (contentWrap) contentWrap.classList.remove('d-none');
         if (typeof window.attachSliderButtons === 'function') {
           window.attachSliderButtons();
         }
@@ -543,18 +537,7 @@
     if (enablePermCheckbox) {
       enablePermCheckbox.addEventListener('change', () => savePersonDetectionParam('enable_perm'));
     }
-    
-    // 绑定区域标签页切换
-    if (areaTabs) {
-      areaTabs.addEventListener('shown.bs.tab', (event) => {
-        const tabId = event.target.id;
-        const areaIndex = parseInt(tabId.split('-')[1]) - 1;
-        currentAreaIndex = areaIndex;
-      });
-    }
-    
 
-    
     // 绑定坐标输入框
     for (let i = 1; i <= 4; i++) {
       const coordsTable = document.getElementById(`persondetection-coords-${i}`);
@@ -587,9 +570,7 @@
     if (!canvasElement || !previewImg) return;
     
     let canvas;
-    const polygons = [];
-    const points = [];
-    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4'];
+    let polygonData = null;
     
     function initFabricCanvas() {
       const container = document.getElementById('persondetection-editor-container');
@@ -770,7 +751,7 @@
       }
       
       const polygonPoints = pointsX.map((x, idx) => ({ x, y: pointsY[idx] }));
-      createPolygon(polygonPoints, 0, colors[0]);
+      createPolygon(polygonPoints);
     }
     
     // 暴露loadPolygonsFromForm函数到全局作用域
@@ -780,16 +761,15 @@
       if (!canvas) return;
       canvas.clear();
       canvas.backgroundColor = 'rgba(128, 128, 128, 0.1)';
-      polygons.forEach(polygon => {
-        if (polygon.polygon) canvas.remove(polygon.polygon);
-        polygon.points.forEach(point => canvas.remove(point));
-      });
-      polygons.length = 0;
-      points.length = 0;
+      if (polygonData) {
+        if (polygonData.polygon) canvas.remove(polygonData.polygon);
+        polygonData.points.forEach(point => canvas.remove(point));
+      }
+      polygonData = null;
       drawGrid();
     }
     
-    function createPolygon(polygonPoints, areaIndex, color) {
+    function createPolygon(polygonPoints) {
       if (!canvas) {
         console.log('Canvas not initialized');
         return;
@@ -811,9 +791,7 @@
       
       const areaData = {
         polygon: polygon,
-        points: [],
-        areaIndex: areaIndex,
-        color: color
+        points: []
       };
       
       polygonPoints.forEach((point, pointIndex) => {
@@ -837,7 +815,6 @@
             offsetX: 0,
             offsetY: 0
           }),
-          areaIndex: areaIndex,
           pointIndex: pointIndex
         });
         
@@ -855,32 +832,30 @@
           const originalX = Math.round(x);
           const originalY = Math.round(y);
           
-          updatePolygonPoint(areaIndex, pointIndex, x, y);
-          updateFormCoords(areaIndex, pointIndex, originalX, originalY);
+          updatePolygonPoint(pointIndex, x, y);
+          updateFormCoords(pointIndex, originalX, originalY);
         });
         
         canvas.add(circle);
         areaData.points.push(circle);
-        points.push(circle);
       });
       
-      polygons.push(areaData);
+      polygonData = areaData;
     }
     
-    function updatePolygonPoint(areaIndex, pointIndex, x, y) {
-      const areaData = polygons[areaIndex];
-      if (!areaData || !areaData.polygon) return;
+    function updatePolygonPoint(pointIndex, x, y) {
+      if (!polygonData || !polygonData.polygon) return;
       
-      const polygonPoints = areaData.polygon.points;
+      const polygonPoints = polygonData.polygon.points;
       if (polygonPoints[pointIndex]) {
         polygonPoints[pointIndex].x = x;
         polygonPoints[pointIndex].y = y;
-        areaData.polygon.setCoords();
+        polygonData.polygon.setCoords();
       }
     }
     
-    function updateFormCoords(areaIndex, pointIndex, x, y) {
-      const coordsTable = document.getElementById(`persondetection-coords-${areaIndex + 1}`);
+    function updateFormCoords(pointIndex, x, y) {
+      const coordsTable = document.getElementById('persondetection-coords-1');
       if (!coordsTable) return;
       
       const rows = coordsTable.querySelectorAll('tbody tr');
@@ -976,14 +951,8 @@
       });
     }
     
-    if (areaTabs) {
-      areaTabs.addEventListener('shown.bs.tab', () => {
-        loadPolygonsFromForm();
-      });
-    }
-    
     for (let i = 1; i <= 4; i++) {
-      const coordsTable = $(`#persondetection-coords-${i}`);
+      const coordsTable = $(`#persondetection-coords-1-${i}`);
       if (coordsTable) {
         coordsTable.addEventListener('input', () => {
           setTimeout(loadPolygonsFromForm, 100);
