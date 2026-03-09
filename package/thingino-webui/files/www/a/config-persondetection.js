@@ -268,7 +268,7 @@
     };
     
     // 更新坐标
-    const coordsTable = document.getElementById('persondetection-coords-1');
+    const coordsTable = document.getElementById('persondetection-coords');
     if (coordsTable) {
       const tbody = coordsTable.querySelector('tbody');
       if (tbody) {
@@ -308,7 +308,7 @@
         coordsContainer.innerHTML = `
           <h4>坐标配置</h4>
           <div class="table-responsive">
-            <table id="persondetection-coords-1" class="table table-sm">
+            <table id="persondetection-coords" class="table table-sm">
               <thead>
                 <tr>
                   <th>X坐标</th>
@@ -408,7 +408,7 @@
   }
 
   function validatePermsConfig() {
-    const coordsTable = $(`#persondetection-coords-1`);
+    const coordsTable = $(`#persondetection-coords`);
     if (!coordsTable) return true;
     
     const pcnt = 8; // 固定点数为8
@@ -454,7 +454,7 @@
     
     const perms = [];
     
-    const coordsTable = $(`#persondetection-coords-1`);
+    const coordsTable = $(`#persondetection-coords`);
     if (coordsTable) {
       const pcnt = 8; // 固定点数为8
       const pointsX = [];
@@ -539,11 +539,9 @@
     }
 
     // 绑定坐标输入框
-    for (let i = 1; i <= 4; i++) {
-      const coordsTable = document.getElementById(`persondetection-coords-${i}`);
-      if (coordsTable) {
-        coordsTable.addEventListener('input', () => savePermsConfig());
-      }
+    const coordsTable = document.getElementById('persondetection-coords');
+    if (coordsTable) {
+      coordsTable.addEventListener('input', () => savePermsConfig());
     }
   }
 
@@ -634,7 +632,7 @@
       }
       clearCanvas();
       
-      let coordsTable = document.getElementById('persondetection-coords-1');
+      let coordsTable = document.getElementById('persondetection-coords');
       console.log('coordsTable found:', !!coordsTable);
       if (!coordsTable) {
         console.log('coordsTable not found, creating...');
@@ -645,7 +643,7 @@
           coordsContainer.innerHTML = `
             <h4>坐标配置</h4>
             <div class="table-responsive">
-              <table id="persondetection-coords-1" class="table table-sm">
+              <table id="persondetection-coords" class="table table-sm">
                 <thead>
                   <tr>
                     <th>X坐标</th>
@@ -658,7 +656,7 @@
             </div>
           `;
           permConfig.appendChild(coordsContainer);
-          coordsTable = document.getElementById('persondetection-coords-1');
+          coordsTable = document.getElementById('persondetection-coords');
         } else {
           return;
         }
@@ -855,7 +853,7 @@
     }
     
     function updateFormCoords(pointIndex, x, y) {
-      const coordsTable = document.getElementById('persondetection-coords-1');
+      const coordsTable = document.getElementById('persondetection-coords');
       if (!coordsTable) return;
       
       const rows = coordsTable.querySelectorAll('tbody tr');
@@ -924,7 +922,7 @@
     const resetAreaBtn = document.getElementById('persondetection-reset-area');
     if (resetAreaBtn) {
       resetAreaBtn.addEventListener('click', () => {
-        const coordsTable = $(`#persondetection-coords-1`);
+        const coordsTable = $(`#persondetection-coords`);
         if (coordsTable) {
           const tbody = coordsTable.querySelector('tbody');
           if (tbody) {
@@ -951,13 +949,12 @@
       });
     }
     
-    for (let i = 1; i <= 4; i++) {
-      const coordsTable = $(`#persondetection-coords-1-${i}`);
-      if (coordsTable) {
-        coordsTable.addEventListener('input', () => {
-          setTimeout(loadPolygonsFromForm, 100);
-        });
-      }
+    // 绑定坐标输入框事件
+    const coordsTable = document.getElementById('persondetection-coords');
+    if (coordsTable) {
+      coordsTable.addEventListener('input', () => {
+        setTimeout(loadPolygonsFromForm, 100);
+      });
     }
     
     setTimeout(loadPolygonsFromForm, 1000);
