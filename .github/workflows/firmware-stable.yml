@@ -333,7 +333,24 @@ jobs:
           BOARD=${{ matrix.thingino-version }} make source WORKFLOW=1
           echo "Source download completed"
 
-      
+      - name: Update webui files
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        run: |
+          # 复制当前项目目录到/tmp
+          REPO_FULL="${{ github.repository }}"
+          REPO_NAME="${REPO_FULL#*/}"
+          echo "Repository name: $REPO_NAME"
+          echo "copied repository to /tmp/$REPO_NAME"
+          cd ../
+          cp -r $REPO_NAME /tmp/$REPO_NAME
+          ls -ltr /tmp/$REPO_NAME
+          cd /tmp/$REPO_NAME
+          git checkout iborder
+
+          cd $GITHUB_WORKSPACE
+          # fix jct
+          cp -r /tmp/$REPO_NAME/package/thingino-jct/0001-strtok_2_strtok_r.patch package/thingino-jct/
+          
       - name: Update ingenic-lib.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
@@ -350,7 +367,6 @@ jobs:
       - name: Update prudynt-t.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
-          cp -r /tmp/$REPO_NAME/package/thingino-jct/0001-strtok_2_strtok_r.patch package/thingino-jct/
           sed -i 's/^PRUDYNT_T_SITE/# PRUDYNT_T_SITE/' package/prudynt-t/prudynt-t.mk
           sed -i 's/^PRUDYNT_T_VERSION/# PRUDYNT_T_VERSION/' package/prudynt-t/prudynt-t.mk
           sed -i 's/^PRUDYNT_T_GIT_SUBMODULES/# PRUDYNT_T_GIT_SUBMODULES/' package/prudynt-t/prudynt-t.mk
