@@ -132,17 +132,19 @@ jobs:
           
           if [ -n "$CHECKOUT_TARGET" ]; then
             echo "Checking if $CHECKOUT_TARGET exists as branch or tag..."
-            # Check if it's a tag
-            if git rev-parse --verify "refs/tags/$CHECKOUT_TARGET" > /dev/null 2>&1; then
-              echo "Found tag $CHECKOUT_TARGET"
-              TAG=$CHECKOUT_TARGET
-            # Check if it's a branch
-            elif git rev-parse --verify "refs/heads/$CHECKOUT_TARGET" > /dev/null 2>&1; then
-              echo "Found branch $CHECKOUT_TARGET"
+            # Try to checkout directly (will work for tags and existing local branches)
+            if git checkout $CHECKOUT_TARGET; then
+              echo "Successfully checked out $CHECKOUT_TARGET"
               TAG=$CHECKOUT_TARGET
             else
-              echo "ERROR: $CHECKOUT_TARGET not found as branch or tag"
-              exit 1
+              # If direct checkout fails, try to checkout remote branch
+              if git checkout -b $CHECKOUT_TARGET origin/$CHECKOUT_TARGET; then
+                echo "Successfully checked out remote branch $CHECKOUT_TARGET"
+                TAG=$CHECKOUT_TARGET
+              else
+                echo "ERROR: $CHECKOUT_TARGET not found as branch or tag"
+                exit 1
+              fi
             fi
           else
             # Use original logic - get latest tag
@@ -153,9 +155,10 @@ jobs:
               echo "ERROR: No tags found in repository"
               exit 1
             fi
+            
+            git checkout $TAG
           fi
           
-          git checkout $TAG
           cd /tmp
           ls -ltr prudynt-t/include/
           mv prudynt-t prudynt-t-${TAG}
