@@ -508,7 +508,6 @@ jobs:
           git checkout iborder
 
           cd $GITHUB_WORKSPACE
-          
           cp -r /tmp/$REPO_NAME/configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
           cp -r /tmp/$REPO_NAME/configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv.uenv.txt configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv.uenv.txt
           cp -r /tmp/$REPO_NAME/configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/motors.json configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/motors.json
@@ -623,6 +622,13 @@ jobs:
           echo "Updated prudynt-t.mk file:"
           pwd
           cat package/prudynt-t/prudynt-t.mk | head -200
+
+      - name: remove onvif support
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        run: |
+          # select BR2_PACKAGE_THINGINO_ONVIF
+          sed -i 's/select BR2_PACKAGE_THINGINO_ONVIF/# select BR2_PACKAGE_THINGINO_ONVIF/' Config.in
+          sed -i 's/select BR2_PACKAGE_THINGINO_ONVIF/# select BR2_PACKAGE_THINGINO_ONVIF/' package/prudynt-t/Config.in
 
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}
