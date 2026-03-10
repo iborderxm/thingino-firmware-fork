@@ -41,6 +41,10 @@ on:
         description: 'Create GitHub release'
         required: false
         default: false
+      prudynt-t-checkout:
+        type: string
+        description: 'Tag or branch name to checkout for prudynt-t. If not provided, uses latest tag.'
+        required: false
 
 env:
   BR2_DL_DIR: ~/dl
@@ -279,12 +283,31 @@ jobs:
           cd /tmp/prudynt-t
           git fetch --all
 
-          TAG=$(git tag --sort=-v:refname | head -1)
-          echo "Latest Tag: $TAG"
+          CHECKOUT_TARGET="${{ github.event.inputs.prudynt-t-checkout }}"
           
-          if [ -z "$TAG" ]; then
-            echo "ERROR: No tags found in repository"
-            exit 1
+          if [ -n "$CHECKOUT_TARGET" ]; then
+            echo "Checking if $CHECKOUT_TARGET exists as branch or tag..."
+            # Check if it's a tag
+            if git rev-parse --verify "refs/tags/$CHECKOUT_TARGET" > /dev/null 2>&1; then
+              echo "Found tag $CHECKOUT_TARGET"
+              TAG=$CHECKOUT_TARGET
+            # Check if it's a branch
+            elif git rev-parse --verify "refs/heads/$CHECKOUT_TARGET" > /dev/null 2>&1; then
+              echo "Found branch $CHECKOUT_TARGET"
+              TAG=$CHECKOUT_TARGET
+            else
+              echo "ERROR: $CHECKOUT_TARGET not found as branch or tag"
+              exit 1
+            fi
+          else
+            # Use original logic - get latest tag
+            TAG=$(git tag --sort=-v:refname | head -1)
+            echo "Latest Tag: $TAG"
+            
+            if [ -z "$TAG" ]; then
+              echo "ERROR: No tags found in repository"
+              exit 1
+            fi
           fi
           
           git checkout $TAG
