@@ -17,7 +17,7 @@
     "spk_enabled": true,
     "spk_gain": 20,
     "spk_sample_rate": 8000,
-    "spk_vol": 60,
+    "spk_vol": 10,
     "tap_enabled": true,
     "tap_path": "/run/prudynt/audio_mic.pcm",
     "buffer_warn_frames": 60,
@@ -147,9 +147,9 @@
     "permcnt": 1,
     "perms": [
         {
-          "pcnt": 4,
-          "points_x": [0, 640, 640, 0],
-          "points_y": [0, 0, 360, 360]
+          "pcnt": 8,
+          "points_x": [0, 320, 640, 640, 640, 320, 0, 0],
+          "points_y": [0, 0, 0, 180, 360, 360, 360, 180]
         }
     ]
   },
