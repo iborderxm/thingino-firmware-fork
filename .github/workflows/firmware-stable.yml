@@ -508,6 +508,8 @@ jobs:
           git checkout iborder
 
           cd $GITHUB_WORKSPACE
+          # fix jct
+          cp -r /tmp/$REPO_NAME/package/thingino-jct/0001-strtok_2_strtok_r.patch package/thingino-jct/
           cp -r /tmp/$REPO_NAME/configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
           cp -r /tmp/$REPO_NAME/configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv.uenv.txt configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv.uenv.txt
           cp -r /tmp/$REPO_NAME/configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/motors.json configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/motors.json
