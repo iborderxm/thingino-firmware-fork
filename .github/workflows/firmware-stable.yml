@@ -395,11 +395,14 @@ jobs:
           mkdir -p output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin
           cp -a "$(dirname "$PRUDYNT_BIN")/"* output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/
           ls -ltr output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/
+          
+          UPDATE_FW_DATETIME=$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')
+          echo "UPDATE_FW_DATETIME=${UPDATE_FW_DATETIME}" >> ${GITHUB_ENV}
 
       - name: Upload prudynt-t binary as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: prudynt-t-${{ matrix.thingino-version }}
+          name: prudynt-t-${{ matrix.thingino-version }}-${{ env.UPDATE_FW_DATETIME }}
           path: |
             output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/prudynt
             output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/prudyntctl
