@@ -35,9 +35,13 @@
   let frameWidth = 640;
   let frameHeight = 360;
 
-  function getDefaultPolygonPoints(width = frameWidth, height = frameHeight) {
-    const w = width || 640;
-    const h = height || 360;
+  function getDefaultPolygonPoints(width, height) {
+    // 0<width<frameWidth, 0<height<frameHeight
+    if (width <= 0 || width >= frameWidth || height <= 0 || height >= frameHeight) {
+      throw new Error('Invalid width or height');
+    }
+    const w = (width !== undefined && width !== null) ? width : frameWidth-1;
+    const h = (height !== undefined && height !== null) ? height : frameHeight-1;
     return {
       pcnt: 8,
       points_x: [0, w / 2, w, w, w, w / 2, 0, 0],
@@ -192,6 +196,15 @@
     if (enabled) {
       permConfig.classList.remove('d-none');
       permContainer.classList.add('d-none');
+      
+      // 延迟刷新画布，确保 DOM 已经显示
+      setTimeout(() => {
+        if (window.loadPolygonsFromForm) {
+          window.loadPolygonsFromForm();
+        }
+        // 触发 resize 事件来重新计算画布尺寸
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
     } else {
       permConfig.classList.add('d-none');
       permContainer.classList.remove('d-none');
@@ -458,8 +471,8 @@
         });
 
         circle.on('moving', function() {
-          const x = Math.max(0, Math.min(frameWidth, this.left));
-          const y = Math.max(0, Math.min(frameHeight, this.top));
+          const x = Math.max(0, Math.min(frameWidth-1, this.left));
+          const y = Math.max(0, Math.min(frameHeight-1, this.top));
           this.set({ left: x, top: y });
           updatePolygonPoint(pointIndex, x, y);
         });

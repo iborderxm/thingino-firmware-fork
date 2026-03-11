@@ -40,7 +40,7 @@
     "switch_below_percent": 15,
     "tolerance_percent": 50,
     "total_gain_day_threshold": 500,
-    "total_gain_night_threshold": 15000,
+    "total_gain_night_threshold": 13000,
     "controls": {
       "color": true,
       "ircut": true,
@@ -148,8 +148,8 @@
     "perms": [
         {
           "pcnt": 8,
-          "points_x": [0, 320, 640, 640, 640, 320, 0, 0],
-          "points_y": [0, 0, 0, 180, 360, 360, 360, 180]
+          "points_x": [0, 320, 639, 639, 639, 320, 0, 0],
+          "points_y": [0, 0, 0, 180, 359, 359, 359, 180]
         }
     ]
   },
