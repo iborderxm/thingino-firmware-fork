@@ -3,6 +3,7 @@
 . /usr/share/common
 
 PRUDYNT_CONFIG="/etc/prudynt.json"
+PERSONDETECTION_CONFIG="/etc/persondetection.json"
 PIDFILE="/var/run/send2email_persondetection.pid"
 CHECK_INTERVAL=5
 
@@ -38,11 +39,106 @@ read_save_path() {
 	return 0
 }
 
+get_email_config() {
+	local email_index=$1
+
+	username=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$email_index.username" 2>/dev/null)
+	password=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$email_index.password" 2>/dev/null)
+	from_address=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$email_index.from_address" 2>/dev/null)
+	send_date=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$email_index.send_date" 2>/dev/null)
+	fail_num=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$email_index.554_fail_num" 2>/dev/null)
+
+	if [ -z "$fail_num" ]; then
+		fail_num=0
+	fi
+
+	host=$(jct "$PERSONDETECTION_CONFIG" get "host" 2>/dev/null)
+	port=$(jct "$PERSONDETECTION_CONFIG" get "port" 2>/dev/null)
+	trust_cert=$(jct "$PERSONDETECTION_CONFIG" get "trust_cert" 2>/dev/null)
+	use_ssl=$(jct "$PERSONDETECTION_CONFIG" get "use_ssl" 2>/dev/null)
+	to_address=$(jct "$PERSONDETECTION_CONFIG" get "to_address" 2>/dev/null)
+	to_name=$(jct "$PERSONDETECTION_CONFIG" get "to_name" 2>/dev/null)
+	body=$(jct "$PERSONDETECTION_CONFIG" get "body" 2>/dev/null)
+	subject=$(jct "$PERSONDETECTION_CONFIG" get "subject" 2>/dev/null)
+	max_fail_num=$(jct "$PERSONDETECTION_CONFIG" get "max_fail_num" 2>/dev/null)
+
+	if [ -z "$max_fail_num" ]; then
+		max_fail_num=10
+	fi
+}
+
+update_email_fail_count() {
+	local email_index=$1
+	local fail_count=$2
+
+	jct "$PERSONDETECTION_CONFIG" set "from_email.$email_index.554_fail_num" "$fail_count" 2>/dev/null
+}
+
+update_email_send_date() {
+	local email_index=$1
+	local date=$2
+
+	jct "$PERSONDETECTION_CONFIG" set "from_email.$email_index.send_date" "$date" 2>/dev/null
+}
+
+disable_email() {
+	local email_index=$1
+
+	jct "$PERSONDETECTION_CONFIG" set "from_email.$email_index.enabled" "false" 2>/dev/null
+	echo_warning "Disabled email account at index $email_index"
+}
+
+find_available_email() {
+	local current_date=$(date +%Y%m%d)
+	local total_emails=$(jct "$PERSONDETECTION_CONFIG" get "from_email_num" 2>/dev/null || echo 0)
+
+	echo_info "[10086] Checking available email accounts, total: $total_emails"
+
+	if [ "$total_emails" -eq 0 ]; then
+		echo_error "[10086] No email accounts configured"
+		return 255
+	fi
+
+	for i in $(seq 0 $((total_emails - 1))); do
+		local enabled=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$i.enabled" 2>/dev/null)
+
+		echo_info "[10086] Checking email account $i, enabled: $enabled"
+
+		if [ "$enabled" = "true" ]; then
+			get_email_config $i
+
+			echo_info "[10086] Email account $i details - username: $username, from_address: $from_address, send_date: $send_date, fail_num: $fail_num"
+
+			if [ -z "$username" ] || [ -z "$password" ] || [ -z "$from_address" ]; then
+				echo_warning "[10086] Email account at index $i is incomplete, skipping"
+				continue
+			fi
+
+			if [ -z "$send_date" ] || [ "$send_date" != "$current_date" ]; then
+				echo_info "[10086] Resetting email account $i for new day (current_date: $current_date)"
+				update_email_fail_count $i 0
+				update_email_send_date $i "$current_date"
+			fi
+
+			if [ "$fail_num" -ge "$max_fail_num" ]; then
+				echo_warning "[10086] Email account at index $i has too many failures ($fail_num/$max_fail_num), skipping"
+				continue
+			fi
+
+			echo_info "[10086] Found available email account: $i"
+			return $i
+		fi
+	done
+
+	echo_error "[10086] No available email accounts found after checking all $total_emails accounts"
+	return 255
+}
+
 send_video_email() {
 	local video_file="$1"
 
 	if [ ! -f "$video_file" ]; then
-		echo_warning "Video file not found: $video_file"
+		echo_warning "[10086] Video file not found: $video_file"
 		return 1
 	fi
 
@@ -52,6 +148,9 @@ send_video_email() {
 	local filename=$(basename "$video_file")
 	local start_time=""
 	local end_time=""
+	local output=""
+	local exit_code=0
+	local email_body=""
 
 	if echo "$filename" | grep -q "^persondetect_[0-9]\{6\}-[0-9]\{6\}\.mp4$"; then
 		local time_part=$(echo "$filename" | sed 's/^persondetect_\(.*\)\.mp4$/\1/')
@@ -61,37 +160,82 @@ send_video_email() {
 		local start_formatted=$(echo "$start_time" | sed 's/\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1:\2:\3/')
 		local end_formatted=$(echo "$end_time" | sed 's/\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)/\1:\2:\3/')
 
-		local body="[$start_formatted - $end_formatted]检测到行人经过"
-		local cmd="/usr/sbin/send2email -V $tmpfile -b \"$body\""
+		email_body="[$start_formatted - $end_formatted]$body"
+	else
+		email_body="$body"
+	fi
 
-		if MOTION_VIDEO_FILE="$tmpfile" sh -c "$cmd"; then
-			rm -f "$tmpfile"
-			return 0
-		else
-			rm -f "$tmpfile"
-			return 1
+	echo_info "[10086] Email config - host: '$host', port: '$port', username: '$username', from_address: '$from_address', to_address: '$to_address', subject: '$subject'"
+
+	echo_info "[10086] Executing send2email command for $filename"
+
+	if [ "$use_ssl" = "true" ]; then
+		if ! output=$(/usr/sbin/send2email -V "$tmpfile" -b "$email_body" -h "$host" -p "$port" -u "$username" -P "$password" -f "$from_address" -t "$to_address" -s "$subject" -k 2>&1); then
+			exit_code=$?
+		fi
+	else
+		if ! output=$(/usr/sbin/send2email -V "$tmpfile" -b "$email_body" -h "$host" -p "$port" -u "$username" -P "$password" -f "$from_address" -t "$to_address" -s "$subject" 2>&1); then
+			exit_code=$?
 		fi
 	fi
 
-	local cmd="/usr/sbin/send2email -V"
+	rm -f "$tmpfile"
 
-	if MOTION_VIDEO_FILE="$tmpfile" sh -c "$cmd"; then
-		rm -f "$tmpfile"
-		return 0
-	else
-		rm -f "$tmpfile"
-		return 1
+	if [ -n "$output" ]; then
+		echo_info "[10086] send2email output: $output"
 	fi
+
+	if echo "$output" | grep -qi "illegal\|invalid\|error\|fail\|unable"; then
+		echo_error "[10086] Email sending failed for $filename (detected in output)"
+		echo_error "[10086] Output: $output"
+
+		if echo "$output" | grep -q "554"; then
+			if echo "$output" | grep -qi "limit\|quota\|daily\|rate\|exceed"; then
+				echo_error "[10086] Failed to send email for $filename: Daily sending limit reached"
+				echo_warning "[10086] Please wait until tomorrow or upgrade your email service plan"
+				return 2
+			elif echo "$output" | grep -qi "spam\|reject\|blocked"; then
+				echo_error "[10086] Failed to send email for $filename: Email rejected by server"
+				echo_warning "[10086] The email may be flagged as spam or blocked by the server"
+				return 3
+			else
+				echo_error "[10086] Failed to send email for $filename: SMTP error 554"
+				echo_warning "[10086] Server rejected the email. Please check your SMTP settings"
+				return 4
+			fi
+		elif echo "$output" | grep -q "535\|authentication\|auth"; then
+			echo_error "[10086] Failed to send email for $filename: Authentication failed"
+			echo_warning "[10086] Please check your username and password"
+			return 5
+		elif echo "$output" | grep -q "530\|login\|credentials"; then
+			echo_error "[10086] Failed to send email for $filename: Login failed"
+			echo_warning "[10086] Please check your SMTP credentials"
+			return 6
+		elif echo "$output" | grep -qi "illegal\|invalid\|unrecognized"; then
+			echo_error "[10086] Failed to send email for $filename: Invalid command option"
+			return 7
+		else
+			echo_error "[10086] Failed to send email for $filename"
+			return 8
+		fi
+	elif [ $exit_code -ne 0 ]; then
+		echo_error "[10086] send2email failed with exit code $exit_code"
+		echo_error "[10086] Failed to send email for $filename"
+		return $exit_code
+	fi
+
+	echo_info "[10086] Email sent successfully for $filename"
+	return 0
 }
 
 process_video_list() {
-	type=$(jct "/etc/persondetection.json" get "type" 2>/dev/null)
+	type=$(jct "$PERSONDETECTION_CONFIG" get "type" 2>/dev/null)
 	if [ -z "$type" ]; then
 		type="delete"
 	fi
-	# 视频文件处理方式type(delete删除rename重命名)
+
 	if [ "$type" != "delete" ] && [ "$type" != "rename" ]; then
-		echo_warning "Unknown video file processing type: $type"
+		echo_warning "[10086] Unknown video file processing type: $type"
 		return 1
 	fi
 
@@ -101,53 +245,131 @@ process_video_list() {
 	local video_dir="$save_path/$current_date"
 	local yesterday_dir="$save_path/$yesterday"
 	local count=0
+	local daily_limit_reached=0
 
-    # 1小时前
-    local oneHourLate=$(awk 'BEGIN {print strftime("%H%M%d", systime() - 3600)}')
+	local oneHourLate=$(awk 'BEGIN {print strftime("%H%M%d", systime() - 3600)}')
 	local end_video_file="persondetect_${oneHourLate}-000000.mp4"
 
+	echo_info "[10086] Starting process_video_list - current_date: $current_date, current_hour: $current_hour, save_path: $save_path"
+
 	if [ "$current_hour" = "00" ] && [ -d "$yesterday_dir" ]; then
+		echo_info "[10086] Processing yesterday's videos in $yesterday_dir"
 		for video_file in $(ls -1 "$yesterday_dir"/*.mp4 2>/dev/null | grep -v "send" | grep -v "temp" | sort); do
 			[ -z "$video_file" ] && continue
+			[ "$daily_limit_reached" -eq 1 ] && break
 
 			if [ $end_video_file \> $video_file ]; then
 				continue
 			fi
 
-			if send_video_email "$video_file"; then
-			    if [ "$type" == "delete" ]; then
+			echo_info "[10086] Processing video: $video_file"
+			find_available_email
+			local email_index=$?
+
+			echo_info "[10086] find_available_email returned: $email_index"
+
+			if [ $email_index -eq 255 ] || [ $email_index -lt 0 ]; then
+				daily_limit_reached=1
+				echo_warning "[10086] No available email accounts, stopping further email attempts"
+				break
+			fi
+
+			get_email_config $email_index
+			send_video_email "$video_file"
+			local send_result=$?
+
+			echo_info "[10086] send_video_email returned: $send_result"
+
+			if [ $send_result -eq 2 ]; then
+				local current_date=$(date +%Y%m%d)
+				update_email_send_date $email_index "$current_date"
+				daily_limit_reached=1
+				echo_warning "[10086] Daily sending limit reached for email account $email_index, stopping further email attempts"
+				break
+			elif [ $send_result -eq 4 ]; then
+				local new_fail_num=$((fail_num + 1))
+				update_email_fail_count $email_index $new_fail_num
+
+				if [ $new_fail_num -ge $max_fail_num ]; then
+					disable_email $email_index
+					echo_warning "[10086] Email account $email_index disabled due to too many failures"
+				fi
+			elif [ $send_result -eq 0 ]; then
+				echo_info "[10086] Email sent successfully, processing file: $video_file"
+				if [ "$type" = "delete" ]; then
 					rm -rf "$video_file"
 				else
 					mv "$video_file" "${video_file%.mp4}_send.mp4"
 				fi
 				count=$((count + 1))
 				sleep "$CHECK_INTERVAL"
+			else
+				echo_error "[10086] Email sending failed for $video_file, will not process file"
 			fi
 		done
 	fi
-	
-	if [ -d "$video_dir" ]; then
+
+	if [ -d "$video_dir" ] && [ "$daily_limit_reached" -eq 0 ]; then
+		echo_info "[10086] Processing today's videos in $video_dir"
 		for video_file in $(ls -1 "$video_dir"/*.mp4 2>/dev/null | grep -v "send" | grep -v "temp" | sort); do
 			[ -z "$video_file" ] && continue
+			[ "$daily_limit_reached" -eq 1 ] && break
 
-			if ["$current_hour" != "00"] && [ $video_file \> $end_video_file ]; then
+			if [ "$current_hour" != "00" ] && [ $video_file \> $end_video_file ]; then
 				continue
 			fi
 
-			if send_video_email "$video_file"; then
-				if [ "$type" == "delete" ]; then
+			echo_info "[10086] Processing video: $video_file"
+			find_available_email
+			local email_index=$?
+
+			echo_info "[10086] find_available_email returned: $email_index"
+
+			if [ $email_index -eq 255 ] || [ $email_index -lt 0 ]; then
+				daily_limit_reached=1
+				echo_warning "[10086] No available email accounts, stopping further email attempts"
+				break
+			fi
+
+			get_email_config $email_index
+			send_video_email "$video_file"
+			local send_result=$?
+
+			echo_info "[10086] send_video_email returned: $send_result"
+
+			if [ $send_result -eq 2 ]; then
+				local current_date=$(date +%Y%m%d)
+				update_email_send_date $email_index "$current_date"
+				daily_limit_reached=1
+				echo_warning "[10086] Daily sending limit reached for email account $email_index, stopping further email attempts"
+				break
+			elif [ $send_result -eq 4 ]; then
+				local new_fail_num=$((fail_num + 1))
+				update_email_fail_count $email_index $new_fail_num
+
+				if [ $new_fail_num -ge $max_fail_num ]; then
+					disable_email $email_index
+					echo_warning "[10086] Email account $email_index disabled due to too many failures"
+				fi
+			elif [ $send_result -eq 0 ]; then
+				echo_info "[10086] Email sent successfully, processing file: $video_file"
+				if [ "$type" = "delete" ]; then
 					rm -rf "$video_file"
 				else
 					mv "$video_file" "${video_file%.mp4}_send.mp4"
 				fi
 				count=$((count + 1))
 				sleep "$CHECK_INTERVAL"
+			else
+				echo_error "[10086] Email sending failed for $video_file, will not process file"
 			fi
 		done
 	fi
 
 	if [ $count -gt 0 ]; then
-		echo_info "Sent $count video(s)"
+		echo_info "[10086] Sent $count video(s)"
+	else
+		echo_info "[10086] No videos sent"
 	fi
 
 	return $count
@@ -165,8 +387,7 @@ daemon_loop() {
 }
 
 start() {
-	# 检查是否已经开启邮件通知persondetection.json
-	email_enable=$(jct "/etc/persondetection.json" get "enable" 2>/dev/null)
+	email_enable=$(jct "$PERSONDETECTION_CONFIG" get "enable" 2>/dev/null)
 	if [ -z "$email_enable" ] || [ "$email_enable" = "false" ]; then
 		echo_error "Email notification for persondetection is not enabled in persondetection.json"
 		return 1
@@ -202,14 +423,27 @@ stop() {
 status() {
 	if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
 		echo_info "send2email_persondetection is running (PID: $(cat $PIDFILE))"
+
+		email_enable=$(jct "$PERSONDETECTION_CONFIG" get "enable" 2>/dev/null)
+		if [ "$email_enable" = "true" ]; then
+			total_emails=$(jct "$PERSONDETECTION_CONFIG" get "from_email_num" 2>/dev/null || echo 0)
+			enabled_emails=0
+
+			for i in $(seq 0 $((total_emails - 1))); do
+			local enabled=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$i.enabled" 2>/dev/null)
+				if [ "$enabled" = "true" ]; then
+					enabled_emails=$((enabled_emails + 1))
+				fi
+			done
+
+			echo_info "Email accounts: $enabled_emails/$total_emails enabled"
+		fi
 		return 0
 	else
 		echo_info "send2email_persondetection is not running"
 		return 1
 	fi
 }
-
-
 
 case "$1" in
 	start)

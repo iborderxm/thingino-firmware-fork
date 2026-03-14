@@ -264,9 +264,135 @@
           </div>
         </div>
 
-        <button type="button" id="save-prudynt-config" class="btn btn-primary">
-          <i class="bi bi-floppy me-1"></i> 保存配置到文件
-        </button>
+        <div class="text-end">
+          <button type="button" id="save-prudynt-config" class="btn btn-primary">
+            <i class="bi bi-floppy me-1"></i> 保存配置到文件
+          </button>
+        </div>
+      </form>
+
+      <form id="persondetection-notification-form" class="needs-validation" novalidate autocomplete="off" style="margin-top: 20px;">
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title">通知设置</h2>
+            <small>配置人形检测的邮件通知和视频文件处理方式</small>
+            <button type="button" class="btn btn-outline-secondary" id="notification-reload">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <!-- 通用设置 -->
+              <div class="col-12">
+                <div class="card h-100">
+                  <div class="card-header">通用设置</div>
+                  <div class="card-body">
+                    <p class="form-switch">
+                      <input type="checkbox" class="form-check-input" id="email_enable" name="email_enable">
+                      <label class="form-check-label" for="email_enable">启用邮件通知</label>
+                    </p>
+                    <p class="form-select">
+                      <label for="video_file_type">视频文件处理方式</label>
+                      <select id="video_file_type" name="video_file_type" class="form-select">
+                        <option value="rename">重命名</option>
+                        <option value="delete">删除</option>
+                      </select>
+                      <small class="form-text text-secondary">视频文件发送后的处理方式,如果是重命名,那么会等到存储空间达到阈值后才会自动清理</small>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 发件人邮箱列表 -->
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-header">SMTP 服务器</div>
+                  <div class="card-body">
+                    <div class="row g-1 mb-3">
+                      <div class="col-9">
+                        <label for="email_host">服务器地址</label>
+                        <input type="text" class="form-control" id="email_host" name="email_host" placeholder="smtp.gmail.com" required>
+                      </div>
+                      <div class="col-3">
+                        <label for="email_port">端口</label>
+                        <input type="number" class="form-control" id="email_port" name="email_port" value="587" required>
+                      </div>
+                    </div>
+                    <p class="form-switch">
+                      <input type="checkbox" class="form-check-input" id="email_use_ssl" name="email_use_ssl">
+                      <label class="form-check-label" for="email_use_ssl">使用 TLS/SSL</label>
+                    </p>
+                    <p class="form-switch">
+                      <input type="checkbox" class="form-check-input" id="email_trust_cert" name="email_trust_cert">
+                      <label class="form-check-label" for="email_trust_cert">忽略 SSL 证书有效性</label>
+                    </p>
+                  </div>
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>发件人邮箱</span>
+                    
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="add-from-email">
+                      <i class="bi bi-plus"></i> 添加
+                    </button>
+                  </div>
+                  <div class="card-body">
+                    <div id="from-email-list">
+                      <!-- 发件人邮箱项将在这里动态添加 -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 邮件地址 -->
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-header">邮件地址</div>
+                  <div class="card-body">
+                    <p class="form-switch">
+                      <input type="checkbox" class="form-check-input" id="email_enable" name="email_enable">
+                      <label class="form-check-label" for="email_enable">启用邮件通知</label>
+                    </p>
+                    <p>
+                      <label for="email_from_name">发件人姓名</label>
+                      <input type="text" class="form-control" id="email_from_name" name="email_from_name" placeholder="摄像机">
+                    </p>
+                    <p>
+                      <label for="email_to_address">收件人地址</label>
+                      <input type="email" class="form-control" id="email_to_address" name="email_to_address" placeholder="admin@example.com" required>
+                    </p>
+                    <p>
+                      <label for="email_to_name">收件人姓名</label>
+                      <input type="text" class="form-control" id="email_to_name" name="email_to_name" placeholder="管理员">
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 邮件内容 -->
+              <div class="col">
+                <div class="card h-100">
+                  <div class="card-header">邮件内容</div>
+                  <div class="card-body">
+                    <p>
+                      <label for="email_subject">邮件主题</label>
+                      <input type="text" class="form-control" id="email_subject" name="email_subject" placeholder="检测到动作">
+                    </p>
+                    <p>
+                      <label for="email_body">邮件正文</label>
+                      <textarea class="form-control" id="email_body" name="email_body" rows="4" placeholder="在 %datetime% 检测到动作"></textarea>
+                      <small class="form-text text-secondary">换行将被替换为空格</small>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-end">
+          <button type="submit" class="btn btn-primary" id="save-notification-config">
+            <i class="bi bi-check-circle"></i> 保存通知设置
+          </button>
+        </div>
       </form>
     </div>
   </section>

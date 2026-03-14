@@ -547,4 +547,223 @@
   loadPersonDetectionConfig().then(() => {
     initEditor();
   });
+  // 通知设置相关代码
+  const notificationEndpoint = '/x/json-config-persondetection.cgi';
+  const notificationForm = document.getElementById('persondetection-notification-form');
+  const notificationReloadButton = document.getElementById('notification-reload');
+  const addFromEmailButton = document.getElementById('add-from-email');
+  const fromEmailList = document.getElementById('from-email-list');
+
+  let fromEmailData = [];
+
+  async function requestNotification(payload) {
+    const body = typeof payload === 'string' ? payload : JSON.stringify(payload);
+    const response = await fetch(notificationEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const text = await response.text();
+    if (!text) return {};
+    try {
+      return JSON.parse(text);
+    } catch (err) {
+      throw new Error('Invalid JSON from persondetection');
+    }
+  }
+
+  function renderFromEmailList() {
+    if (!fromEmailList) return;
+    fromEmailList.innerHTML = '';
+    
+    fromEmailData.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'border rounded p-2 mb-2';
+      div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-bold">发件人 #${index + 1}</span>
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFromEmail(${index})">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">用户名</label>
+          <input type="text" class="form-control form-control-sm from-email-username" data-index="${index}" value="${item.username || ''}" placeholder="邮箱用户名">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">密码</label>
+          <input type="password" class="form-control form-control-sm from-email-password" data-index="${index}" value="${item.password || ''}" placeholder="邮箱密码">
+        </div>
+        <div>
+          <label class="form-label small">发件地址</label>
+          <input type="email" class="form-control form-control-sm from-email-address" data-index="${index}" value="${item.from_address || ''}" placeholder="发件人邮箱地址">
+        </div>
+      `;
+      fromEmailList.appendChild(div);
+    });
+
+    // 绑定输入事件
+    fromEmailList.querySelectorAll('.from-email-username').forEach(input => {
+      input.addEventListener('change', updateFromEmailData);
+    });
+    fromEmailList.querySelectorAll('.from-email-password').forEach(input => {
+      input.addEventListener('change', updateFromEmailData);
+    });
+    fromEmailList.querySelectorAll('.from-email-address').forEach(input => {
+      input.addEventListener('change', updateFromEmailData);
+    });
+  }
+
+  function updateFromEmailData() {
+    const usernames = fromEmailList.querySelectorAll('.from-email-username');
+    const passwords = fromEmailList.querySelectorAll('.from-email-password');
+    const addresses = fromEmailList.querySelectorAll('.from-email-address');
+    
+    fromEmailData = [];
+    usernames.forEach((input, index) => {
+      fromEmailData.push({
+        enabled: true,
+        username: input.value,
+        password: passwords[index]?.value || '',
+        from_address: addresses[index]?.value || '',
+        send_date: "",
+        "554_fail_num": 0
+      });
+    });
+  }
+
+  window.removeFromEmail = function(index) {
+    fromEmailData.splice(index, 1);
+    renderFromEmailList();
+  };
+
+  function addFromEmail() {
+    fromEmailData.push({
+      enabled: true,
+      username: '',
+      password: '',
+      from_address: '',
+      send_date: '',
+      '554_fail_num': 0
+    });
+    renderFromEmailList();
+  }
+
+  function applyNotificationConfig(config = {}) {
+    document.getElementById('email_enable').checked = config.enable || false;
+    document.getElementById('video_file_type').value = config.type || 'rename';
+    document.getElementById('email_host').value = config.host || '';
+    document.getElementById('email_port').value = config.port || 587;
+    document.getElementById('email_from_name').value = config.from_name || '';
+    document.getElementById('email_to_address').value = config.to_address || '';
+    document.getElementById('email_to_name').value = config.to_name || '';
+    document.getElementById('email_subject').value = config.subject || '';
+    document.getElementById('email_body').value = config.body || '';
+    document.getElementById('email_use_ssl').checked = config.use_ssl || false;
+    document.getElementById('email_trust_cert').checked = config.trust_cert || false;
+    
+    // 加载from_email数组
+    if (config.from_email && Array.isArray(config.from_email)) {
+      fromEmailData = config.from_email.map(item => ({
+        enabled: item.enabled !== false,
+        username: item.username || '',
+        password: item.password || '',
+        from_address: item.from_address || '',
+        send_date: item.send_date || '',
+        '554_fail_num': item['554_fail_num'] || 0
+      }));
+    } else {
+      fromEmailData = [];
+    }
+    renderFromEmailList();
+  }
+
+  async function loadNotificationConfig(options = {}) {
+    const { silent = false } = options;
+    if (!silent) {
+      showBusy('正在加载通知设置...');
+    }
+    try {
+      const data = await requestNotification({ action: 'get' });
+      applyNotificationConfig(data);
+      if (!silent) {
+        showAlert('info', '通知设置已加载。', 3000);
+      }
+      return true;
+    } catch (err) {
+      console.error('Failed to load notification settings', err);
+      showAlert('danger', `无法加载通知设置：${err.message || err}`);
+      return false;
+    } finally {
+      if (!silent) {
+        hideBusy();
+      }
+    }
+  }
+
+  async function saveNotificationConfig() {
+    const formData = new FormData(notificationForm);
+    
+    // 确保fromEmailData是最新的
+    updateFromEmailData();
+    
+    const config = {
+      enable: formData.get('email_enable') === 'on',
+      type: formData.get('video_file_type') || 'rename',
+      from_name: formData.get('email_from_name') || "name",
+      body: formData.get('email_body'),
+      subject: formData.get('email_subject'),
+      from_email_num: fromEmailData.length,
+      from_email: fromEmailData,
+      max_fail_num: 10,
+      host: formData.get('email_host'),
+      port: parseInt(formData.get('email_port'), 10),
+      trust_cert: formData.get('email_trust_cert') === 'on',
+      use_ssl: formData.get('email_use_ssl') === 'on',
+      to_address: formData.get('email_to_address'),
+      to_name: formData.get('email_to_name')
+    };
+
+    try {
+      showBusy('正在保存通知设置...');
+      await requestNotification({ action: 'set', config });
+      showAlert('success', '通知设置已保存');
+    } catch (err) {
+      console.error('Failed to save notification settings', err);
+      showAlert('danger', `无法保存通知设置：${err.message || err}`);
+    } finally {
+      hideBusy();
+    }
+  }
+
+  if (notificationForm) {
+    notificationForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await saveNotificationConfig();
+    });
+  }
+
+  if (notificationReloadButton) {
+    notificationReloadButton.addEventListener('click', async () => {
+      try {
+        notificationReloadButton.disabled = true;
+        const success = await loadNotificationConfig({ silent: true });
+        if (success) {
+          showAlert('info', '通知设置已重新加载。', 3000);
+        }
+      } catch (err) {
+        showAlert('danger', '重新加载通知设置失败。');
+      } finally {
+        notificationReloadButton.disabled = false;
+      }
+    });
+  }
+
+  if (addFromEmailButton) {
+    addFromEmailButton.addEventListener('click', addFromEmail);
+  }
+
+  // 加载通知设置
+  loadNotificationConfig({ silent: true });
 })();

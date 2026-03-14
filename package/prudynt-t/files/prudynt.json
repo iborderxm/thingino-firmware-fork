@@ -40,7 +40,7 @@
     "switch_below_percent": 15,
     "tolerance_percent": 50,
     "total_gain_day_threshold": 500,
-    "total_gain_night_threshold": 13000,
+    "total_gain_night_threshold": 3000,
     "controls": {
       "color": true,
       "ircut": true,
@@ -127,7 +127,7 @@
   "persondetection": {
     "enabled": true,
     "monitor_stream": 1,
-    "sensitivity": 4,
+    "sensitivity": 1,
     "detect_distance": 1,
     "skip_frame_count": 5,
     "frame_width": 640,
@@ -141,8 +141,8 @@
     "recording_duration": 15,
     "save_path": "/tmp/persondetection/",
     "recording_stream": 1,
-    "recording_detection_interval": 5,
-    "enable_move": false,
+    "recording_detection_interval": 1,
+    "enable_move": true,
     "enable_perm": true,
     "permcnt": 1,
     "perms": [

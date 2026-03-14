@@ -1,5 +1,26 @@
 {
-    "enable": false,
-    "type": "delete",
-    "comment": "视频文件处理方式type(delete删除rename重命名)"
+    "enable": true,
+    "type": "rename",
+    "comment": "视频文件处理方式type(delete删除rename重命名)",
+    "from_name": "name",
+    "body": "检测到有行人经过",
+    "subject": "**人形检测",
+    "from_email_num": 1,
+    "from_email":[
+        {
+            "enabled": true,
+            "username": "test@gmail.com",
+            "password": "123123123123",
+            "from_address": "test@gmail.com",
+            "send_date": "",
+            "554_fail_num": 0
+        }
+    ],
+    "max_fail_num": 10,
+    "host": "smtp.163.com",
+    "port": 465,
+    "trust_cert": true,
+    "use_ssl": true,
+    "to_address": "test@139.com",
+    "to_name": "test"
 }
