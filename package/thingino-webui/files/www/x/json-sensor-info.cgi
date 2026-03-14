@@ -6,11 +6,12 @@ require_auth
 
 printf 'Content-Type: application/json\r\n'
 printf 'Cache-Control: no-cache\r\n'
+printf 'Connection: close\r\n'
 printf '\r\n'
 
 SENSOR_MODEL=$(cat /proc/jz/sensor/name)
 SENSOR_IQ_PATH="/etc/sensor"
-SENSOR_IQ_FILE="${SENSOR_MODEL}-$(fw_printenv -n soc).bin"
+SENSOR_IQ_FILE="${SENSOR_MODEL}-$(soc -f).bin"
 SENSOR_FILE_FULL_PATH="${SENSOR_IQ_PATH}/${SENSOR_IQ_FILE}"
 
 if [ -f "$SENSOR_FILE_FULL_PATH" ]; then

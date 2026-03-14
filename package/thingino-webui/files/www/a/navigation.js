@@ -35,6 +35,7 @@
       { label: '音频', href: '/config-audio.html' },
       { label: '隐私屏幕', href: '/config-privacy.html' },
       { label: '光感', href: '/config-photosensing.html' },
+      { label: 'Dusk2Dawn', href: '/config-dusk2dawn.html' },
       { label: 'RTSP/ONVIF 访问', href: '/config-rtsp.html' },
       { label: '远程日志', href: '/config-syslog.html' },
       { label: 'Telegram 机器人', href: '/config-telegrambot.html' },
@@ -97,7 +98,8 @@
         label: '服务',
         items: [
           { label: '延时摄影录制', href: '/tool-timelapse.html' },
-          { label: '视频录制', href: '/tool-record.html' }
+          { label: '视频录制', href: '/tool-record.html' },
+          { label: 'MQTT Subscriptions', href: '/tool-mqtt-sub.html' }
         ]
       },
       {

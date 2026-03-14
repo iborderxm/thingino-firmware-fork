@@ -34,6 +34,7 @@ send_json() {
 Content-Type: application/json
 Cache-Control: no-store
 Pragma: no-cache
+Connection: close
 
 $1
 EOF
@@ -161,6 +162,10 @@ EOF
       ;;
     system)
       cmd="cat /etc/os-release"
+      ;;
+    thingino)
+      cmd="cat /etc/thingino.json"
+      extras=$(button_restore_from_rom "/etc/thingino.json")
       ;;
     top)
       cmd="top -n 1 -b"
