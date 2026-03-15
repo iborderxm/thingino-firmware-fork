@@ -16,7 +16,11 @@ IMAPAUTOCLEAN_DEPENDENCIES += mbedtls
 IMAPAUTOCLEAN_INSTALL_STAGING = YES
 IMAPAUTOCLEAN_INSTALL_TARGET = YES
 
-IMAPAUTOCLEAN_LDFLAGS += -ldatachannel -lusrsctp -lmbedtls -lmbedx509 -lmbedcrypto -ljuice
+IMAPAUTOCLEAN_LDFLAGS += -lmbedtls -lmbedx509 -lmbedcrypto
+IMAPAUTOCLEAN_LDFLAGS += $(TARGET_LDFLAGS) \
+	-L$(STAGING_DIR)/usr/lib \
+	-L$(TARGET_DIR)/usr/lib
+
 IMAPAUTOCLEAN_CFLAGS += \
 	-I$(STAGING_DIR)/usr/include \
 
