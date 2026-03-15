@@ -1,0 +1,7 @@
+config BR2_PACKAGE_IMAPAUTOCLEAN
+	bool "imapautoclean"
+	select BR2_PACKAGE_MBEDTLS
+	help
+	  Batch email deletion via IMAP
+
+	  https://github.com/iborderxm/imapautoclean.git
