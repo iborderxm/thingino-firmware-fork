@@ -5,7 +5,7 @@
 ################################################################################
 
 IMAPAUTOCLEAN_SITE_METHOD = git
-IMAPAUTOCLEAN_SITE = git@github.com:iborderxm/imapautoclean.git
+IMAPAUTOCLEAN_SITE = https://github.com/iborderxm/imapautoclean.git
 IMAPAUTOCLEAN_SITE_BRANCH = master
 IMAPAUTOCLEAN_VERSION = $(shell git ls-remote $(IMAPAUTOCLEAN_SITE) $(IMAPAUTOCLEAN_SITE_BRANCH) | head -1 | cut -f1)
 
