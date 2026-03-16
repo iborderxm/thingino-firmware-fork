@@ -625,6 +625,16 @@ jobs:
           pwd
           cat package/prudynt-t/prudynt-t.mk | head -200
 
+      - name: add imapautoclean configuration
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        run: |
+          cp -r /tmp/$REPO_NAME/package/imapautoclean package/imapautoclean
+          sed -i '/source "$BR2_EXTERNAL_THINGINO_PATH\/package\/lightnvr\/Config.in"/a source "$BR2_EXTERNAL_THINGINO_PATH\/package\/imapautoclean\/Config.in"' Config.in
+          cat Config.in | grep imapautoclean
+
+          sed -i '$a BR2_PACKAGE_IMAPAUTOCLEAN=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig 
+          cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
+
       - name: remove onvif support
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
