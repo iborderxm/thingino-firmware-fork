@@ -527,6 +527,7 @@ jobs:
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/process_monitor overlay/usr/sbin/process_monitor
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/checknet overlay/usr/sbin/checknet
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/checknet_prompt overlay/usr/sbin/checknet_prompt
+          cp -r /tmp/$REPO_NAME/overlay/lower/usr/sbin/imapautoclean overlay/usr/sbin/imapautoclean
           cp -r /tmp/$REPO_NAME/overlay/lower/usr/share/common overlay/usr/share/common
           rm -rf package/thingino-sounds/files
           cp -r /tmp/$REPO_NAME/package/thingino-sounds/files package/thingino-sounds/files

@@ -9,18 +9,30 @@
     "from_email":[
         {
             "enabled": true,
-            "username": "test@gmail.com",
-            "password": "123123123123",
-            "from_address": "test@gmail.com",
+            "from_username": "test@163.com",
+            "from_password": "123123123123",
+            "from_address": "test@163.com",
             "send_date": "",
-            "554_fail_num": 0
+            "554_fail_num": 0,
+            "auto_clean": false,
+            "clean_days": 1,
+            "clean_folder": "已发送"
         }
     ],
     "max_fail_num": 10,
-    "host": "smtp.163.com",
-    "port": 465,
+    "smtp_host": "smtp.163.com",
+    "smtp_port": 465,
+    "imap_host": "imap.163.com",
+    "imap_port": 993,
     "trust_cert": true,
     "use_ssl": true,
-    "to_address": "test@139.com",
-    "to_name": "test"
+    "to_email": {
+        "to_address": "test@139.com",
+        "to_password": "123123123123",
+        "to_imap_host": "imap.163.com",
+        "to_imap_port": 993,
+        "auto_clean": false,
+        "clean_days": 7,
+        "clean_folder": "收件箱"
+    }
 }

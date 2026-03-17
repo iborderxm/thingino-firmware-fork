@@ -46,7 +46,7 @@
           </div>
           <div class="card-body">
             <div class="row g-4">
-              <div class="col-6 col-lg-12">
+              <div class="col-12 col-lg-12">
                 <h4>通用设置</h4>
                 <small>基本检测配置</small>
                 <div class="d-flex gap-3 flex-wrap">
@@ -57,7 +57,7 @@
                   </p>
                 </div>
               </div>
-              <div class="col-15 col-lg-6">
+              <div class="col-12 col-lg-6">
                 <h4>检测参数</h4>
                 <small>灵敏度和时间设置</small>
                 <p class="number-range">
@@ -82,7 +82,7 @@
                   </span>
                 </p>
               </div>
-              <div class="col-15 col-lg-6">
+              <div class="col-12 col-lg-6">
                 <h4>时间设置</h4>
                 <small>防抖和冷却时间</small>
                 <p class="number-range">
@@ -283,7 +283,7 @@
           <div class="card-body">
             <div class="row g-4">
               <!-- 通用设置 -->
-              <div class="col-12">
+              <div class="col-12 col-lg-12">
                 <div class="card h-100">
                   <div class="card-header">通用设置</div>
                   <div class="card-body">
@@ -304,20 +304,26 @@
               </div>
 
               <!-- 发件人邮箱列表 -->
-              <div class="col">
+              <div class="col-12 col-lg-4">
                 <div class="card h-100">
-                  <div class="card-header">SMTP 服务器</div>
+                  <div class="card-header">发件邮箱SMTP/IMAP 服务器</div>
                   <div class="card-body">
-                    <div class="row g-1 mb-3">
-                      <div class="col-9">
-                        <label for="email_host">服务器地址</label>
-                        <input type="text" class="form-control" id="email_host" name="email_host" placeholder="smtp.gmail.com" required>
-                      </div>
-                      <div class="col-3">
-                        <label for="email_port">端口</label>
-                        <input type="number" class="form-control" id="email_port" name="email_port" value="587" required>
-                      </div>
-                    </div>
+                    <p>
+                      <label for="email_smtp_host">发件邮箱SMTP服务器地址</label>
+                      <input type="text" class="form-control" id="email_smtp_host" name="email_smtp_host" placeholder="smtp.gmail.com" required>
+                    </p>
+                    <p>
+                      <label for="email_smtp_port">发件邮箱SMTP端口</label>
+                      <input type="number" class="form-control" id="email_smtp_port" name="email_smtp_port" placeholder="587" required>
+                    </p>
+                    <p>
+                      <label for="email_imap_host">发件邮箱IMAP服务器地址</label>
+                      <input type="text" class="form-control" id="email_imap_host" name="email_imap_host" placeholder="imap.gmail.com" required>
+                    </p>
+                    <p>
+                      <label for="email_imap_port">发件邮箱IMAP端口</label>
+                      <input type="number" class="form-control" id="email_imap_port" name="email_imap_port" placeholder="993" required>
+                    </p>
                     <p class="form-switch">
                       <input type="checkbox" class="form-check-input" id="email_use_ssl" name="email_use_ssl">
                       <label class="form-check-label" for="email_use_ssl">使用 TLS/SSL</label>
@@ -328,14 +334,14 @@
                     </p>
                   </div>
                   <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>发件人邮箱</span>
+                    <span>发件邮箱</span>
                     
                     <button type="button" class="btn btn-sm btn-outline-primary" id="add-from-email">
                       <i class="bi bi-plus"></i> 添加
                     </button>
                   </div>
                   <div class="card-body">
-                    <div id="from-email-list">
+                    <div id="from_email_list">
                       <!-- 发件人邮箱项将在这里动态添加 -->
                     </div>
                   </div>
@@ -343,35 +349,51 @@
               </div>
 
               <!-- 邮件地址 -->
-              <div class="col">
+              <div class="col-12 col-lg-4">
                 <div class="card h-100">
-                  <div class="card-header">邮件地址</div>
+                  <div class="card-header">收件邮箱</div>
                   <div class="card-body">
-                    <p class="form-switch">
-                      <input type="checkbox" class="form-check-input" id="email_enable" name="email_enable">
-                      <label class="form-check-label" for="email_enable">启用邮件通知</label>
-                    </p>
                     <p>
-                      <label for="email_from_name">发件人姓名</label>
-                      <input type="text" class="form-control" id="email_from_name" name="email_from_name" placeholder="摄像机">
-                    </p>
-                    <p>
-                      <label for="email_to_address">收件人地址</label>
+                      <label for="email_to_address">收件邮箱地址</label>
                       <input type="email" class="form-control" id="email_to_address" name="email_to_address" placeholder="admin@example.com" required>
                     </p>
                     <p>
-                      <label for="email_to_name">收件人姓名</label>
-                      <input type="text" class="form-control" id="email_to_name" name="email_to_name" placeholder="管理员">
+                      <label for="email_to_password">收件邮箱授权码</label>
+                      <input type="password" class="form-control form-control-sm" id="email_to_password" name="email_to_password" placeholder="邮箱授权码">
+                    </p>
+                    <p>
+                      <label for="email_to_imap_host">收件邮箱IMAP服务器地址</label>
+                      <input type="text" class="form-control form-control-sm" id="email_to_imap_host" name="email_to_imap_host" placeholder="imap.163.com">
+                    </p>
+                    <p> 
+                      <label for="email_to_imap_port">收件邮箱IIMAP端口</label>
+                      <input type="number" class="form-control form-control-sm" id="email_to_imap_port" name="email_to_imap_port" placeholder="993">
+                    </p>
+                    <p class="form-switch">
+                      <input type="checkbox" class="form-check-input" id="email_auto_clean" name="email_auto_clean">
+                      <label class="form-check-label" for="email_auto_clean">自动清理旧邮件</label>
+                    </p>
+                    <p>
+                      <label for="email_clean_days">清理N天前邮件(天)</label>
+                      <input type="number" class="form-control" id="email_clean_days" name="email_clean_days" placeholder="7" required>
+                    </p>
+                    <p>
+                      <label for="email_clean_folder">邮箱清理文件夹(默认收件箱)</label>
+                      <input type="text" class="form-control" id="email_clean_folder" name="email_clean_folder" placeholder="收件箱">
                     </p>
                   </div>
                 </div>
               </div>
 
               <!-- 邮件内容 -->
-              <div class="col">
+              <div class="col-12 col-lg-4">
                 <div class="card h-100">
                   <div class="card-header">邮件内容</div>
                   <div class="card-body">
+                    <p>
+                      <label for="email_from_name">发件人名称</label>
+                      <input type="text" class="form-control" id="email_from_name" name="email_from_name" placeholder="from_name">
+                    </p>
                     <p>
                       <label for="email_subject">邮件主题</label>
                       <input type="text" class="form-control" id="email_subject" name="email_subject" placeholder="检测到动作">

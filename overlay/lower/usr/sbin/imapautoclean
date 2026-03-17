@@ -1,0 +1,138 @@
+#!/bin/env sh
+
+. /usr/share/common
+
+PERSONDETECTION_CONFIG="/etc/persondetection.json"
+PIDFILE="/var/run/imapautoclean.pid"
+show_help() {
+	echo "Usage: $0 {start}
+Where:
+	start         Run email cleanup once and exit
+" >&2
+	exit 0
+}
+
+read_email_config() {
+	local email_index=$1
+
+	from_username=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$email_index.from_username" 2>/dev/null)
+	from_password=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$email_index.from_password" 2>/dev/null)
+	from_address=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$email_index.from_address" 2>/dev/null)
+	auto_clean=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$email_index.auto_clean" 2>/dev/null)
+	clean_days=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$email_index.clean_days" 2>/dev/null)
+	clean_folder=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$email_index.clean_folder" 2>/dev/null)
+	imap_host=$(jct "$PERSONDETECTION_CONFIG" get "imap_host" 2>/dev/null)
+	imap_port=$(jct "$PERSONDETECTION_CONFIG" get "imap_port" 2>/dev/null)
+}
+
+read_to_email_config() {
+	to_address=$(jct "$PERSONDETECTION_CONFIG" get "to_email.to_address" 2>/dev/null)
+	to_password=$(jct "$PERSONDETECTION_CONFIG" get "to_email.to_password" 2>/dev/null)
+	to_imap_host=$(jct "$PERSONDETECTION_CONFIG" get "to_email.to_imap_host" 2>/dev/null)
+	to_imap_port=$(jct "$PERSONDETECTION_CONFIG" get "to_email.to_imap_port" 2>/dev/null)
+	auto_clean=$(jct "$PERSONDETECTION_CONFIG" get "to_email.auto_clean" 2>/dev/null)
+	clean_days=$(jct "$PERSONDETECTION_CONFIG" get "to_email.clean_days" 2>/dev/null)
+	clean_folder=$(jct "$PERSONDETECTION_CONFIG" get "to_email.clean_folder" 2>/dev/null)
+}
+
+process_email_item() {
+	local username=$1
+	local password=$2
+	local server=$3
+	local port=$4
+	local clean_days=$5
+	local clean_folder=$6
+
+    # clean_folder 如果是收件箱，就用INBOX
+    if [ "$clean_folder" = "收件箱" ]; then
+        clean_folder="INBOX"
+    fi
+
+	if [ -z "$username" ] || [ -z "$password" ] || [ -z "$server" ] || [ -z "$port" ]; then
+		echo_warning "Incomplete email configuration, skipping"
+		return 1
+	fi
+
+	if [ -z "$clean_days" ]; then
+		clean_days=7
+	fi
+
+	local imap_cleaner_cmd="/usr/sbin/imap_cleaner -s $server:$port -u $username -p $password -f $clean_folder -d $clean_days"
+
+	echo_info "Running: $imap_cleaner_cmd"
+
+	if ! output=$($imap_cleaner_cmd 2>&1); then
+		echo_error "imap_cleaner failed: $output"
+		return 1
+	fi
+
+	echo_info "Email cleanup completed successfully"
+	return 0
+}
+
+clean_from_emails() {
+	local total_emails=$(jct "$PERSONDETECTION_CONFIG" get "from_email_num" 2>/dev/null || echo 0)
+
+	if [ "$total_emails" -eq 0 ]; then
+		echo_warning "No from_email accounts configured"
+		return 0
+	fi
+
+	for i in $(seq 0 $((total_emails - 1))); do
+		local enabled=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$i.enabled" 2>/dev/null)
+
+		if [ "$enabled" = "true" ]; then
+			read_email_config $i
+
+			if [ "$auto_clean" = "true" ]; then
+				echo_info "Processing from_email account $i: $from_address"
+				process_email_item "$from_username" "$from_password" "$imap_host" "$imap_port" "$clean_days" "$clean_folder"
+			fi
+		fi
+	done
+}
+
+clean_to_email() {
+	read_to_email_config
+
+	if [ "$auto_clean" = "true" ]; then
+		echo_info "Processing to_email account: $to_address"
+		process_email_item "$to_address" "$to_password" "$to_imap_host" "$to_imap_port" "$clean_days" "$clean_folder"
+	fi
+}
+
+clean_emails() {
+	clean_from_emails
+	clean_to_email
+}
+
+start() {
+	if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
+		echo_error "imapautoclean is already running"
+		return 1
+	fi
+
+	echo $$ > "$PIDFILE"
+	trap 'rm -f "$PIDFILE"' EXIT
+
+	email_enable=$(jct "$PERSONDETECTION_CONFIG" get "enable" 2>/dev/null)
+	if [ -z "$email_enable" ] || [ "$email_enable" = "false" ]; then
+		echo_error "Email notification not enabled"
+		return 1
+	fi
+
+	echo_title "Running imapautoclean once"
+	clean_emails
+	echo_info "Email cleanup completed"
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	*)
+		show_help
+		;;
+esac
+
+exit 0

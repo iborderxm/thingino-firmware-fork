@@ -56,7 +56,7 @@ ensure_persondetection_file() {
   local old_umask
   old_umask=$(umask)
   umask 077
-  echo '{"enable":false,"type":"rename","from_name":"name","body":"检测到有行人经过","subject":"**人形检测","from_email_num":1,"from_email":[{"enabled":true,"username":"","password":"","from_address":"","send_date":"","554_fail_num":0}],"max_fail_num":10,"host":"smtp.163.com","port":465,"trust_cert":true,"use_ssl":true,"to_address":"","to_name":""}' >"$PERSONDETECTION_CONFIG"
+  echo '{"enable":true,"type":"rename","comment":"视频文件处理方式type(delete删除rename重命名)","from_name":"name","body":"检测到有行人经过","subject":"**人形检测","from_email_num":1,"from_email":[{"enabled":true,"from_username":"test@163.com","from_password":"123123123123","from_address":"test@163.com","send_date":"","554_fail_num":0,"auto_clean":false,"clean_days":1,"clean_folder":"已发送"}],"max_fail_num":10,"smtp_host":"smtp.163.com","smtp_port":465,"imap_host":"imap.163.com","imap_port":993,"trust_cert":true,"use_ssl":true,"to_email":{"to_address":"test@139.com","to_password":"123123123123","to_imap_host":"imap.163.com","to_imap_port":993,"auto_clean":false,"clean_days":7,"clean_folder":"收件箱"}}' >"$PERSONDETECTION_CONFIG"
   umask "$old_umask"
 }
 
@@ -75,7 +75,7 @@ apply_persondetection_payload() {
   printf '%s' "$payload" >"$payload_file"
   
   # Extract values from payload and update config file using jct set
-  local enable type from_name body subject from_email_num host port trust_cert use_ssl to_address to_name
+  local enable type from_name body subject from_email_num smtp_host smtp_port imap_host imap_port trust_cert use_ssl to_address to_password to_imap_host to_imap_port auto_clean clean_days clean_folder
   
   enable=$(jct "$payload_file" get enable 2>/dev/null)
   type=$(jct "$payload_file" get type 2>/dev/null)
@@ -83,12 +83,19 @@ apply_persondetection_payload() {
   body=$(jct "$payload_file" get body 2>/dev/null)
   subject=$(jct "$payload_file" get subject 2>/dev/null)
   from_email_num=$(jct "$payload_file" get from_email_num 2>/dev/null)
-  host=$(jct "$payload_file" get host 2>/dev/null)
-  port=$(jct "$payload_file" get port 2>/dev/null)
+  smtp_host=$(jct "$payload_file" get smtp_host 2>/dev/null)
+  smtp_port=$(jct "$payload_file" get smtp_port 2>/dev/null)
+  imap_host=$(jct "$payload_file" get imap_host 2>/dev/null)
+  imap_port=$(jct "$payload_file" get imap_port 2>/dev/null)
   trust_cert=$(jct "$payload_file" get trust_cert 2>/dev/null)
   use_ssl=$(jct "$payload_file" get use_ssl 2>/dev/null)
-  to_address=$(jct "$payload_file" get to_address 2>/dev/null)
-  to_name=$(jct "$payload_file" get to_name 2>/dev/null)
+  to_address=$(jct "$payload_file" get to_email.to_address 2>/dev/null)
+  to_password=$(jct "$payload_file" get to_email.to_password 2>/dev/null)
+  to_imap_host=$(jct "$payload_file" get to_email.to_imap_host 2>/dev/null)
+  to_imap_port=$(jct "$payload_file" get to_email.to_imap_port 2>/dev/null)
+  auto_clean=$(jct "$payload_file" get to_email.auto_clean 2>/dev/null)
+  clean_days=$(jct "$payload_file" get to_email.clean_days 2>/dev/null)
+  clean_folder=$(jct "$payload_file" get to_email.clean_folder 2>/dev/null)
   
   # Update simple fields - check if value is not null
   [ -n "$enable" ] && [ "$enable" != "null" ] && jct "$PERSONDETECTION_CONFIG" set enable "$enable" >/dev/null 2>&1
@@ -97,12 +104,19 @@ apply_persondetection_payload() {
   [ -n "$body" ] && [ "$body" != "null" ] && jct "$PERSONDETECTION_CONFIG" set body "$body" >/dev/null 2>&1
   [ -n "$subject" ] && [ "$subject" != "null" ] && jct "$PERSONDETECTION_CONFIG" set subject "$subject" >/dev/null 2>&1
   [ -n "$from_email_num" ] && [ "$from_email_num" != "null" ] && jct "$PERSONDETECTION_CONFIG" set from_email_num "$from_email_num" >/dev/null 2>&1
-  [ -n "$host" ] && [ "$host" != "null" ] && jct "$PERSONDETECTION_CONFIG" set host "$host" >/dev/null 2>&1
-  [ -n "$port" ] && [ "$port" != "null" ] && jct "$PERSONDETECTION_CONFIG" set port "$port" >/dev/null 2>&1
+  [ -n "$smtp_host" ] && [ "$smtp_host" != "null" ] && jct "$PERSONDETECTION_CONFIG" set smtp_host "$smtp_host" >/dev/null 2>&1
+  [ -n "$smtp_port" ] && [ "$smtp_port" != "null" ] && jct "$PERSONDETECTION_CONFIG" set smtp_port "$smtp_port" >/dev/null 2>&1
+  [ -n "$imap_host" ] && [ "$imap_host" != "null" ] && jct "$PERSONDETECTION_CONFIG" set imap_host "$imap_host" >/dev/null 2>&1
+  [ -n "$imap_port" ] && [ "$imap_port" != "null" ] && jct "$PERSONDETECTION_CONFIG" set imap_port "$imap_port" >/dev/null 2>&1
   [ -n "$trust_cert" ] && [ "$trust_cert" != "null" ] && jct "$PERSONDETECTION_CONFIG" set trust_cert "$trust_cert" >/dev/null 2>&1
   [ -n "$use_ssl" ] && [ "$use_ssl" != "null" ] && jct "$PERSONDETECTION_CONFIG" set use_ssl "$use_ssl" >/dev/null 2>&1
-  [ -n "$to_address" ] && [ "$to_address" != "null" ] && jct "$PERSONDETECTION_CONFIG" set to_address "$to_address" >/dev/null 2>&1
-  [ -n "$to_name" ] && [ "$to_name" != "null" ] && jct "$PERSONDETECTION_CONFIG" set to_name "$to_name" >/dev/null 2>&1
+  [ -n "$to_address" ] && [ "$to_address" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_address" "$to_address" >/dev/null 2>&1\
+  [ -n "$to_password" ] && [ "$to_password" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_password" "$to_password" >/dev/null 2>&1\
+  [ -n "$to_imap_host" ] && [ "$to_imap_host" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_imap_host" "$to_imap_host" >/dev/null 2>&1\
+  [ -n "$to_imap_port" ] && [ "$to_imap_port" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_imap_port" "$to_imap_port" >/dev/null 2>&1\
+  [ -n "$auto_clean" ] && [ "$auto_clean" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.auto_clean" "$auto_clean" >/dev/null 2>&1\
+  [ -n "$clean_days" ] && [ "$clean_days" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.clean_days" "$clean_days" >/dev/null 2>&1\
+  [ -n "$clean_folder" ] && [ "$clean_folder" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.clean_folder" "$clean_folder" >/dev/null 2>&1\
   
   # Handle from_email array - build complete array JSON and set it
   local from_email_count i
@@ -115,18 +129,24 @@ apply_persondetection_payload() {
     local from_email_json="["
     i=0
     while [ "$i" -lt "$from_email_count" ]; do
-      local enabled_val username_val password_val from_address_val send_date_val fail_num_val
+      local enabled_val from_username_val from_password_val from_address_val send_date_val fail_num_val auto_clean_val clean_days_val clean_folder_val
       enabled_val=$(jct "$payload_file" get "from_email.$i.enabled" 2>/dev/null)
-      username_val=$(jct "$payload_file" get "from_email.$i.username" 2>/dev/null)
-      password_val=$(jct "$payload_file" get "from_email.$i.password" 2>/dev/null)
+      from_username_val=$(jct "$payload_file" get "from_email.$i.from_username" 2>/dev/null)
+      from_password_val=$(jct "$payload_file" get "from_email.$i.from_password" 2>/dev/null)
       from_address_val=$(jct "$payload_file" get "from_email.$i.from_address" 2>/dev/null)
       send_date_val=$(jct "$payload_file" get "from_email.$i.send_date" 2>/dev/null)
       fail_num_val=$(jct "$payload_file" get "from_email.$i.554_fail_num" 2>/dev/null)
+      auto_clean_val=$(jct "$payload_file" get "from_email.$i.auto_clean" 2>/dev/null)
+      clean_days_val=$(jct "$payload_file" get "from_email.$i.clean_days" 2>/dev/null)
+      clean_folder_val=$(jct "$payload_file" get "from_email.$i.clean_folder" 2>/dev/null)
       
       # Handle null values
       [ "$enabled_val" = "null" ] && enabled_val="true"
       [ "$send_date_val" = "null" ] && send_date_val=""
       [ "$fail_num_val" = "null" ] && fail_num_val="0"
+      [ "$auto_clean_val" = "null" ] && auto_clean_val="false"
+      [ "$clean_days_val" = "null" ] && clean_days_val="1"
+      [ "$clean_folder_val" = "null" ] && clean_folder_val=""
       
       # Build JSON object for this array element
       if [ "$i" -gt 0 ]; then
@@ -142,7 +162,7 @@ apply_persondetection_payload() {
       fi
       
       # Build the object
-      from_email_json="${from_email_json}{\"enabled\":$enabled_json,\"username\":\"$username_val\",\"password\":\"$password_val\",\"from_address\":\"$from_address_val\",\"send_date\":\"$send_date_val\",\"554_fail_num\":$fail_num_val}"
+      from_email_json="${from_email_json}{\"enabled\":$enabled_json,\"from_username\":\"$from_username_val\",\"from_password\":\"$from_password_val\",\"from_address\":\"$from_address_val\",\"send_date\":\"$send_date_val\",\"554_fail_num\":$fail_num_val,\"auto_clean\":$auto_clean_val,\"clean_days\":$clean_days_val,\"clean_folder\":\"$clean_folder_val\"}"
       
       i=$((i + 1))
     done

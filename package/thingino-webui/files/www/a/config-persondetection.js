@@ -552,7 +552,7 @@
   const notificationForm = document.getElementById('persondetection-notification-form');
   const notificationReloadButton = document.getElementById('notification-reload');
   const addFromEmailButton = document.getElementById('add-from-email');
-  const fromEmailList = document.getElementById('from-email-list');
+  const fromEmailList = document.getElementById('from_email_list');
 
   let fromEmailData = [];
 
@@ -579,58 +579,104 @@
     
     fromEmailData.forEach((item, index) => {
       const div = document.createElement('div');
-      div.className = 'border rounded p-2 mb-2';
+      div.className = 'border rounded p-2 mb-2 from_email_item';
       div.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <span class="fw-bold">发件人 #${index + 1}</span>
+          <span class="fw-bold">发件邮箱 #${index + 1}</span>
           <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFromEmail(${index})">
             <i class="bi bi-trash"></i>
           </button>
         </div>
-        <div class="mb-2">
-          <label class="form-label small">用户名</label>
-          <input type="text" class="form-control form-control-sm from-email-username" data-index="${index}" value="${item.username || ''}" placeholder="邮箱用户名">
-        </div>
-        <div class="mb-2">
-          <label class="form-label small">密码</label>
-          <input type="password" class="form-control form-control-sm from-email-password" data-index="${index}" value="${item.password || ''}" placeholder="邮箱密码">
-        </div>
-        <div>
-          <label class="form-label small">发件地址</label>
-          <input type="email" class="form-control form-control-sm from-email-address" data-index="${index}" value="${item.from_address || ''}" placeholder="发件人邮箱地址">
-        </div>
+        <p>
+          <label class="form-label small">发件邮箱用户名</label>
+          <input type="text" class="form-control form-control-sm from_email_username" data-index="${index}" value="${item.from_username || ''}" placeholder="邮箱用户名">
+        </p>
+        <p>
+          <label class="form-label small">发件邮箱授权码</label>
+          <input type="password" class="form-control form-control-sm from_email_password" data-index="${index}" value="${item.from_password || ''}" placeholder="邮箱密码">
+        </p>
+        <p>
+          <label class="form-label small">发件邮箱地址</label>
+          <input type="email" class="form-control form-control-sm from_email_address" data-index="${index}" value="${item.from_address || ''}" placeholder="发件人邮箱地址">
+        </p>
+        <p class="form-switch">
+          <input type="checkbox" class="form-check-input" id="from_email_auto_clean" name="from_email_auto_clean" data-index="${index}" checked="${item.auto_clean || false}">
+          <label class="form-check-label" for="from_email_auto_clean">自动清理旧邮件</label>
+        </p>
+        <p>
+          <label class="form-label small">清理N天前邮件(天)</label>
+          <input type="number" class="form-control form-control-sm from_email_clean_days" data-index="${index}" value="${item.clean_days || 1}" placeholder="清理N天前邮件">
+        </p>
+        <p>
+          <label class="form-label small">邮箱清理文件夹(默认已发送)</label>
+          <input type="text" class="form-control form-control-sm from_email_clean_folder" data-index="${index}" value="${item.clean_folder || '已发送'}" placeholder="已发送">
+        </p>
       `;
       fromEmailList.appendChild(div);
     });
 
     // 绑定输入事件
-    fromEmailList.querySelectorAll('.from-email-username').forEach(input => {
+    fromEmailList.querySelectorAll('.from_email_username').forEach(input => {
       input.addEventListener('change', updateFromEmailData);
     });
-    fromEmailList.querySelectorAll('.from-email-password').forEach(input => {
+    fromEmailList.querySelectorAll('.from_email_password').forEach(input => {
       input.addEventListener('change', updateFromEmailData);
     });
-    fromEmailList.querySelectorAll('.from-email-address').forEach(input => {
+    fromEmailList.querySelectorAll('.from_email_address').forEach(input => {
+      input.addEventListener('change', updateFromEmailData);
+    });
+    fromEmailList.querySelectorAll('#from_email_auto_clean').forEach(input => {
+      input.addEventListener('change', updateFromEmailData);
+    });
+    fromEmailList.querySelectorAll('.from_email_clean_days').forEach(input => {
+      input.addEventListener('change', updateFromEmailData);
+    });
+    fromEmailList.querySelectorAll('.from_email_clean_folder').forEach(input => {
       input.addEventListener('change', updateFromEmailData);
     });
   }
 
   function updateFromEmailData() {
-    const usernames = fromEmailList.querySelectorAll('.from-email-username');
-    const passwords = fromEmailList.querySelectorAll('.from-email-password');
-    const addresses = fromEmailList.querySelectorAll('.from-email-address');
+    const emailItems = fromEmailList.querySelectorAll('.from_email_item');
     
     fromEmailData = [];
-    usernames.forEach((input, index) => {
+    emailItems.forEach((item, index) => {
+      const username = item.querySelector('.from_email_username')?.value || '';
+      const password = item.querySelector('.from_email_password')?.value || '';
+      const address = item.querySelector('.from_email_address')?.value || '';
+      const autoClean = item.querySelector('#from_email_auto_clean')?.checked || false;
+      const cleanDays = parseInt(item.querySelector('.from_email_clean_days')?.value || '7', 10);
+      const cleanFolder = item.querySelector('.from_email_clean_folder')?.value || '已发送';
+      
+      // 在 push 数据前添加验证 确保必填字段不为空
+      if (!username || !password || !address) {
+        showAlert('danger', `无法保存通知设置：发件邮箱 #${index + 1} 缺少必填字段`);
+        throw new Error(`发件邮箱 #${index + 1} 缺少必填字段`);
+      }
+
+      // 校验邮箱格式
+      if (!validateEmail(address)) {
+        showAlert('danger', `无法保存通知设置：发件邮箱 #${index + 1} 邮箱格式无效`);
+        throw new Error(`发件邮箱 #${index + 1} 邮箱格式无效`);
+      }
+
       fromEmailData.push({
         enabled: true,
-        username: input.value,
-        password: passwords[index]?.value || '',
-        from_address: addresses[index]?.value || '',
+        from_username: username,
+        from_password: password,
+        from_address: address,
         send_date: "",
-        "554_fail_num": 0
+        "554_fail_num": 0,
+        auto_clean: autoClean,
+        clean_days: cleanDays,
+        clean_folder: cleanFolder
       });
     });
+  }
+
+  function validateEmail(email) {
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return re.test(email);
   }
 
   window.removeFromEmail = function(index) {
@@ -641,11 +687,14 @@
   function addFromEmail() {
     fromEmailData.push({
       enabled: true,
-      username: '',
-      password: '',
+      from_username: '',
+      from_password: '',
       from_address: '',
       send_date: '',
-      '554_fail_num': 0
+      '554_fail_num': 0,
+      auto_clean: false,
+      clean_days: 7,
+      clean_folder: '已发送'
     });
     renderFromEmailList();
   }
@@ -653,11 +702,18 @@
   function applyNotificationConfig(config = {}) {
     document.getElementById('email_enable').checked = config.enable || false;
     document.getElementById('video_file_type').value = config.type || 'rename';
-    document.getElementById('email_host').value = config.host || '';
-    document.getElementById('email_port').value = config.port || 587;
+    document.getElementById('email_smtp_host').value = config.smtp_host || '';
+    document.getElementById('email_smtp_port').value = config.smtp_port || 587;
+    document.getElementById('email_imap_host').value = config.imap_host || '';
+    document.getElementById('email_imap_port').value = config.imap_port || 993;
     document.getElementById('email_from_name').value = config.from_name || '';
-    document.getElementById('email_to_address').value = config.to_address || '';
-    document.getElementById('email_to_name').value = config.to_name || '';
+    document.getElementById('email_to_address').value = config.to_email?.to_address || '';
+    document.getElementById('email_to_password').value = config.to_email?.to_password || '';
+    document.getElementById('email_to_imap_host').value = config.to_email?.to_imap_host || '';
+    document.getElementById('email_to_imap_port').value = config.to_email?.to_imap_port || 993;
+    document.getElementById('email_auto_clean').checked = config.to_email?.auto_clean || false;
+    document.getElementById('email_clean_days').value = config.to_email?.clean_days || 7;
+    document.getElementById('email_clean_folder').value = config.to_email?.clean_folder || '收件箱';
     document.getElementById('email_subject').value = config.subject || '';
     document.getElementById('email_body').value = config.body || '';
     document.getElementById('email_use_ssl').checked = config.use_ssl || false;
@@ -667,11 +723,14 @@
     if (config.from_email && Array.isArray(config.from_email)) {
       fromEmailData = config.from_email.map(item => ({
         enabled: item.enabled !== false,
-        username: item.username || '',
-        password: item.password || '',
+        from_username: item.from_username || '',
+        from_password: item.from_password || '',
         from_address: item.from_address || '',
         send_date: item.send_date || '',
-        '554_fail_num': item['554_fail_num'] || 0
+        '554_fail_num': item['554_fail_num'] || 0,
+        auto_clean: item.auto_clean || false,
+        clean_days: item.clean_days || 7,
+        clean_folder: item.clean_folder || '已发送'
       }));
     } else {
       fromEmailData = [];
@@ -717,12 +776,21 @@
       from_email_num: fromEmailData.length,
       from_email: fromEmailData,
       max_fail_num: 10,
-      host: formData.get('email_host'),
-      port: parseInt(formData.get('email_port'), 10),
+      smtp_host: formData.get('email_smtp_host'),
+      smtp_port: parseInt(formData.get('email_smtp_port'), 10),
+      imap_host: formData.get('email_imap_host'),
+      imap_port: parseInt(formData.get('email_imap_port'), 10),
       trust_cert: formData.get('email_trust_cert') === 'on',
       use_ssl: formData.get('email_use_ssl') === 'on',
-      to_address: formData.get('email_to_address'),
-      to_name: formData.get('email_to_name')
+      to_email: {
+        to_address: formData.get('email_to_address') || '',
+        to_password: formData.get('email_to_password') || '',
+        to_imap_host: formData.get('email_to_imap_host') || '',
+        to_imap_port: parseInt(formData.get('email_to_imap_port'), 10) || 993,
+        auto_clean: formData.get('email_auto_clean') === 'on',
+        clean_days: parseInt(formData.get('email_clean_days'), 10) || 7,
+        clean_folder: formData.get('email_clean_folder') || '收件箱',
+      }
     };
 
     try {
