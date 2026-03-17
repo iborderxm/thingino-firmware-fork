@@ -136,7 +136,7 @@ cleanup_old_videos() {
     local today_dir="$save_path/$current_date"
     if [ -d "$today_dir" ]; then
         log "cleaning old videos in current date directory: $current_date"
-        for video in "$today_dir"/persondetect_*.mp4; do
+        for video in $(ls -tr "$today_dir"/persondetect_*.mp4 2>/dev/null); do
             if [ -f "$video" ]; then
                 rm -f "$video"
                 log "removed video: $(basename "$video")"
