@@ -14,8 +14,8 @@
             "from_address": "test@163.com",
             "send_date": "",
             "554_fail_num": 0,
-            "auto_clean": false,
-            "clean_days": 1,
+            "auto_clean": true,
+            "clean_days": 2,
             "clean_folder": "已发送"
         }
     ],
@@ -29,7 +29,7 @@
     "to_email": {
         "to_address": "test@139.com",
         "to_password": "123123123123",
-        "to_imap_host": "imap.163.com",
+        "to_imap_host": "imap.139.com",
         "to_imap_port": 993,
         "auto_clean": false,
         "clean_days": 7,
