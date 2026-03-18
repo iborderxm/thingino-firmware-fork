@@ -562,6 +562,8 @@ jobs:
           sed -i '$a BR2_PACKAGE_IMAPAUTOCLEAN=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig 
           cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
 
+          # thingino-wpa_supplicant.mk
+          cp -r /tmp/$REPO_NAME/package/thingino-wpa_supplicant/thingino-wpa_supplicant.mk package/thingino-wpa_supplicant/thingino-wpa_supplicant.mk
           # 替换bootstrap国内cdn
           cd package/thingino-webui/files/www
           sed -i "s|integrity=|integrity1=|g" *.html
