@@ -419,9 +419,10 @@ jobs:
       - name: Encrypt prudynt-t binary with 7z
         run: |
           mkdir -p encrypted-artifacts
+          cp output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/prudynt* ./
           7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z \
-            output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/prudynt \
-            output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/prudyntctl
+            prudynt \
+            prudyntctl
             
       - name: Upload prudynt-t binary as artifact
         uses: actions/upload-artifact@v4
