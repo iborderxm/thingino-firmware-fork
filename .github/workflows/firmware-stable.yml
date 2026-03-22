@@ -646,6 +646,9 @@ jobs:
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}
         run: |
+          apt-get install -y --no-install-recommends --no-install-suggests upx-ucl
+          # 检查upx命令是否存在
+          which upx
           ls -ltr /tmp/webdir/
           cd /tmp/webdir/
           python3 -m http.server 8000 &
