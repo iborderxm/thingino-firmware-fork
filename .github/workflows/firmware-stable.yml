@@ -401,7 +401,7 @@ jobs:
           if [[ "${{ github.event.inputs.prudynt-t-signature }}" == "true" ]]; then
             sed -i 's|SDK_VERSION=\"$(SDK_VERSION)\"|SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" SDK_VERSION=\"$(SDK_VERSION)\"|' package/prudynt-t/prudynt-t.mk
             sed -i 's/$(TARGET_CROSS)strip/# $(TARGET_CROSS)strip/' package/prudynt-t/prudynt-t.mk
-            sed -i '/chmod 755 $(TARGET_DIR)/usr/bin/prudynt/a cp $(@D)/bin/prudynt $(TARGET_DIR)/usr/bin/prudynt' package/prudynt-t/prudynt-t.mk
+            sed -i '|chmod 755 $(TARGET_DIR)/usr/bin/prudynt|a cp $(@D)/bin/prudynt $(TARGET_DIR)/usr/bin/prudynt' package/prudynt-t/prudynt-t.mk
           fi
           
           # Verify the changes
