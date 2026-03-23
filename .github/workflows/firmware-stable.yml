@@ -135,8 +135,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget upx-ucl
-          upx --version
+          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget
 
       - name: Checkout prudynt-t
         uses: actions/checkout@v4
@@ -399,8 +398,12 @@ jobs:
           sed -i '3i\PRUDYNT_T_SITE = http://127.0.0.1:8000' package/prudynt-t/prudynt-t.mk
           sed -i 's/\$(shell git show -s --format=%h)/${{ env.PRUDYNT_T_TAG }}/' package/prudynt-t/prudynt-t.mk
           # 注入device-id和MAC地址  SDK_VERSION="$(SDK_VERSION)" SIGNATURE_DEVICE_ID="${{ github.event.inputs.prudynt-t-device-id }}"
-          sed -i 's|SDK_VERSION=\"$(SDK_VERSION)\"|SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" SDK_VERSION=\"$(SDK_VERSION)\"|' package/prudynt-t/prudynt-t.mk
-
+          if [[ "${{ github.event.inputs.prudynt-t-signature }}" == "true" ]]; then
+            sed -i 's|SDK_VERSION=\"$(SDK_VERSION)\"|SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" SDK_VERSION=\"$(SDK_VERSION)\"|' package/prudynt-t/prudynt-t.mk
+            sed -i 's/$(TARGET_CROSS)strip/# $(TARGET_CROSS)strip/' package/prudynt-t/prudynt-t.mk
+            sed -i '/chmod 755 $(TARGET_DIR)/usr/bin/prudynt/a cp $(@D)/bin/prudynt $(TARGET_DIR)/usr/bin/prudynt' package/prudynt-t/prudynt-t.mk
+          fi
+          
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
