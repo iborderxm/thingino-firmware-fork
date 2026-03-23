@@ -53,11 +53,11 @@ on:
       prudynt-t-device-id:
         type: string
         description: 'Device ID for the prudynt-t build'
-        required: ${{ github.event.inputs.prudynt-t-signature }}
+        required: false
       prudynt-t-mac:
         type: string
         description: 'MAC address for the prudynt-t build'
-        required: ${{ github.event.inputs.prudynt-t-signature }}
+        required: false
 
 env:
   BR2_DL_DIR: ~/dl
@@ -74,6 +74,22 @@ jobs:
     outputs:
       should_build: ${{ steps.check.outputs.should_build }}
     steps:
+      - name: check inputs
+        run: |
+          echo "Inputs:"
+          echo "branch: ${{ github.event.inputs.branch }}"
+          echo "create_release: ${{ github.event.inputs.create_release }}"
+          echo "prudynt-t-signature: ${{ github.event.inputs.prudynt-t-signature }}"
+          echo "prudynt-t-device-id: ${{ github.event.inputs.prudynt-t-device-id }}"
+          echo "prudynt-t-mac: ${{ github.event.inputs.prudynt-t-mac }}"
+          # prudynt-t-signature required device-id and MAC address
+          if [[ "${{ github.event.inputs.prudynt-t-signature }}" == "true" ]]; then
+            if [[ -z "${{ github.event.inputs.prudynt-t-device-id }}" || -z "${{ github.event.inputs.prudynt-t-mac }}" ]]; then
+              echo "prudynt-t-signature required device-id and MAC address"
+              echo "should_build=false" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          fi
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
