@@ -399,8 +399,8 @@ jobs:
           sed -i '3i\PRUDYNT_T_SITE = http://127.0.0.1:8000' package/prudynt-t/prudynt-t.mk
           sed -i 's/\$(shell git show -s --format=%h)/${{ env.PRUDYNT_T_TAG }}/' package/prudynt-t/prudynt-t.mk
           # 注入device-id和MAC地址  SDK_VERSION="$(SDK_VERSION)" SIGNATURE_DEVICE_ID="${{ github.event.inputs.prudynt-t-device-id }}"
-          sed -i 's/SDK_VERSION=\"$(SDK_VERSION)\"/SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" SDK_VERSION=\"$(SDK_VERSION)\"' package/prudynt-t/prudynt-t.mk
-          
+          sed -i 's|SDK_VERSION=\"$(SDK_VERSION)\"|SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" SDK_VERSION=\"$(SDK_VERSION)\"|' package/prudynt-t/prudynt-t.mk
+
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
