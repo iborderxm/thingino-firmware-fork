@@ -407,7 +407,7 @@ jobs:
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
-          cat package/prudynt-t/prudynt-t.mk | head -200
+          cat package/prudynt-t/prudynt-t.mk | head -250
 
       - name: Build prudynt-t only
         run: |
