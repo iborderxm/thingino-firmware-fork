@@ -135,7 +135,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget upx-ucl
+          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget upx-ucl python3 python3-pip
           upx --version
 
       - name: Checkout prudynt-t
