@@ -33,6 +33,20 @@ on:
         type: string
         description: 'Tag or branch name to checkout for prudynt-t. If not provided, uses latest tag.'
         required: false
+        
+      prudynt-t-signature:
+        type: boolean
+        description: 'Enable prudynt-t signature verification'
+        required: false
+        default: false
+      prudynt-t-device-id:
+        type: string
+        description: 'Device ID for the prudynt-t build'
+        required: false
+      prudynt-t-mac:
+        type: string
+        description: 'MAC address for the prudynt-t build'
+        required: false
 
 env:
   BR2_DL_DIR: ~/dl
@@ -47,6 +61,15 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
+      - name: check inputs
+        run: |
+          # prudynt-t-signature required device-id and MAC address
+          if [[ "${{ github.event.inputs.prudynt-t-signature }}" == "true" ]]; then
+            if [[ -z "${{ github.event.inputs.prudynt-t-device-id }}" || -z "${{ github.event.inputs.prudynt-t-mac }}" ]]; then
+              echo "prudynt-t-signature required device-id and MAC address"
+              exit 1
+            fi
+          fi
       - name: Set timezone
         run: |
           sudo timedatectl set-timezone ${{ env.TZ }}
@@ -375,6 +398,7 @@ jobs:
           sed -i '2i\PRUDYNT_T_SOURCE = prudynt-t-$(PRUDYNT_T_VERSION).tar.gz' package/prudynt-t/prudynt-t.mk
           sed -i '3i\PRUDYNT_T_SITE = http://127.0.0.1:8000' package/prudynt-t/prudynt-t.mk
           sed -i 's/\$(shell git show -s --format=%h)/${{ env.PRUDYNT_T_TAG }}/' package/prudynt-t/prudynt-t.mk
+
           
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
