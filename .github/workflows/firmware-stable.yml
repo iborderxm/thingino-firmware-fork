@@ -45,6 +45,19 @@ on:
         type: string
         description: 'Tag or branch name to checkout for prudynt-t. If not provided, uses latest tag.'
         required: false
+      prudynt-t-signature:
+        type: boolean
+        description: 'Enable prudynt-t signature verification'
+        required: false
+        default: false
+      prudynt-t-device-id:
+        type: string
+        description: 'Device ID for the prudynt-t build'
+        required: ${{ github.event.inputs.prudynt-t-signature }}
+      prudynt-t-mac:
+        type: string
+        description: 'MAC address for the prudynt-t build'
+        required: ${{ github.event.inputs.prudynt-t-signature }}
 
 env:
   BR2_DL_DIR: ~/dl
