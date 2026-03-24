@@ -401,10 +401,7 @@ jobs:
           if [[ "${{ github.event.inputs.prudynt-t-signature }}" == "true" ]]; then
             sed -i 's|SDK_VERSION=\"$(SDK_VERSION)\"|SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" SDK_VERSION=\"$(SDK_VERSION)\"|' package/prudynt-t/prudynt-t.mk
             sed -i 's/$(TARGET_CROSS)strip/# $(TARGET_CROSS)strip/' package/prudynt-t/prudynt-t.mk
-            chmod_line=$(grep -n '$(TARGET_CROSS)strip $(@D)/bin/prudynt -o $(TARGET_DIR)/usr/bin/prudynt' package/prudynt-t/prudynt-t.mk | cut -d: -f1)
-            echo "PYTHON_STRIP_LINE=${chmod_line}" >> ${GITHUB_ENV}
-            # 下一行插入" cp $(@D)/bin/prudynt $(TARGET_DIR)/usr/bin/prudynt"
-            sed -i '${{ env.PYTHON_STRIP_LINE }}i\  cp \$(@D)/bin/prudynt \$(TARGET_DIR)/usr/bin/prudynt' package/prudynt-t/prudynt-t.mk
+            sed -i $'/\$(TARGET_CROSS)strip \$(@D)\/bin\/prudynt -o \$(TARGET_DIR)\/usr\/bin\/prudynt/a\\\n\tcp \$(@D)\/bin\/prudynt \$(TARGET_DIR)\/usr\/bin\/prudynt' package/prudynt-t/prudynt-t.mk
           fi
           
           # Verify the changes
