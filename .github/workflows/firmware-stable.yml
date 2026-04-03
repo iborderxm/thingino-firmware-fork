@@ -652,25 +652,23 @@ jobs:
           sed -i '2i\PRUDYNT_T_SOURCE = prudynt-t-$(PRUDYNT_T_VERSION).tar.gz' package/prudynt-t/prudynt-t.mk
           sed -i '3i\PRUDYNT_T_SITE = http://127.0.0.1:8000' package/prudynt-t/prudynt-t.mk
           sed -i 's/\$(shell git show -s --format=%h)/${{ env.PRUDYNT_T_TAG }}/' package/prudynt-t/prudynt-t.mk
-          # 注入device-id和MAC地址  SDK_VERSION="$(SDK_VERSION)" SIGNATURE_DEVICE_ID="${{ github.event.inputs.prudynt-t-device-id }}"
           if [[ "${{ github.event.inputs.prudynt-t-signature }}" == "true" ]]; then
-            sed -i 's|SDK_VERSION=\"$(SDK_VERSION)\"|SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" SDK_VERSION=\"$(SDK_VERSION)\"|' package/prudynt-t/prudynt-t.mk
+            sed -i 's|SDK_VERSION=\"$(SDK_VERSION)\"|SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" MAC_ADDRESS=\"${{ github.event.inputs.prudynt-t-mac }}\" SDK_VERSION=\"$(SDK_VERSION)\"|' package/prudynt-t/prudynt-t.mk
             sed -i 's/$(TARGET_CROSS)strip/# $(TARGET_CROSS)strip/' package/prudynt-t/prudynt-t.mk
-            sed -i '|chmod 755 $(TARGET_DIR)/usr/bin/prudynt|a cp $(@D)/bin/prudynt $(TARGET_DIR)/usr/bin/prudynt' package/prudynt-t/prudynt-t.mk
+            sed -i $'/\$(TARGET_CROSS)strip \$(@D)\/bin\/prudynt -o \$(TARGET_DIR)\/usr\/bin\/prudynt/a\\\n\tcp \$(@D)\/bin\/prudynt \$(TARGET_DIR)\/usr\/bin\/prudynt' package/prudynt-t/prudynt-t.mk
           fi
-
 
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
           cat package/prudynt-t/prudynt-t.mk | head -250
 
-      - name: remove onvif support
-        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
-        run: |
-          # select BR2_PACKAGE_THINGINO_ONVIF
-          sed -i 's/select BR2_PACKAGE_THINGINO_ONVIF/# select BR2_PACKAGE_THINGINO_ONVIF/' Config.in
-          sed -i 's/select BR2_PACKAGE_THINGINO_ONVIF/# select BR2_PACKAGE_THINGINO_ONVIF/' package/prudynt-t/Config.in
+      # - name: remove onvif support
+      #   if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+      #   run: |
+      #     # select BR2_PACKAGE_THINGINO_ONVIF
+      #     sed -i 's/select BR2_PACKAGE_THINGINO_ONVIF/# select BR2_PACKAGE_THINGINO_ONVIF/' Config.in
+      #     sed -i 's/select BR2_PACKAGE_THINGINO_ONVIF/# select BR2_PACKAGE_THINGINO_ONVIF/' package/prudynt-t/Config.in
 
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}

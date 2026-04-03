@@ -96,6 +96,8 @@ find_available_email() {
 		return 255
 	fi
 
+	local available_indices=""
+
 	for i in $(seq 0 $((total_emails - 1))); do
 		local enabled=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$i.enabled" 2>/dev/null)
 
@@ -117,12 +119,22 @@ find_available_email() {
 				continue
 			fi
 
-			return $i
+			available_indices="$available_indices $i"
 		fi
 	done
 
-	echo_error "No available email accounts found"
-	return 255
+	if [ -z "$available_indices" ]; then
+		echo_error "No available email accounts found"
+		return 255
+	fi
+
+	set -- $available_indices
+	local count=$#
+	local rand_index=$(od -An -N2 -tu2 /dev/urandom | tr -d ' ')
+	rand_index=$((rand_index % count))
+	local selected_index=$(eval echo \$$((rand_index + 1)))
+
+	return $selected_index
 }
 
 send_video_email() {
