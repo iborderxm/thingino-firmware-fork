@@ -272,8 +272,18 @@ process_video_list() {
 			elif [ $send_result -eq 0 ]; then
 				if [ "$type" = "delete" ]; then
 					rm -rf "$video_file"
+					# 同名jpg文件也删除
+					local jpg_file="${video_file%.mp4}.jpg"
+					if [ -f "$jpg_file" ]; then
+						rm -rf "$jpg_file"
+					fi
 				else
 					mv "$video_file" "${video_file%.mp4}_send.mp4"
+					# 同名jpg文件也重命名
+					local jpg_file="${video_file%.mp4}.jpg"
+					if [ -f "$jpg_file" ]; then
+						mv "$jpg_file" "${jpg_file%.jpg}_send.jpg"
+					fi
 				fi
 				count=$((count + 1))
 				sleep "$CHECK_INTERVAL"
@@ -319,8 +329,18 @@ process_video_list() {
 			elif [ $send_result -eq 0 ]; then
 				if [ "$type" = "delete" ]; then
 					rm -rf "$video_file"
+					# 同名jpg文件也删除
+					local jpg_file="${video_file%.mp4}.jpg"
+					if [ -f "$jpg_file" ]; then
+						rm -rf "$jpg_file"
+					fi
 				else
 					mv "$video_file" "${video_file%.mp4}_send.mp4"
+					# 同名jpg文件也重命名
+					local jpg_file="${video_file%.mp4}.jpg"
+					if [ -f "$jpg_file" ]; then
+						mv "$jpg_file" "${jpg_file%.jpg}_send.jpg"
+					fi
 				fi
 				count=$((count + 1))
 				sleep "$CHECK_INTERVAL"
