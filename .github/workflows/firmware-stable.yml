@@ -98,7 +98,7 @@ jobs:
           echo "Last commit:"
           git log --oneline -1
           # 检查当前仓库是否存在github.event.inputs.branch分支
-          if [[ ! $(git branch -a | grep -q "${{ github.event.inputs.branch }}") ]]; then
+          if ! git ls-remote --exit-code origin "${{ github.event.inputs.branch }}" | grep -q "refs/heads/${{ github.event.inputs.branch }}"; then
             echo "Branch ${{ github.event.inputs.branch }} not found in remote repository"
             exit 1
           fi
