@@ -1,7 +1,8 @@
 #!/bin/sh
 
 LOG_FILE="/var/log/process_monitor.log"
-DISK_THRESHOLD_KB=15360
+# 12MB
+DISK_USED_THRESHOLD_KB=12288
 
 log() {
     LOG_SIZE_LIMIT=524288
@@ -86,8 +87,8 @@ check_and_start_opc() {
 
 check_disk_space() {
     local path="$1"
-    local available_kb=$(df -k "$path" 2>/dev/null | awk 'NR==2 {print $4}')
-    if [ -n "$available_kb" ] && [ "$available_kb" -lt "$DISK_THRESHOLD_KB" ]; then
+    local used_kb=$(df -k "$path" 2>/dev/null | awk 'NR==2 {print $3}')
+    if [ -n "$used_kb" ] && [ "$used_kb" -gt "$DISK_USED_THRESHOLD_KB" ]; then
         return 1
     fi
     return 0
@@ -140,6 +141,11 @@ cleanup_old_videos() {
             if [ -f "$video" ]; then
                 rm -f "$video"
                 log "removed video: $(basename "$video")"
+                # 同名jpg文件也删除
+                local jpg_file="${video%.mp4}.jpg"
+                if [ -f "$jpg_file" ]; then
+                    rm -rf "$jpg_file"
+                fi
                 
                 if check_disk_space "$save_path"; then
                     log "disk space sufficient after video cleanup"
@@ -178,3 +184,4 @@ check_prudynt_save_path() {
 check_and_start_prudynt
 check_and_start_opc
 check_prudynt_save_path
+check_and_start_send2email_persondetection

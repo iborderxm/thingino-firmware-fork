@@ -87,6 +87,13 @@ disable_email() {
 	echo_warning "Disabled email account at index $email_index"
 }
 
+enable_email() {
+	local email_index=$1
+
+	jct "$PERSONDETECTION_CONFIG" set "from_email.$email_index.enabled" "true" 2>/dev/null
+	echo_warning "Enabled email account at index $email_index"
+}
+
 find_available_email() {
 	local current_date=$(date +%Y%m%d)
 	local total_emails=$(jct "$PERSONDETECTION_CONFIG" get "from_email_num" 2>/dev/null || echo 0)
@@ -98,6 +105,17 @@ find_available_email() {
 
 	local available_indices=""
 
+	# 遍历全部email账号，检查send_date是否为当前日期
+	for i in $(seq 0 $((total_emails - 1))); do
+		local send_date=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$i.send_date" 2>/dev/null)
+		if [ -z "$send_date" ] || [ "$send_date" != "$current_date" ]; then
+			echo_warning "Email account $i: send_date: ($send_date) is not today ($current_date), resetting config"
+			update_email_fail_count $i 0
+			update_email_send_date $i "$current_date"
+			enable_email $i
+		fi
+	done
+
 	for i in $(seq 0 $((total_emails - 1))); do
 		local enabled=$(jct "$PERSONDETECTION_CONFIG" get "from_email.$i.enabled" 2>/dev/null)
 
@@ -107,11 +125,6 @@ find_available_email() {
 			if [ -z "$from_username" ] || [ -z "$from_password" ] || [ -z "$from_address" ]; then
 				echo_warning "Email account $i incomplete, skipping"
 				continue
-			fi
-
-			if [ -z "$send_date" ] || [ "$send_date" != "$current_date" ]; then
-				update_email_fail_count $i 0
-				update_email_send_date $i "$current_date"
 			fi
 
 			if [ "$fail_num" -ge "$max_fail_num" ]; then
@@ -213,7 +226,7 @@ send_video_email() {
 }
 
 process_video_list() {
-	type=$(jct "$PERSONDETECTION_CONFIG" get "type" 2>/dev/null)
+	local type=$(jct "$PERSONDETECTION_CONFIG" get "type" 2>/dev/null)
 	if [ -z "$type" ]; then
 		type="delete"
 	fi
@@ -247,7 +260,6 @@ process_video_list() {
 			local email_index=$?
 
 			if [ $email_index -eq 255 ] || [ $email_index -lt 0 ]; then
-				daily_limit_reached=1
 				echo_warning "No available email accounts"
 				break
 			fi
@@ -257,10 +269,9 @@ process_video_list() {
 			local send_result=$?
 
 			if [ $send_result -eq 2 ]; then
-				local current_date=$(date +%Y%m%d)
-				update_email_send_date $email_index "$current_date"
 				daily_limit_reached=1
 				echo_warning "Daily sending limit reached"
+				disable_email $email_index
 				break
 			elif [ $send_result -eq 4 ]; then
 				local new_fail_num=$((fail_num + 1))
@@ -287,6 +298,9 @@ process_video_list() {
 				fi
 				count=$((count + 1))
 				sleep "$CHECK_INTERVAL"
+			else
+				echo_error "Failed to send email: $video_file"
+				echo_error "Fail code: $send_result"
 			fi
 		done
 	fi
@@ -304,7 +318,6 @@ process_video_list() {
 			local email_index=$?
 
 			if [ $email_index -eq 255 ] || [ $email_index -lt 0 ]; then
-				daily_limit_reached=1
 				echo_warning "No available email accounts"
 				break
 			fi
@@ -314,10 +327,9 @@ process_video_list() {
 			local send_result=$?
 
 			if [ $send_result -eq 2 ]; then
-				local current_date=$(date +%Y%m%d)
-				update_email_send_date $email_index "$current_date"
 				daily_limit_reached=1
 				echo_warning "Daily sending limit reached"
+				disable_email $email_index
 				break
 			elif [ $send_result -eq 4 ]; then
 				local new_fail_num=$((fail_num + 1))
@@ -344,6 +356,9 @@ process_video_list() {
 				fi
 				count=$((count + 1))
 				sleep "$CHECK_INTERVAL"
+			else
+				echo_error "Failed to send email: $video_file"
+				echo_error "Fail code: $send_result"
 			fi
 		done
 	fi
@@ -360,7 +375,7 @@ daemon_loop() {
 
 	while true; do
 		if read_save_path; then
-			process_video_list
+    process_video_list
 		fi
 		sleep "$CHECK_INTERVAL"
 	done
