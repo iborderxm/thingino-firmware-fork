@@ -13,10 +13,16 @@ ifeq ($(__BASH_MAKE_COMPLETION__),1)
 	exit
 endif
 
+# project directories
+BR2_EXTERNAL := $(CURDIR)
+SCRIPTS_DIR := $(BR2_EXTERNAL)/scripts
+BUILDROOT_DIR := $(BR2_EXTERNAL)/buildroot
+BUILDROOT_OVERRIDE_PATCH_DIR := $(BR2_EXTERNAL)/package/all-patches/buildroot
+
 # Run dependency check before doing anything, but skip if WORKFLOW=1 or if .prereqs.done exists
 ifeq ($(WORKFLOW),)
 ifeq ($(wildcard $(CURDIR)/.prereqs.done),)
-	_dep_check := $(shell $(CURDIR)/scripts/dep_check.sh>&2; echo $$?)
+	_dep_check := $(shell $(SCRIPTS_DIR)/dep_check.sh>&2; echo $$?)
 	ifneq ($(lastword $(_dep_check)),0)
 	$(error Dependency check failed)
 	endif
@@ -33,10 +39,6 @@ IP ?=
 TFTP_IP_ADDRESS ?=
 # TFTP server root directory for local server
 TFTP_ROOT ?= /srv/tftp
-
-# project directories
-BR2_EXTERNAL := $(CURDIR)
-SCRIPTS_DIR := $(BR2_EXTERNAL)/scripts
 
 # Buildroot downloads directory
 # can be reused from environment, just export the value:
@@ -89,6 +91,7 @@ THINGINO_USER_FRAGMENT_FILES := $(wildcard $(THINGINO_USER_COMMON_DIR)/local.fra
 THINGINO_USER_MK_FILES := $(wildcard $(THINGINO_USER_COMMON_DIR)/local.mk)
 THINGINO_USER_JSON_FILES := $(wildcard $(THINGINO_USER_COMMON_DIR)/thingino.json)
 THINGINO_USER_MOTORS_JSON_FILES := $(wildcard $(THINGINO_USER_COMMON_DIR)/motors.json)
+THINGINO_USER_PRUDYNT_JSON_FILES := $(wildcard $(THINGINO_USER_COMMON_DIR)/prudynt.json)
 THINGINO_USER_UENV_FILES := $(wildcard $(THINGINO_USER_COMMON_DIR)/local.uenv.txt)
 THINGINO_USER_OVERLAY_DIRS := $(wildcard $(THINGINO_USER_COMMON_DIR)/overlay)
 THINGINO_USER_OPT_DIRS := $(wildcard $(THINGINO_USER_COMMON_DIR)/opt)
@@ -99,6 +102,7 @@ THINGINO_USER_FRAGMENT_FILES += $(wildcard $(THINGINO_USER_CAMERA_DIR)/local.fra
 THINGINO_USER_MK_FILES += $(wildcard $(THINGINO_USER_CAMERA_DIR)/local.mk)
 THINGINO_USER_JSON_FILES += $(wildcard $(THINGINO_USER_CAMERA_DIR)/thingino.json)
 THINGINO_USER_MOTORS_JSON_FILES += $(wildcard $(THINGINO_USER_CAMERA_DIR)/motors.json)
+THINGINO_USER_PRUDYNT_JSON_FILES += $(wildcard $(THINGINO_USER_CAMERA_DIR)/prudynt.json)
 THINGINO_USER_UENV_FILES += $(wildcard $(THINGINO_USER_CAMERA_DIR)/local.uenv.txt)
 THINGINO_USER_OVERLAY_DIRS += $(wildcard $(THINGINO_USER_CAMERA_DIR)/overlay)
 THINGINO_USER_OPT_DIRS += $(wildcard $(THINGINO_USER_CAMERA_DIR)/opt)
@@ -109,6 +113,7 @@ THINGINO_USER_FRAGMENT_FILES += $(wildcard $(THINGINO_USER_DEVICE_DIR)/local.fra
 THINGINO_USER_MK_FILES += $(wildcard $(THINGINO_USER_DEVICE_DIR)/local.mk)
 THINGINO_USER_JSON_FILES += $(wildcard $(THINGINO_USER_DEVICE_DIR)/thingino.json)
 THINGINO_USER_MOTORS_JSON_FILES += $(wildcard $(THINGINO_USER_DEVICE_DIR)/motors.json)
+THINGINO_USER_PRUDYNT_JSON_FILES += $(wildcard $(THINGINO_USER_DEVICE_DIR)/prudynt.json)
 THINGINO_USER_UENV_FILES += $(wildcard $(THINGINO_USER_DEVICE_DIR)/local.uenv.txt)
 THINGINO_USER_OVERLAY_DIRS += $(wildcard $(THINGINO_USER_DEVICE_DIR)/overlay)
 THINGINO_USER_OPT_DIRS += $(wildcard $(THINGINO_USER_DEVICE_DIR)/opt)
@@ -122,6 +127,7 @@ export THINGINO_USER_FRAGMENT_FILES
 export THINGINO_USER_MK_FILES
 export THINGINO_USER_JSON_FILES
 export THINGINO_USER_MOTORS_JSON_FILES
+export THINGINO_USER_PRUDYNT_JSON_FILES
 export THINGINO_USER_UENV_FILES
 export THINGINO_USER_OVERLAY_DIRS
 export THINGINO_USER_OPT_DIRS
@@ -134,6 +140,11 @@ THINGINO_USER_OVERLAY_FILES := $(call collect_user_tree_files,$(THINGINO_USER_OV
 THINGINO_USER_OPT_FILES := $(call collect_user_tree_files,$(THINGINO_USER_OPT_DIRS))
 
 BUILD_SUMMARY_TARGETS := all fast dev cleanbuild build build_fast
+ifeq ($(origin THINGINO_BUILD_START_EPOCH), undefined)
+THINGINO_BUILD_START_EPOCH := $(shell date +%s)
+endif
+export THINGINO_BUILD_START_EPOCH
+THINGINO_LOG_TARGETS := all fast dev cleanbuild build build_fast pack repack
 
 define print_build_user_files_section
 $(if $(strip $(2)),$(info $(1):)$(foreach file,$(2),$(info   - $(file))),$(info $(1): none))
@@ -148,6 +159,7 @@ $(call print_build_user_files_section,local.fragment,$(THINGINO_USER_FRAGMENT_FI
 $(call print_build_user_files_section,user local.mk,$(THINGINO_USER_MK_FILES))
 $(call print_build_user_files_section,thingino.json,$(THINGINO_USER_JSON_FILES))
 $(call print_build_user_files_section,motors.json,$(THINGINO_USER_MOTORS_JSON_FILES))
+$(call print_build_user_files_section,prudynt.json,$(THINGINO_USER_PRUDYNT_JSON_FILES))
 $(call print_build_user_files_section,local.uenv.txt,$(THINGINO_USER_UENV_FILES))
 $(call print_build_user_files_section,overlay files,$(THINGINO_USER_OVERLAY_FILES))
 $(call print_build_user_files_section,opt files,$(THINGINO_USER_OPT_FILES))
@@ -190,6 +202,14 @@ else
 OUTPUT_DIR ?= $(OUTPUT_ROOT_DIR)/$(GIT_BRANCH)
 endif
 export OUTPUT_DIR
+
+ifneq ($(filter $(THINGINO_LOG_TARGETS),$(CURRENT_TARGETS)),)
+THINGINO_LOG_BASENAME := $(shell printf '%s' "$(CURRENT_TARGETS)" | tr ' /' '__' | tr -cd 'A-Za-z0-9._-')
+THINGINO_LOG_DIR = $(OUTPUT_DIR)/logs
+THINGINO_LOG_TIMESTAMP := $(shell date '+%Y%m%d-%H%M%S')
+THINGINO_LOG_FILE ?= $(THINGINO_LOG_DIR)/$(THINGINO_LOG_BASENAME)-$(THINGINO_LOG_TIMESTAMP).log
+export THINGINO_LOG_FILE
+endif
 
 GENERIC_OUTPUT_DIR = $(OUTPUT_BASE_DIR)
 
@@ -242,18 +262,12 @@ UB_ENV_BIN := $(OUTPUT_DIR)/images/u-boot-env.bin
 CONFIG_BIN := $(OUTPUT_DIR)/images/config.jffs2
 KERNEL_BIN := $(OUTPUT_DIR)/images/uImage
 ROOTFS_BIN := $(OUTPUT_DIR)/images/rootfs.squashfs
-ROOTFS_TAR := $(OUTPUT_DIR)/images/rootfs.tar
 EXTRAS_BIN := $(OUTPUT_DIR)/images/extras.jffs2
 
-# TODO: create a full binary file suffixed with the time of the last modification
-# to either uboot, kernel, or rootfs
 FIRMWARE_NAME_FULL = thingino-$(CAMERA).bin
-FIRMWARE_NAME_NOBOOT = thingino-$(CAMERA)-update.bin
 
 FIRMWARE_BIN_FULL := $(OUTPUT_DIR)/images/$(FIRMWARE_NAME_FULL)
-FIRMWARE_BIN_NOBOOT := $(OUTPUT_DIR)/images/$(FIRMWARE_NAME_NOBOOT)
 GENERIC_FIRMWARE_BIN_FULL := $(GENERIC_OUTPUT_DIR)/images/$(FIRMWARE_NAME_FULL)
-GENERIC_FIRMWARE_BIN_NOBOOT := $(GENERIC_OUTPUT_DIR)/images/$(FIRMWARE_NAME_NOBOOT)
 
 # file sizes
 U_BOOT_BIN_SIZE = $(shell stat -c%s $(U_BOOT_BIN))
@@ -289,8 +303,6 @@ KERNEL_SIZE_KB  = $(shell echo $$(($(KERNEL_PARTITION_SIZE) / 1024)))
 ROOTFS_SIZE_KB  = $(shell echo $$(($(ROOTFS_PARTITION_SIZE) / 1024)))
 EXTRAS_SIZE_KB  = $(shell echo $$(($(FLASH_SIZE_KB) - $(ROOTFS_OFFSET) / 1024 - $(ROOTFS_SIZE_KB))))
 
-FIRMWARE_NOBOOT_SIZE = $(shell echo $$(($(FLASH_SIZE) - $(U_BOOT_PARTITION_SIZE) - $(UB_ENV_PARTITION_SIZE) - $(CONFIG_PARTITION_SIZE))))
-
 UPGRADE_SIZE_KB = $(shell echo $$(($(FLASH_SIZE_KB) - $(U_BOOT_SIZE_KB) - $(UB_ENV_SIZE_KB) - $(CONFIG_SIZE_KB))))
 
 # dynamic partitions
@@ -315,9 +327,6 @@ KERNEL_OFFSET = $(shell echo $$(($(CONFIG_OFFSET) + $(CONFIG_PARTITION_SIZE))))
 ROOTFS_OFFSET = $(shell echo $$(($(KERNEL_OFFSET) + $(KERNEL_PARTITION_SIZE))))
 EXTRAS_OFFSET = $(shell echo $$(($(ROOTFS_OFFSET) + $(ROOTFS_PARTITION_SIZE))))
 
-# special case with no uboot nor env
-EXTRAS_OFFSET_NOBOOT = $(shell echo $$(($(KERNEL_PARTITION_SIZE) + $(ROOTFS_PARTITION_SIZE))))
-
 export CONFIG_OFFSET
 else
 U_BOOT_OFFSET :=
@@ -326,7 +335,6 @@ CONFIG_OFFSET :=
 KERNEL_OFFSET :=
 ROOTFS_OFFSET :=
 EXTRAS_OFFSET :=
-EXTRAS_OFFSET_NOBOOT :=
 endif
 export FLASH_SIZE_MB
 
@@ -336,10 +344,22 @@ BR2_MAKE = $(MAKE) -C $(BR2_EXTERNAL)/buildroot \
 	O=$(OUTPUT_DIR) \
 	BR2_DL_DIR=$(BR2_DL_DIR)
 
-.PHONY: all bootstrap build build_fast clean clean-nfs-debug cleanbuild defconfig distclean \
+define thingino_run_build
+	@if [ -n "$(THINGINO_LOG_FILE)" ]; then \
+		mkdir -p "$(THINGINO_LOG_DIR)"; \
+		if [ ! -f "$(THINGINO_LOG_FILE)" ]; then \
+			echo "Build log: $(THINGINO_LOG_FILE)"; \
+		fi; \
+		set -o pipefail; $(1) 2>&1 | tee -a "$(THINGINO_LOG_FILE)"; \
+	else \
+		$(1); \
+	fi
+endef
+
+.PHONY: all bootstrap build build_fast build-info clean clean-nfs-debug cleanbuild defconfig distclean \
 	dev fast help pack remove_bins repack sdk toolchain update upboot-ota \
 	upload_tftp cloner ota br-% check-config force-config show-config-deps clean-config \
-	tftpd-start tftpd-stop tftpd-restart tftpd-status tftpd-logs show-vars run user-dirs
+	tftpd-start tftpd-stop tftpd-restart tftpd-status tftpd-logs show-vars run user-dirs setup-hooks
 
 # Run a binary under QEMU in the build sysroot.
 # Usage: CAMERA=<camera> make run CMD="/bin/ffmpeg --help"  (binary with args)
@@ -394,11 +414,8 @@ ifneq ($(TFTP_IP_ADDRESS),)
 	@echo "Copying images to TFTP root..."
 	@sudo mkdir -p $(TFTP_ROOT)
 	@sudo cp -f $(FIRMWARE_BIN_FULL) $(TFTP_ROOT)/$(FIRMWARE_NAME_FULL)
-	@sudo cp -f $(FIRMWARE_BIN_NOBOOT) $(TFTP_ROOT)/$(FIRMWARE_NAME_NOBOOT)
 	@sudo cp -f $(FIRMWARE_BIN_FULL).sha256sum $(TFTP_ROOT)/$(FIRMWARE_NAME_FULL).sha256sum 2>/dev/null || true
-	@sudo cp -f $(FIRMWARE_BIN_NOBOOT).sha256sum $(TFTP_ROOT)/$(FIRMWARE_NAME_NOBOOT).sha256sum 2>/dev/null || true
 	@echo "TFTP: $(TFTP_ROOT)/$(FIRMWARE_NAME_FULL)"
-	@echo "TFTP: $(TFTP_ROOT)/$(FIRMWARE_NAME_NOBOOT)"
 endif
 	@date +%T
 
@@ -407,12 +424,41 @@ update:
 	@$(TEAL) "$@"
 	@echo "=== UPDATING MAIN REPOSITORY ==="
 	git pull --rebase --autostash
+	@echo "=== UNPATCHING BUILDROOT OVERRIDES ==="
+	@if [ -d "$(BUILDROOT_OVERRIDE_PATCH_DIR)" ]; then \
+		for patch in $$(find "$(BUILDROOT_OVERRIDE_PATCH_DIR)" -maxdepth 1 -type f -name '*.patch' | LC_ALL=C sort -r); do \
+			if git -C "$(BUILDROOT_DIR)" apply -R --check "$$patch"; then \
+				echo "Unapplying $$patch"; \
+				git -C "$(BUILDROOT_DIR)" apply -R "$$patch"; \
+			else \
+				echo "Skipping (not applied): $$patch"; \
+			fi; \
+		done; \
+	else \
+		echo "No buildroot override patch directory: $(BUILDROOT_OVERRIDE_PATCH_DIR)"; \
+	fi
 	@echo "=== UPDATING SUBMODULES ==="
 	git submodule init
 	git submodule update
+	@echo "=== APPLYING BUILDROOT OVERRIDES ==="
+	@if [ -d "$(BUILDROOT_OVERRIDE_PATCH_DIR)" ]; then \
+		for patch in $$(find "$(BUILDROOT_OVERRIDE_PATCH_DIR)" -maxdepth 1 -type f -name '*.patch' | LC_ALL=C sort); do \
+			if git -C "$(BUILDROOT_DIR)" apply --check "$$patch"; then \
+				echo "Applying $$patch"; \
+				git -C "$(BUILDROOT_DIR)" apply "$$patch"; \
+			elif git -C "$(BUILDROOT_DIR)" apply -R --check "$$patch"; then \
+				echo "Already applied: $$patch"; \
+			else \
+				echo "ERROR: failed to apply $$patch"; \
+				exit 1; \
+			fi; \
+		done; \
+	else \
+		echo "No buildroot override patch directory: $(BUILDROOT_OVERRIDE_PATCH_DIR)"; \
+	fi
 	@echo "=== CHECKING EXTERNAL TOOLCHAIN BUNDLES ==="
 	BR2_DL_DIR=$(BR2_DL_DIR) \
-		$(CURDIR)/scripts/update_toolchain_bundles.sh
+		$(SCRIPTS_DIR)/update_toolchain_bundles.sh
 	@$(ORANGE) "$(GIT_BRANCH)"
 
 update_manual:
@@ -424,6 +470,12 @@ update_manual:
 bootstrap:
 	@$(TEAL) "$@"
 	$(SCRIPTS_DIR)/dep_check.sh
+
+# Configure repository-local git hooks path for team pre-commit automation.
+setup-hooks:
+	@$(TEAL) "$@"
+	@git config core.hooksPath .githooks
+	@echo "Configured local git hooks path: $$(git config --get core.hooksPath)"
 
 build: BR2_MAKE_JOBS =
 build: $(U_BOOT_ENV_TXT)
@@ -479,7 +531,7 @@ force-config: buildroot/Makefile $(OUTPUT_DIR)/.keep $(CONFIG_PARTITION_DIR)/.ke
 ifeq ($(RAW_DEFCONFIG_MODE),y)
 	# preprocess a plain Buildroot defconfig used by GitHub workflows
 	$(info * preprocess raw defconfig $(CAMERA_CONFIG_REAL))
-	sed 's/\$$[(]BR2_HOSTARCH[)]/$(BR2_HOSTARCH)/g; s/\$$[(]SOC_ARCH[)]/$(SOC_ARCH)/g; s/\$$[(]SOC_MODEL[)]/$(SOC_MODEL)/g; s/\$$[(]SOC_FAMILY[)]/$(SOC_FAMILY)/g; s/\$$[(]KERNEL_VERSION[)]/$(KERNEL_VERSION)/g; s/\$$[(]KERNEL_SITE[)]/$(subst /,\/,$(KERNEL_SITE))/g; s/\$$[(]KERNEL_HASH[)]/$(KERNEL_HASH)/g; s/\$$[(]UBOOT_BOARDNAME[)]/$(UBOOT_BOARDNAME)/g; s/\$$[(]UBOOT_REPO[)]/$(subst /,\/,$(UBOOT_REPO))/g; s/\$$[(]UBOOT_REPO_VERSION[)]/$(UBOOT_REPO_VERSION)/g' $(CAMERA_CONFIG_REAL) >$(OUTPUT_DIR)/.config
+	sed 's/\$$[(]BR2_HOSTARCH[)]/$(BR2_HOSTARCH)/g; s/\$$[(]SOC_ARCH[)]/$(SOC_ARCH)/g; s/\$$[(]SOC_MODEL[)]/$(SOC_MODEL)/g; s/\$$[(]SOC_FAMILY[)]/$(SOC_FAMILY)/g; s/\$$[(]KERNEL_VERSION[)]/$(KERNEL_VERSION)/g; s/\$$[(]KERNEL_SITE[)]/$(subst /,\/,$(KERNEL_SITE))/g; s/\$$[(]KERNEL_BRANCH[)]/$(KERNEL_BRANCH)/g; s/\$$[(]KERNEL_HASH[)]/$(KERNEL_HASH)/g; s/\$$[(]UBOOT_BOARDNAME[)]/$(UBOOT_BOARDNAME)/g; s/\$$[(]UBOOT_REPO[)]/$(subst /,\/,$(UBOOT_REPO))/g; s/\$$[(]UBOOT_REPO_VERSION[)]/$(UBOOT_REPO_VERSION)/g' $(CAMERA_CONFIG_REAL) >$(OUTPUT_DIR)/.config
 else
 	# add toolchain fragment (from preset selection)
 	$(info * add toolchain fragment $(TOOLCHAIN_FRAGMENT_FILE))
@@ -488,7 +540,7 @@ else
 		exit 1; \
 	fi
 	@echo "# $$(basename "$(TOOLCHAIN_FRAGMENT_FILE)")" >> $(OUTPUT_DIR)/.config
-	@sed 's/\$$[(]BR2_HOSTARCH[)]/$(BR2_HOSTARCH)/g; s/\$$[(]SOC_ARCH[)]/$(SOC_ARCH)/g; s/\$$[(]SOC_MODEL[)]/$(SOC_MODEL)/g; s/\$$[(]SOC_FAMILY[)]/$(SOC_FAMILY)/g; s/\$$[(]KERNEL_VERSION[)]/$(KERNEL_VERSION)/g; s/\$$[(]KERNEL_SITE[)]/$(subst /,\/,$(KERNEL_SITE))/g; s/\$$[(]KERNEL_HASH[)]/$(KERNEL_HASH)/g; s/\$$[(]UBOOT_BOARDNAME[)]/$(UBOOT_BOARDNAME)/g; s/\$$[(]UBOOT_REPO[)]/$(subst /,\/,$(UBOOT_REPO))/g; s/\$$[(]UBOOT_REPO_VERSION[)]/$(UBOOT_REPO_VERSION)/g' "$(TOOLCHAIN_FRAGMENT_FILE)" >> $(OUTPUT_DIR)/.config
+	@sed 's/\$$[(]BR2_HOSTARCH[)]/$(BR2_HOSTARCH)/g; s/\$$[(]SOC_ARCH[)]/$(SOC_ARCH)/g; s/\$$[(]SOC_MODEL[)]/$(SOC_MODEL)/g; s/\$$[(]SOC_FAMILY[)]/$(SOC_FAMILY)/g; s/\$$[(]KERNEL_VERSION[)]/$(KERNEL_VERSION)/g; s/\$$[(]KERNEL_SITE[)]/$(subst /,\/,$(KERNEL_SITE))/g; s/\$$[(]KERNEL_BRANCH[)]/$(KERNEL_BRANCH)/g; s/\$$[(]KERNEL_HASH[)]/$(KERNEL_HASH)/g; s/\$$[(]UBOOT_BOARDNAME[)]/$(UBOOT_BOARDNAME)/g; s/\$$[(]UBOOT_REPO[)]/$(subst /,\/,$(UBOOT_REPO))/g; s/\$$[(]UBOOT_REPO_VERSION[)]/$(UBOOT_REPO_VERSION)/g' "$(TOOLCHAIN_FRAGMENT_FILE)" >> $(OUTPUT_DIR)/.config
 	@echo >> $(OUTPUT_DIR)/.config
 	# add other fragments
 	$(info * add fragments FRAGMENTS=$(FRAGMENTS) from $(CAMERA_CONFIG_REAL))
@@ -500,7 +552,7 @@ else
 		fi; \
 		echo "** add $$fragment_path"; \
 		echo "# $$(basename "$$fragment_path")" >> $(OUTPUT_DIR)/.config; \
-		sed 's/\$$[(]BR2_HOSTARCH[)]/$(BR2_HOSTARCH)/g; s/\$$[(]SOC_ARCH[)]/$(SOC_ARCH)/g; s/\$$[(]SOC_MODEL[)]/$(SOC_MODEL)/g; s/\$$[(]SOC_FAMILY[)]/$(SOC_FAMILY)/g; s/\$$[(]KERNEL_VERSION[)]/$(KERNEL_VERSION)/g; s/\$$[(]KERNEL_SITE[)]/$(subst /,\/,$(KERNEL_SITE))/g; s/\$$[(]KERNEL_HASH[)]/$(KERNEL_HASH)/g; s/\$$[(]UBOOT_BOARDNAME[)]/$(UBOOT_BOARDNAME)/g; s/\$$[(]UBOOT_REPO[)]/$(subst /,\/,$(UBOOT_REPO))/g; s/\$$[(]UBOOT_REPO_VERSION[)]/$(UBOOT_REPO_VERSION)/g' "$$fragment_path" >>$(OUTPUT_DIR)/.config; \
+		sed 's/\$$[(]BR2_HOSTARCH[)]/$(BR2_HOSTARCH)/g; s/\$$[(]SOC_ARCH[)]/$(SOC_ARCH)/g; s/\$$[(]SOC_MODEL[)]/$(SOC_MODEL)/g; s/\$$[(]SOC_FAMILY[)]/$(SOC_FAMILY)/g; s/\$$[(]KERNEL_VERSION[)]/$(KERNEL_VERSION)/g; s/\$$[(]KERNEL_SITE[)]/$(subst /,\/,$(KERNEL_SITE))/g; s/\$$[(]KERNEL_BRANCH[)]/$(KERNEL_BRANCH)/g; s/\$$[(]KERNEL_HASH[)]/$(KERNEL_HASH)/g; s/\$$[(]UBOOT_BOARDNAME[)]/$(UBOOT_BOARDNAME)/g; s/\$$[(]UBOOT_REPO[)]/$(subst /,\/,$(UBOOT_REPO))/g; s/\$$[(]UBOOT_REPO_VERSION[)]/$(UBOOT_REPO_VERSION)/g' "$$fragment_path" >>$(OUTPUT_DIR)/.config; \
 		echo >>$(OUTPUT_DIR)/.config; \
 	done
 	# add kernel-specific headers based on SOC requirements
@@ -516,7 +568,7 @@ else
 	fi; \
 	echo >>$(OUTPUT_DIR)/.config
 	# add camera configuration
-	sed 's/\$$[(]SOC_MODEL[)]/$(SOC_MODEL)/g; s/\$$[(]SOC_FAMILY[)]/$(SOC_FAMILY)/g; s/\$$[(]KERNEL_VERSION[)]/$(KERNEL_VERSION)/g; s/\$$[(]KERNEL_SITE[)]/$(subst /,\/,$(KERNEL_SITE))/g; s/\$$[(]KERNEL_HASH[)]/$(KERNEL_HASH)/g; s/\$$[(]UBOOT_BOARDNAME[)]/$(UBOOT_BOARDNAME)/g; s/\$$[(]UBOOT_REPO[)]/$(subst /,\/,$(UBOOT_REPO))/g; s/\$$[(]UBOOT_REPO_VERSION[)]/$(UBOOT_REPO_VERSION)/g' $(CAMERA_CONFIG_REAL) >>$(OUTPUT_DIR)/.config
+	sed 's/\$$[(]SOC_MODEL[)]/$(SOC_MODEL)/g; s/\$$[(]SOC_FAMILY[)]/$(SOC_FAMILY)/g; s/\$$[(]KERNEL_VERSION[)]/$(KERNEL_VERSION)/g; s/\$$[(]KERNEL_SITE[)]/$(subst /,\/,$(KERNEL_SITE))/g; s/\$$[(]KERNEL_BRANCH[)]/$(KERNEL_BRANCH)/g; s/\$$[(]KERNEL_HASH[)]/$(KERNEL_HASH)/g; s/\$$[(]UBOOT_BOARDNAME[)]/$(UBOOT_BOARDNAME)/g; s/\$$[(]UBOOT_REPO[)]/$(subst /,\/,$(UBOOT_REPO))/g; s/\$$[(]UBOOT_REPO_VERSION[)]/$(UBOOT_REPO_VERSION)/g' $(CAMERA_CONFIG_REAL) >>$(OUTPUT_DIR)/.config
 	# add SOC-derived values
 	@echo "# SOC-derived configuration" >>$(OUTPUT_DIR)/.config
 	@echo 'BR2_SOC_FAMILY="$(SOC_FAMILY)"' >>$(OUTPUT_DIR)/.config
@@ -636,8 +688,7 @@ clean: clean-nfs-debug
 	rm -rf $(OUTPUT_DIR)/config
 	rm -rf $(OUTPUT_DIR)/extras
 	rm -f $(FIRMWARE_BIN_FULL) $(FIRMWARE_BIN_FULL).sha256sum
-	rm -f $(FIRMWARE_BIN_NOBOOT) $(FIRMWARE_BIN_NOBOOT).sha256sum
-	rm -f $(ROOTFS_BIN) $(ROOTFS_TAR) $(EXTRAS_BIN) $(CONFIG_BIN)
+	rm -f $(ROOTFS_BIN) $(EXTRAS_BIN) $(CONFIG_BIN)
 #	$(UB_ENV_BIN) $(KERNEL_BIN)
 
 # remove all build files
@@ -646,20 +697,13 @@ distclean: clean-nfs-debug
 	if [ -d "$(OUTPUT_DIR)" ]; then rm -rf $(OUTPUT_DIR); fi
 
 # assemble final images
-pack: $(FIRMWARE_BIN_FULL) $(FIRMWARE_BIN_NOBOOT) $(ROOTFS_TAR)
+pack: $(FIRMWARE_BIN_FULL)
 	@$(TEAL) "$@"
 	$(info Aligned at: $(ALIGN_BLOCK))
 	$(info U-Boot Env: $(shell strings $(UB_ENV_BIN) 2>/dev/null | grep "^mtdparts" || echo "mtdparts not found"))
 	$(info Generated:  mtdparts=$(UBOOT_FLASH_CONTROLLER):$(U_BOOT_SIZE_KB)k(boot),$(UB_ENV_SIZE_KB)k(env),$(CONFIG_SIZE_KB)k(config),$(KERNEL_SIZE_KB)k(kernel),$(ROOTFS_SIZE_KB)k(rootfs),$(EXTRAS_SIZE_KB)k@$(shell printf '0x%x' $(EXTRAS_OFFSET))(extras),$(UPGRADE_SIZE_KB)k@$(shell printf '0x%x' $(KERNEL_OFFSET))(upgrade),$(FLASH_SIZE_KB)k@0(all))
-	@rm -f $(FIRMWARE_BIN_FULL).sha256sum
-	@echo "$(shell echo \# $(CAMERA))" >> $(FIRMWARE_BIN_FULL).sha256sum
-	@echo "# ${GIT_BRANCH}+${GIT_HASH}, ${BUILD_DATE}" >> "$(FIRMWARE_BIN_FULL).sha256sum"
-	@sha256sum $(FIRMWARE_BIN_FULL) | awk '{print $$1 "  " filename}' filename="$(FIRMWARE_NAME_FULL)" >> $(FIRMWARE_BIN_FULL).sha256sum
-	@rm -f $(FIRMWARE_BIN_NOBOOT).sha256sum
-	@echo "$(shell echo \# $(CAMERA))" >> $(FIRMWARE_BIN_NOBOOT).sha256sum
-	@echo "# ${GIT_BRANCH}+${GIT_HASH}, ${BUILD_DATE}" >> "$(FIRMWARE_BIN_NOBOOT).sha256sum"
-	@sha256sum $(FIRMWARE_BIN_NOBOOT) | awk '{print $$1 "  " filename}' filename="$(FIRMWARE_NAME_NOBOOT)" >> $(FIRMWARE_BIN_NOBOOT).sha256sum
-	@$(BR2_EXTERNAL)/scripts/save_partition_info.py "$(OUTPUT_DIR)/images/$(CAMERA).md" \
+	@$(SCRIPTS_DIR)/generate_release_artifacts.sh "$(OUTPUT_DIR)"
+	@$(SCRIPTS_DIR)/save_partition_info.py "$(OUTPUT_DIR)/images/$(CAMERA).md" \
 		"$(CAMERA)" $(GIT_BRANCH) $(GIT_HASH) $(BUILD_DATE) "$(UB_ENV_BIN)" \
 		$(U_BOOT_OFFSET) $(U_BOOT_PARTITION_SIZE) $(U_BOOT_BIN_SIZE) $(U_BOOT_BIN_SIZE_ALIGNED) \
 		$(UB_ENV_OFFSET) $(UB_ENV_PARTITION_SIZE) $(UB_ENV_BIN_SIZE) $(UB_ENV_BIN_SIZE_ALIGNED) \
@@ -668,7 +712,7 @@ pack: $(FIRMWARE_BIN_FULL) $(FIRMWARE_BIN_NOBOOT) $(ROOTFS_TAR)
 		$(ROOTFS_OFFSET) $(ROOTFS_PARTITION_SIZE) $(ROOTFS_BIN_SIZE) \
 		$(EXTRAS_OFFSET) $(EXTRAS_PARTITION_SIZE) $(EXTRAS_BIN_SIZE) $(EXTRAS_BIN_SIZE_ALIGNED) \
 		$(U_BOOT_SIZE_KB) $(UB_ENV_SIZE_KB) $(CONFIG_SIZE_KB) $(KERNEL_SIZE_KB) $(ROOTFS_SIZE_KB) $(EXTRAS_SIZE_KB) \
-		$(UPGRADE_SIZE_KB) $(FLASH_SIZE_KB) $(UBOOT_FLASH_CONTROLLER) && \
+		$(UPGRADE_SIZE_KB) $(FLASH_SIZE_KB) "$$(( $$(date +%s) - $(THINGINO_BUILD_START_EPOCH) ))" $(UBOOT_FLASH_CONTROLLER) && \
 		cat $(OUTPUT_DIR)/images/$(CAMERA).md
 	@$(ORANGE) "Camera: $(CAMERA)"
 	@$(ORANGE) "Device IP: $(CAMERA_IP_ADDRESS)"
@@ -676,7 +720,10 @@ pack: $(FIRMWARE_BIN_FULL) $(FIRMWARE_BIN_NOBOOT) $(ROOTFS_TAR)
 	@if [ $(EXTRAS_PARTITION_SIZE) -lt $(EXTRAS_LLIMIT) ]; then $(RED) "EXTRAS PARTITION IS TOO SMALL"; fi
 	@if [ $(FIRMWARE_BIN_FULL_SIZE) -gt $(FLASH_SIZE) ]; then $(RED) "OVERSIZE"; fi
 	@echo "Image: $(FIRMWARE_BIN_FULL)"
-	@#echo "Update Image: $(FIRMWARE_BIN_NOBOOT)"
+
+build-info: pack
+	@$(TEAL) "$@"
+	$(SCRIPTS_DIR)/generate_build_info.sh "$(OUTPUT_DIR)"
 
 # rebuild a package with smart configuration check
 rebuild-%: force-config
@@ -688,7 +735,7 @@ rebuild-%: force-config
 		rm -rf "$$OVERRIDE_DIR/obj" "$$OVERRIDE_DIR/bin" "$$OVERRIDE_DIR/.built" "$$OVERRIDE_DIR/.stamp_*"; \
 	fi; \
 	true
-	$(BR2_MAKE) $(subst rebuild-,,$@)-dirclean $(subst rebuild-,,$@)
+	$(BR2_MAKE) $(subst rebuild-,,$@)-dirclean $(subst rebuild-,,$@) $(subst rebuild-,,$@)-reinstall target-finalize
 
 remove_bins:
 	@$(TEAL) "$@"
@@ -778,7 +825,7 @@ tftpd-logs:
 download-cache:
 	@$(TEAL) "$@"
 	BR2_EXTERNAL=$(CURDIR) BR2_DL_DIR=$(BR2_DL_DIR) \
-		$(CURDIR)/scripts/dl_buildroot_cache.sh
+		$(SCRIPTS_DIR)/dl_buildroot_cache.sh
 
 ### Buildroot
 
@@ -834,10 +881,6 @@ $(FIRMWARE_BIN_FULL): $(U_BOOT_BIN) $(UB_ENV_BIN) $(CONFIG_BIN) $(KERNEL_BIN) $(
 	  dd if=$(EXTRAS_BIN) bs=$(EXTRAS_BIN_SIZE) seek=$(EXTRAS_OFFSET)B count=1 of=$@ conv=notrunc status=none; \
 	fi
 
-$(FIRMWARE_BIN_NOBOOT): $(FIRMWARE_BIN_FULL)
-	@$(TEAL) "$@"
-	dd if=$(FIRMWARE_BIN_FULL) of=$@ bs=$(FIRMWARE_NOBOOT_SIZE) count=1 skip=$(KERNEL_OFFSET)B
-
 # create config partition image
 $(CONFIG_BIN): $(CONFIG_PARTITION_DIR)/.keep
 	@$(TEAL) "$@"
@@ -882,7 +925,7 @@ $(EXTRAS_BIN): $(ROOTFS_BIN) $(U_BOOT_BIN)
 # rebuild kernel
 $(KERNEL_BIN):
 	@$(TEAL) "$@"
-	$(BR2_MAKE) $(BR2_MAKE_JOBS) linux-rebuild
+	$(call thingino_run_build,$(BR2_MAKE) $(BR2_MAKE_JOBS) linux-rebuild)
 #	mv -vf $(OUTPUT_DIR)/images/uImage $@
 
 # rebuild rootfs (depends on kernel to ensure proper build order)
@@ -902,7 +945,7 @@ $(ROOTFS_BIN): $(KERNEL_BIN)
 	      $(OUTPUT_DIR)/build/thingino-uboot-$(UBOOT_REPO_VERSION)/.stamp_installed \
 	      $(OUTPUT_DIR)/build/thingino-uboot-$(UBOOT_REPO_VERSION)/.stamp_target_installed \
 	      $(OUTPUT_DIR)/build/thingino-uboot-$(UBOOT_REPO_VERSION)/.stamp_images_installed
-	$(BR2_MAKE) $(BR2_MAKE_JOBS) rootfs-squashfs
+	$(call thingino_run_build,$(BR2_MAKE) $(BR2_MAKE_JOBS) rootfs-squashfs)
 
 $(U_BOOT_ENV_TXT): $(ROOTFS_BIN)
 	@$(TEAL) "$@"
@@ -927,16 +970,11 @@ $(U_BOOT_ENV_TXT): $(ROOTFS_BIN)
 # Rebuild U-Boot with actual partition sizes after rootfs is ready
 $(U_BOOT_BIN): $(U_BOOT_ENV_TXT)
 	$(info -------------------------------- $@ (rebuilding with actual partition sizes))
-	$(BR2_MAKE) $(BR2_MAKE_JOBS) thingino-uboot-dirclean thingino-uboot
+	$(call thingino_run_build,$(BR2_MAKE) $(BR2_MAKE_JOBS) thingino-uboot-dirclean thingino-uboot)
 
 $(UB_ENV_BIN): $(U_BOOT_ENV_TXT)
 	@$(TEAL) "$@"
 	$(HOST_DIR)/bin/mkenvimage -s $(UB_ENV_PARTITION_SIZE) -o $@ $(U_BOOT_ENV_TXT)
-
-# create .tar file of rootfs
-$(ROOTFS_TAR):
-	@$(TEAL) "$@"
-	$(BR2_MAKE) $(BR2_MAKE_JOBS) rootfs-tar
 
 build-all:
 	@$(TEAL) "$@"
@@ -988,6 +1026,7 @@ help:
 	@echo -e "\n\
 	Usage:\n\
 	  make bootstrap      install system deps\n\
+	  make setup-hooks    configure local git hooks path (.githooks)\n\
 	  make update         update local repo and submodules (excludes buildroot)\n\
 	  make                build from scratch (clean + parallel) [DEFAULT]\n\
 	  make dev            serial build for debugging compilation errors\n\
@@ -995,9 +1034,10 @@ help:
 	  make cleanbuild     same as 'make' (clean + parallel build)\n\
 	  make build          serial build (no clean)\n\
 	  make pack           create firmware images\n\
+	  make build-info     generate post-build graphs and package analysis\n\
 	  make clean          clean before reassembly\n\
 	  make distclean      start building from scratch\n\
-	  make rebuild-<pkg>  perform a clean package rebuild for <pkg>\n\
+	  make rebuild-<pkg>  clean/rebuild/reinstall <pkg> and run target-finalize\n\
 	  make show-vars      print key build variables\n\
 	  make build-all      build all camera configs one by one\n\
 	  make help           print this help\n\
@@ -1073,6 +1113,7 @@ show-vars:
 	@echo "THINGINO_USER_FRAGMENT_FILES = $(THINGINO_USER_FRAGMENT_FILES)";
 	@echo "THINGINO_USER_JSON_FILES = $(THINGINO_USER_JSON_FILES)";
 	@echo "THINGINO_USER_MOTORS_JSON_FILES = $(THINGINO_USER_MOTORS_JSON_FILES)";
+	@echo "THINGINO_USER_PRUDYNT_JSON_FILES = $(THINGINO_USER_PRUDYNT_JSON_FILES)";
 	@echo "THINGINO_USER_MK_FILES = $(THINGINO_USER_MK_FILES)";
 	@echo "THINGINO_USER_OPT_DIRS = $(THINGINO_USER_OPT_DIRS)";
 	@echo "THINGINO_USER_OVERLAY_DIRS = $(THINGINO_USER_OVERLAY_DIRS)";

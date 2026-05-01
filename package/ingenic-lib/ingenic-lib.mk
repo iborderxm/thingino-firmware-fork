@@ -1,7 +1,7 @@
 INGENIC_LIB_SITE_METHOD = git
 INGENIC_LIB_SITE = https://github.com/gtxaspec/ingenic-lib
 INGENIC_LIB_SITE_BRANCH = master
-INGENIC_LIB_VERSION = 9a70bb8562dbc32303349c92ec6ecf26a7b74b61
+INGENIC_LIB_VERSION = 8f54b5af3176997d49ff41eb75934e312a44bacb
 INGENIC_LIB_INSTALL_STAGING = YES
 
 INGENIC_LIB_LICENSE = GPL-2.0
@@ -55,19 +55,6 @@ else ifeq ($(SOC_FAMILY),t40)
 else ifeq ($(SOC_FAMILY),t41)
 	SDK_VERSION := 1.2.0
 endif
-
-ifeq ($(KERNEL_VERSION),3.10.14)
-$(info KERNEL_VERSION: 3.10.14)
-else ifeq ($(KERNEL_VERSION),4.4.94)
-$(info KERNEL_VERSION: 4.4.94)
-else
-$(info KERNEL_VERSION: UNKNOWN)
-endif
-
-$(info SDK_VERSION: $(SDK_VERSION))
-$(info SDK_LIBC_VERSION: $(SDK_LIBC_VERSION))
-$(info SDK_LIBC_NAME: $(SDK_LIBC_NAME))
-$(info Building using libs for $(SDK_LIBC_NAME) GCC $(SDK_LIBC_VERSION) toolchain from $(SDK_VERSION) SDK)
 
 ifneq ($(filter t40 t41 a1,$(SOC_FAMILY)),)
 	# For T40/T41/A1, use their native version regardless of libc type
