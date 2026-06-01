@@ -411,8 +411,8 @@ jobs:
 
           # 临时修改live555配置
           rm -rf package/all-patches/live555/live555.hash
-          # package/thingino-live555/live555-override.mk文件 2026.04.01 替换为 2026.05.30
-          sed -i 's/2026.04.01/2026.05.30/' package/thingino-live555/live555-override.mk
+          # package/thingino-live555/live555-override.mk文件 2026.04.01 替换为 2026.06.01
+          sed -i 's/2026.04.01/2026.06.01/' package/thingino-live555/live555-override.mk
 
           # Verify the changes
           echo "Updated live555 configuration:"
