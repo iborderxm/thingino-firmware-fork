@@ -410,14 +410,22 @@ jobs:
           cat package/prudynt-t/prudynt-t.mk | head -250
 
           # 临时修改live555配置
-          rm -rf package/all-patches/live555/live555.hash
+          # 下载 https://download.live555.com/live.2026.06.01.tar.gz 到/tmp
+          wget https://download.live555.com/live.2026.06.01.tar.gz -P /tmp/
+          # 获取 sha256sum
+          hashcode=$(sha256sum /tmp/live.2026.06.01.tar.gz | awk '{print $1}')
+          echo "hashcode: $hashcode"
+          # 替换live555.hash
+          sed -i "s/dc84af6faec5342029501a8abe441dcbe0796e29a67a7ad0d61b1a242b2724c3/$hashcode/" package/all-patches/live555/live555.hash
+          # live555.hash 替换 live.2026.04.01.tar.gz 为 live.2026.06.01.tar.gz
+          sed -i 's/live.2026.04.01.tar.gz/live.2026.06.01.tar.gz/' package/all-patches/live555/live555.hash
           # package/thingino-live555/live555-override.mk文件 2026.04.01 替换为 2026.06.01
           sed -i 's/2026.04.01/2026.06.01/' package/thingino-live555/live555-override.mk
 
           # Verify the changes
           echo "Updated live555 configuration:"
-          ls -ltr package/all-patches/live555/
-          cat package/thingino-live555/live555-override.mk | head -10
+          cat package/all-patches/live555/live555.hash
+          cat package/thingino-live555/live555-override.mk | head -5
           
       - name: Build prudynt-t only
         run: |
