@@ -205,9 +205,14 @@ jobs:
       - name: Checkout repository source
         uses: actions/checkout@v5
         with:
-          submodules: 'true'
+          submodules: 'recursive'
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "0"
+
+      - name: Sync submodules to correct commit
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive
 
       - name: Debug checked out branch and commit
         run: |
