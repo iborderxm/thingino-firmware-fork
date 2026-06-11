@@ -200,9 +200,7 @@ jobs:
           DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive tzdata
 
       - name: Setup gh workspace to container
-        run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git config --global submodule.propagateBranches true
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Checkout repository source
         uses: actions/checkout@v5
@@ -217,7 +215,7 @@ jobs:
           cat .gitmodules
 
           git submodule sync
-          git submodule update --init --recursive --force
+          git submodule update --init --recursive --remote
 
           # buildroot/package/libwebsockets/libwebsockets.mk
           if [ -d buildroot/package/libwebsockets ]; then
