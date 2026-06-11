@@ -211,6 +211,9 @@ jobs:
 
       - name: Sync submodules to correct commit
         run: |
+          echo "check .gitmodules"
+          cat .gitmodules
+          
           git submodule sync --recursive
           git submodule update --init --recursive
 
@@ -447,6 +450,8 @@ jobs:
             echo "libwebsockets directory does not exist"
           fi
 
+          echo "check .gitmodules"
+          cat .gitmodules
           
       - name: Build prudynt-t only
         run: |
