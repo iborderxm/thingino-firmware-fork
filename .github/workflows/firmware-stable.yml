@@ -453,6 +453,10 @@ jobs:
           if [ -d buildroot/package/libwebsockets ]; then
             echo "libwebsockets directory exists"
             cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
+            # 版本4.5.8替换成4.5.7
+            echo "Replace libwebsockets version to 4.5.7"
+            sed -i 's/4.5.8/4.5.7/' buildroot/package/libwebsockets/libwebsockets.mk
+            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
           else
             echo "libwebsockets directory does not exist"
           fi
