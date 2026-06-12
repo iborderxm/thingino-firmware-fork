@@ -426,8 +426,9 @@ jobs:
           cat package/prudynt-t/prudynt-t.mk | head -250
 
           # 临时修改live555配置
-          # 下载 https://download.live555.com/live.2026.06.01.tar.gz 到/tmp
-          wget https://download.live555.com/live.2026.06.01.tar.gz -P /tmp/
+          # 下载 live555-latest.tar.gz 到/tmp
+          wget https://download.live555.com/live555-latest.tar.gz -P /tmp/
+          mv /tmp/live555-latest.tar.gz /tmp/live.2026.06.01.tar.gz
           # 获取 sha256sum
           hashcode=$(sha256sum /tmp/live.2026.06.01.tar.gz | awk '{print $1}')
           echo "hashcode: $hashcode"
