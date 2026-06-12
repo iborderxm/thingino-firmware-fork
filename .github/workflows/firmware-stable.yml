@@ -442,7 +442,7 @@ jobs:
           # Verify the changes
           echo "Updated live555 configuration:"
           cat package/all-patches/live555/live555.hash
-          cat package/thingino-live555/live555-override.mk | head -5
+          cat package/thingino-live555/live555-override.mk | head -12
 
           # 文件configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig末尾插入BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y
           sed -i '$a\BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
