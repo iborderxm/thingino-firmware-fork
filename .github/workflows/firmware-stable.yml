@@ -50,9 +50,9 @@ on:
 
       live555_version:
         type: string
-        description: 'live555 version (e.g. 2026.05.30)'
+        description: 'live555 version (e.g. 2026.05.28)'
         required: false
-        default: '2026.05.30'
+        default: '2026.05.28'
 
 env:
   BR2_DL_DIR: ~/dl
