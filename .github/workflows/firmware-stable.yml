@@ -438,9 +438,9 @@ jobs:
           # buildroot/package/live555/live555.mk文件 2025.10.13 替换为 2026.06.01
           sed -i 's/2025.10.13/2026.06.01/' buildroot/package/live555/live555.mk
           # buildroot/package/live555/live555.mk文件 替换LIVE555_SOURCE live替换为v$(LIVE555_VERSION)/live
-          sed -i 's/live/v\$(LIVE555_VERSION)\/live/' buildroot/package/live555/live555.mk
+          # sed -i 's/live/v\$(LIVE555_VERSION)\/live/' buildroot/package/live555/live555.mk
           # buildroot/package/live555/live555.mk文件 替换下载地址
-          sed -i 's/https:\/\/download.videolan.org\/contrib\/live555/live.2025.10.13.tar.gz/https:\/\/github.com\/gtxaspec\/live555-release-mirror\/releases\/download/' buildroot/package/live555/live555.mk
+          sed -i 's|https://download.videolan.org/contrib/live555|https://github.com/gtxaspec/live555-release-mirror/releases/download/v\$(LIVE555_VERSION)|' buildroot/package/live555/live555.mk
 
           # Verify the changes
           echo "Updated live555 configuration:"
