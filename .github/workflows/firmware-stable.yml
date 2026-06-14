@@ -425,6 +425,24 @@ jobs:
           pwd
           cat package/prudynt-t/prudynt-t.mk | head -250
 
+          # 临时修改live555配置
+          # 下载 https://download.videolan.org/contrib/live555/live.2026.06.01.tar.gz 到/tmp
+          wget https://download.videolan.org/contrib/live555/live.2026.06.01.tar.gz -P /tmp/
+          # 获取 sha256sum
+          hashcode=$(sha256sum /tmp/live.2026.06.01.tar.gz | awk '{print $1}')
+          echo "hashcode: $hashcode"
+          # 替换live555.hash
+          sed -i "s/44eb6ae4ae02ef68a5028d9fc8b70c45b9ba45c058f846b68bc4d32c74355f49/$hashcode/" buildroot/package/live555/live555.hash
+          # buildroot/package/live555/live555.hash 替换 live.2025.10.13.tar.gz 为 live.2026.06.01.tar.gz
+          sed -i 's/2025.10.13/2026.06.01/' buildroot/package/live555/live555.mk
+          # buildroot/package/live555/live555.mk文件 2025.10.13 替换为 2026.06.01
+          sed -i 's/2025.10.13/2026.06.01/' buildroot/package/live555/live555.mk
+
+          # Verify the changes
+          echo "Updated live555 configuration:"
+          cat buildroot/package/live555/live555.hash
+          cat buildroot/package/live555/live555.mk | head -12
+
           # 文件configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig末尾插入BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y
           sed -i '$a\BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
           # Verify the changes
