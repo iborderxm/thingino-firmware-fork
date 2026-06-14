@@ -48,6 +48,12 @@ on:
         description: 'MAC address for the prudynt-t build'
         required: false
 
+      live555_version:
+        type: string
+        description: 'live555 version (e.g. 2026.05.30)'
+        required: false
+        default: '2026.05.30'
+
 env:
   BR2_DL_DIR: ~/dl
   FORCE_UNSAFE_CONFIGURE: 1
@@ -426,21 +432,21 @@ jobs:
           cat package/prudynt-t/prudynt-t.mk | head -250
 
           # 临时修改live555配置
-          # 下载 https://github.com/gtxaspec/live555-release-mirror/releases/download/v2026.05.30/live.2026.05.30.tar.gz 到/tmp
-          wget https://github.com/gtxaspec/live555-release-mirror/releases/download/v2026.05.30/live.2026.05.30.tar.gz -P /tmp/
+          # 下载 https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz 到/tmp
+          wget https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz -P /tmp/
           # 获取 sha256sum
-          hashcode=$(sha256sum /tmp/live.2026.05.30.tar.gz | awk '{print $1}')
+          hashcode=$(sha256sum /tmp/live.${{ inputs.live555_version }}.tar.gz | awk '{print $1}')
           echo "hashcode: $hashcode"
           # 计算sh1sum
-          sh1sum=$(sha1sum /tmp/live.2026.05.30.tar.gz | awk '{print $1}')
+          sh1sum=$(sha1sum /tmp/live.${{ inputs.live555_version }}.tar.gz | awk '{print $1}')
           echo "sh1sum: $sh1sum"
           # 替换live555.hash
           sed -i "s/44eb6ae4ae02ef68a5028d9fc8b70c45b9ba45c058f846b68bc4d32c74355f49/$hashcode/" buildroot/package/live555/live555.hash
           sed -i "s/483146b15c5fdb973b88fc318f2772f022253563/$sh1sum/" buildroot/package/live555/live555.hash
-          # buildroot/package/live555/live555.hash 替换 live.2025.10.13.tar.gz 为 live.2026.05.30.tar.gz
-          sed -i 's/2025.10.13/2026.05.30/' buildroot/package/live555/live555.hash
-          # buildroot/package/live555/live555.mk文件 2025.10.13 替换为 2026.05.30
-          sed -i 's/2025.10.13/2026.05.30/' buildroot/package/live555/live555.mk
+          # buildroot/package/live555/live555.hash 替换 live.2025.10.13.tar.gz 为 live.${{ inputs.live555_version }}.tar.gz
+          sed -i 's/2025.10.13/${{ inputs.live555_version }}/' buildroot/package/live555/live555.hash
+          # buildroot/package/live555/live555.mk文件 2025.10.13 替换为 ${{ inputs.live555_version }}
+          sed -i 's/2025.10.13/${{ inputs.live555_version }}/' buildroot/package/live555/live555.mk
           # buildroot/package/live555/live555.mk文件 替换LIVE555_SOURCE live替换为v$(LIVE555_VERSION)/live
           # sed -i 's/live/v\$(LIVE555_VERSION)\/live/' buildroot/package/live555/live555.mk
           # buildroot/package/live555/live555.mk文件 替换下载地址
