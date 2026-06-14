@@ -434,11 +434,11 @@ jobs:
           # 替换live555.hash
           sed -i "s/44eb6ae4ae02ef68a5028d9fc8b70c45b9ba45c058f846b68bc4d32c74355f49/$hashcode/" buildroot/package/live555/live555.hash
           # buildroot/package/live555/live555.hash 替换 live.2025.10.13.tar.gz 为 live.2026.06.01.tar.gz
-          sed -i 's/2025.10.13/2026.06.01/' buildroot/package/live555/live555.mk
+          sed -i 's/2025.10.13/2026.06.01/' buildroot/package/live555/live555.hash
           # buildroot/package/live555/live555.mk文件 2025.10.13 替换为 2026.06.01
           sed -i 's/2025.10.13/2026.06.01/' buildroot/package/live555/live555.mk
           # buildroot/package/live555/live555.mk文件 替换LIVE555_SOURCE live替换为v$(LIVE555_VERSION)/live
-          sed -i 's/live/v$(LIVE555_VERSION)\/live/' buildroot/package/live555/live555.mk
+          sed -i 's/live/v\$(LIVE555_VERSION)\/live/' buildroot/package/live555/live555.mk
           # buildroot/package/live555/live555.mk文件 替换下载地址
           sed -i 's/https:\/\/download.videolan.org\/contrib\/live555/live.2025.10.13.tar.gz/https:\/\/github.com\/gtxaspec\/live555-release-mirror\/releases\/download/' buildroot/package/live555/live555.mk
 
