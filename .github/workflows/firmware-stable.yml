@@ -90,7 +90,7 @@ jobs:
             fi
           fi
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: 0
@@ -167,7 +167,7 @@ jobs:
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "1"
@@ -216,7 +216,7 @@ jobs:
           echo "TAG_NAME=${{ needs.prepare-release.outputs.tag_name }}" >> $GITHUB_ENV
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "1"
@@ -238,7 +238,7 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "0"
@@ -368,7 +368,7 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Checkout repository source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: 'recursive'
           ref: ${{ github.event.inputs.branch || 'stable' }}
@@ -416,7 +416,7 @@ jobs:
           mkdir -p ~/dl
 
       - name: Restore build cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: always()
         with:
           path: ~/.ccache
@@ -494,7 +494,7 @@ jobs:
       - name: Restore libimp-samples-musl cache
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         id: cache-libimp
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz
           key: libimp-samples-musl-${{ runner.os }}-${{ hashFiles('~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz') }}
@@ -865,7 +865,7 @@ jobs:
           echo "TAG_NAME=${{ needs.prepare-release.outputs.tag_name }}" >> $GITHUB_ENV
 
       - name: Checkout repository source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: 'false'
           ref: ${{ github.event.inputs.branch || 'stable' }}
