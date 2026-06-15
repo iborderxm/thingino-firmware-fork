@@ -54,6 +54,12 @@ on:
         description: 'MAC address for the prudynt-t build'
         required: false
 
+      live555_version:
+        type: string
+        description: 'live555 version (e.g. 2026.05.28)'
+        required: false
+        default: '2026.05.28'
+
 env:
   BR2_DL_DIR: ~/dl
   FORCE_UNSAFE_CONFIGURE: 1
@@ -294,7 +300,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget
+          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 python3-dev python3-setuptools lzop rsync tzdata u-boot-tools unzip wget libncurses-dev swig
 
       - name: Checkout prudynt-t
         uses: actions/checkout@v4
@@ -364,10 +370,25 @@ jobs:
       - name: Checkout repository source
         uses: actions/checkout@v4
         with:
-          submodules: 'true'
+          submodules: 'recursive'
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "0"
 
+      - name: Sync submodules to correct commit
+        run: |
+          echo "check .gitmodules"
+          cat .gitmodules
+
+          git submodule sync
+          git submodule update --init --recursive --remote
+
+          # buildroot/package/libwebsockets/libwebsockets.mk
+          if [ -d buildroot/package/libwebsockets ]; then
+            echo "libwebsockets directory exists"
+            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
+          else
+            echo "libwebsockets directory does not exist"
+          fi
       - name: Debug checked out branch and commit
         run: |
           echo "Checked out branch:"
@@ -670,12 +691,61 @@ jobs:
           pwd
           cat package/prudynt-t/prudynt-t.mk | head -250
 
-      # - name: remove onvif support
-      #   if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
-      #   run: |
-      #     # select BR2_PACKAGE_THINGINO_ONVIF
-      #     sed -i 's/select BR2_PACKAGE_THINGINO_ONVIF/# select BR2_PACKAGE_THINGINO_ONVIF/' Config.in
-      #     sed -i 's/select BR2_PACKAGE_THINGINO_ONVIF/# select BR2_PACKAGE_THINGINO_ONVIF/' package/prudynt-t/Config.in
+          # 临时修改live555配置
+          # 下载 https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz 到/tmp
+          wget https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz -P /tmp/
+          # 获取 sha256sum
+          hashcode=$(sha256sum /tmp/live.${{ inputs.live555_version }}.tar.gz | awk '{print $1}')
+          echo "hashcode: $hashcode"
+          # 计算sh1sum
+          sh1sum=$(sha1sum /tmp/live.${{ inputs.live555_version }}.tar.gz | awk '{print $1}')
+          echo "sh1sum: $sh1sum"
+          # 替换live555.hash
+          sed -i "s/44eb6ae4ae02ef68a5028d9fc8b70c45b9ba45c058f846b68bc4d32c74355f49/$hashcode/" buildroot/package/live555/live555.hash
+          sed -i "s/483146b15c5fdb973b88fc318f2772f022253563/$sh1sum/" buildroot/package/live555/live555.hash
+          # buildroot/package/live555/live555.hash 替换 live.2025.10.13.tar.gz 为 live.${{ inputs.live555_version }}.tar.gz
+          sed -i 's/2025.10.13/${{ inputs.live555_version }}/' buildroot/package/live555/live555.hash
+          # buildroot/package/live555/live555.mk文件 2025.10.13 替换为 ${{ inputs.live555_version }}
+          sed -i 's/2025.10.13/${{ inputs.live555_version }}/' buildroot/package/live555/live555.mk
+          # buildroot/package/live555/live555.mk文件 替换LIVE555_SOURCE live替换为v$(LIVE555_VERSION)/live
+          # sed -i 's/live/v\$(LIVE555_VERSION)\/live/' buildroot/package/live555/live555.mk
+          # buildroot/package/live555/live555.mk文件 替换下载地址
+          sed -i 's|https://download.videolan.org/contrib/live555|https://github.com/gtxaspec/live555-release-mirror/releases/download/v\$(LIVE555_VERSION)|' buildroot/package/live555/live555.mk
+
+          # Verify the changes
+          echo "Updated live555 configuration:"
+          cat buildroot/package/live555/live555.hash
+          cat buildroot/package/live555/live555.mk | head -12
+
+          # package/thingino-uboot/thingino-uboot.mk 移除host-libyaml
+          sed -i 's/host-libyaml //' package/thingino-uboot/thingino-uboot.mk
+          cat package/thingino-uboot/thingino-uboot.mk | head -10
+
+          # configs/fragments/core.fragment 新增 BR2_TARGET_UBOOT_NEEDS_OPENSSL=y
+          # BR2_TARGET_UBOOT_NEEDS_LZOP=y的下一行新增BR2_TARGET_UBOOT_NEEDS_OPENSSL=y
+          sed -i '/BR2_TARGET_UBOOT_NEEDS_LZOP=y/a\BR2_TARGET_UBOOT_NEEDS_OPENSSL=y' configs/fragments/core.fragment
+          cat configs/fragments/core.fragment | head -10
+
+          # 文件configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig末尾插入BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y
+          sed -i '$a\BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
+          # Verify the changes
+          echo "Updated configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig file:"
+          cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig | head -20
+
+          # buildroot/package/libwebsockets/libwebsockets.mk
+          if [ -d buildroot/package/libwebsockets ]; then
+            echo "libwebsockets directory exists"
+            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
+            # 版本4.5.8替换成4.5.7
+            echo "Replace libwebsockets version to 4.5.7"
+            sed -i 's/4.5.8/4.5.7/' buildroot/package/libwebsockets/libwebsockets.mk
+            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
+          else
+            echo "libwebsockets directory does not exist"
+          fi
+
+          echo "check .gitmodules"
+          cat .gitmodules
 
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}
