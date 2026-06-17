@@ -4,7 +4,7 @@ on:
     inputs:
       branch:
         type: string
-        description: 'Branch to build from'
+        description: 'Branch, tag, or commit SHA to build from'
         required: true
 
       graph_enabled:
@@ -103,9 +103,9 @@ jobs:
           git rev-parse HEAD
           echo "Last commit:"
           git log --oneline -1
-          # 检查当前仓库是否存在github.event.inputs.branch分支
-          if ! git ls-remote --exit-code origin "${{ github.event.inputs.branch }}" | grep -q "refs/heads/${{ github.event.inputs.branch }}"; then
-            echo "Branch ${{ github.event.inputs.branch }} not found in remote repository"
+          # 检查当前仓库是否存在github.event.inputs.branch分支、标签或commit SHA
+          if ! git ls-remote --exit-code origin "${{ github.event.inputs.branch }}" | grep -qE "refs/(heads|tags)/${{ github.event.inputs.branch }}|${{ github.event.inputs.branch }}"; then
+            echo "Branch, tag, or commit SHA ${{ github.event.inputs.branch }} not found in remote repository"
             exit 1
           fi
 
