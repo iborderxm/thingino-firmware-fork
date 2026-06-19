@@ -381,6 +381,9 @@ jobs:
             # number.real 替换为 number
             sed -i 's/number.real/number/g' prudynt-t/src/JsonAPI.cpp
             sed -i 's/number.real/number/g' prudynt-t/src/Config.cpp
+            # JSON_NUMBER_INT 替换为 JSON_NUMBER
+            sed -i 's/JSON_NUMBER_INT/JSON_NUMBER/g' prudynt-t/src/JsonAPI.cpp
+            sed -i 's/JSON_NUMBER_INT/JSON_NUMBER/g' prudynt-t/src/Config.cpp
           fi
 
           mv prudynt-t prudynt-t-${TAG}
