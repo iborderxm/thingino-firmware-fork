@@ -732,7 +732,7 @@ jobs:
 
       - name: Update live555 configuration
         if: ${{ github.event.inputs.update_live555_config != 'false' }}
-          run: |
+        run: |
           # 临时修改live555配置
           # 下载 https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz 到/tmp
           wget https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz -P /tmp/
