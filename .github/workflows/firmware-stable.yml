@@ -373,14 +373,14 @@ jobs:
           if [[ "${{ github.event.inputs.prutynt_is_json_new_version }}" == 'false' ]]; then
             echo "prudynt-t JSON library is not new version, update JsonAPI.cpp and Config.cpp"
             # number.integer 替换为 number
-            sed -i 's/number.integer/number/g' src/JsonAPI.cpp
-            sed -i 's/number.integer/number/g' src/Config.cpp
+            sed -i 's/number.integer/number/g' prudynt-t/src/JsonAPI.cpp
+            sed -i 's/number.integer/number/g' prudynt-t/src/Config.cpp
             # number.kind 替换为 number
-            sed -i 's/number.kind/number/g' src/JsonAPI.cpp
-            sed -i 's/number.kind/number/g' src/Config.cpp
+            sed -i 's/number.kind/number/g' prudynt-t/src/JsonAPI.cpp
+            sed -i 's/number.kind/number/g' prudynt-t/src/Config.cpp
             # number.real 替换为 number
-            sed -i 's/number.real/number/g' src/JsonAPI.cpp
-            sed -i 's/number.real/number/g' src/Config.cpp
+            sed -i 's/number.real/number/g' prudynt-t/src/JsonAPI.cpp
+            sed -i 's/number.real/number/g' prudynt-t/src/Config.cpp
           fi
 
           mv prudynt-t prudynt-t-${TAG}
