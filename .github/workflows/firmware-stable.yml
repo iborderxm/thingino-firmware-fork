@@ -53,12 +53,26 @@ on:
         type: string
         description: 'MAC address for the prudynt-t build'
         required: false
-
+      prudynt-t_ws_enable:
+        type: boolean
+        description: 'Enable prudynt-t websockets'
+        required: false
+        default: false
+      update_live555_config:
+        type: boolean
+        description: 'Update live555 configuration'
+        required: false
+        default: false
       live555_version:
         type: string
         description: 'live555 version (e.g. 2026.05.28)'
         required: false
         default: '2026.05.28'
+      update_submodules:
+        type: boolean
+        description: 'Update submodules'
+        required: false
+        default: false
 
 env:
   BR2_DL_DIR: ~/dl
@@ -370,11 +384,12 @@ jobs:
       - name: Checkout repository source
         uses: actions/checkout@v5
         with:
-          submodules: 'recursive'
+          submodules: 'true'
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "0"
 
       - name: Sync submodules to correct commit
+        if: ${{ github.event.inputs.update_submodules }}
         run: |
           echo "check .gitmodules"
           cat .gitmodules
@@ -691,6 +706,33 @@ jobs:
           pwd
           cat package/prudynt-t/prudynt-t.mk | head -250
 
+      - name: prudynt-t websockets Enable
+        if: ${{ github.event.inputs.prudynt-t_ws_enable != 'false' }}
+        run: |
+          # 文件configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig末尾插入BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y
+          sed -i '$a\BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
+          # Verify the changes
+          echo "Updated configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig file:"
+          cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig | head -20
+
+          # buildroot/package/libwebsockets/libwebsockets.mk
+          if [ -d buildroot/package/libwebsockets ]; then
+            echo "libwebsockets directory exists"
+            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
+            # 版本4.5.8替换成4.5.7
+            echo "Replace libwebsockets version to 4.5.7"
+            sed -i 's/4.5.8/4.5.7/' buildroot/package/libwebsockets/libwebsockets.mk
+            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
+          else
+            echo "libwebsockets directory does not exist"
+          fi
+
+          echo "check .gitmodules"
+          cat .gitmodules
+
+      - name: Update live555 configuration
+        if: ${{ github.event.inputs.update_live555_config != 'false' }}
+          run: |
           # 临时修改live555配置
           # 下载 https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz 到/tmp
           wget https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz -P /tmp/
@@ -725,27 +767,6 @@ jobs:
           # BR2_TARGET_UBOOT_NEEDS_LZOP=y的下一行新增BR2_TARGET_UBOOT_NEEDS_OPENSSL=y
           # sed -i '/BR2_TARGET_UBOOT_NEEDS_LZOP=y/a\BR2_TARGET_UBOOT_NEEDS_OPENSSL=y' configs/fragments/core.fragment
           # cat configs/fragments/core.fragment | head -10
-
-          # 文件configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig末尾插入BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y
-          sed -i '$a\BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
-          # Verify the changes
-          echo "Updated configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig file:"
-          cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig | head -20
-
-          # buildroot/package/libwebsockets/libwebsockets.mk
-          if [ -d buildroot/package/libwebsockets ]; then
-            echo "libwebsockets directory exists"
-            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
-            # 版本4.5.8替换成4.5.7
-            echo "Replace libwebsockets version to 4.5.7"
-            sed -i 's/4.5.8/4.5.7/' buildroot/package/libwebsockets/libwebsockets.mk
-            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
-          else
-            echo "libwebsockets directory does not exist"
-          fi
-
-          echo "check .gitmodules"
-          cat .gitmodules
 
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}
