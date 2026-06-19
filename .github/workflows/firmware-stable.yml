@@ -22,6 +22,11 @@ on:
         description: 'Debug: Generate dummy image files'
         required: false
         default: false
+      prutynt_is_json_new_version:
+        type: boolean
+        description: 'Is prudynt-t JSON library is new version'
+        required: false
+        default: false
       update_prudynt_config:
         type: boolean
         description: 'Update prudynt-t.mk configuration'
@@ -363,7 +368,23 @@ jobs:
           
           cd /tmp
           ls -ltr prudynt-t/include/
+
+          # JSON库升级导编译失败
+          if [[ "${{ github.event.inputs.prutynt_is_json_new_version }}" == 'false' ]]; then
+            echo "prudynt-t JSON library is not new version, update JsonAPI.cpp and Config.cpp"
+            # number.integer 替换为 number
+            sed -i 's/number.integer/number/g' src/JsonAPI.cpp
+            sed -i 's/number.integer/number/g' src/Config.cpp
+            # number.kind 替换为 number
+            sed -i 's/number.kind/number/g' src/JsonAPI.cpp
+            sed -i 's/number.kind/number/g' src/Config.cpp
+            # number.real 替换为 number
+            sed -i 's/number.real/number/g' src/JsonAPI.cpp
+            sed -i 's/number.real/number/g' src/Config.cpp
+          fi
+
           mv prudynt-t prudynt-t-${TAG}
+
           tar -czf ./prudynt-t-${TAG}.tar.gz prudynt-t-${TAG}
           ls -ltr
           mkdir webdir
