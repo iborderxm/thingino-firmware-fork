@@ -832,9 +832,8 @@ jobs:
           DYNAMIC_PART="${{ matrix.thingino-version }}"
           echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
           ls -ltr $GITHUB_WORKSPACE
-          echo "-------------------------------------"
+          FW_PATH=${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/
           ls -ltr ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/
-          FW_PATH=${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/
           FULL_FW=$(find ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/ -name "thingino-${DYNAMIC_PART}.bin" ! -name "*update.bin" | head -n 1)
           FULL_FW_UBOOT=$(find ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/ -name "u-boot-lzo-with-spl.bin" | head -n 1)
           FULL_FW_KERNEL=$(find ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/ -name "uImage" | head -n 1)
@@ -871,8 +870,6 @@ jobs:
       - name: Encrypt firmware artifacts with 7z
         run: |
           mkdir -p encrypted-artifacts
-          echo "FW_PATH:${{ env.FW_PATH }}"
-          ls -ltr ${{ env.FW_PATH }}
           7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z \
             "${{ env.FULL_FW }}" \
             "${{ env.FULL_FW_UBOOT }}" \
