@@ -810,15 +810,15 @@ jobs:
         if: ${{ github.event.inputs.debug_enabled == 'true' }}
         run: |
           DYNAMIC_PART="${{ matrix.thingino-version }}"
-          mkdir -p ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/
-          echo "debug" > ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}.bin
-          echo "debug uboot" > ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/u-boot-lzo-with-spl.bin
-          echo "debug kernel" > ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/uImage
-          echo "debug rootfs" > ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/rootfs.squashfs
-          echo "debug rootfs" > ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/rootfs.tar
-          echo "debug sha" > ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}.bin.sha256sum
-          echo "debug" > ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}-update.bin
-          echo "debug sha" > ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}-update.bin.sha256sum
+          mkdir -p ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/
+          echo "debug" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}.bin
+          echo "debug uboot" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/u-boot-lzo-with-spl.bin
+          echo "debug kernel" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/uImage
+          echo "debug rootfs" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/rootfs.squashfs
+          echo "debug rootfs" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/rootfs.tar
+          echo "debug sha" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}.bin.sha256sum
+          echo "debug" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}-update.bin
+          echo "debug sha" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}-update.bin.sha256sum
           echo "TIME=7:77" >> ${GITHUB_ENV}
 
       - name: Generate build time graphs
@@ -830,10 +830,10 @@ jobs:
       - name: Validate compiled firmware artifacts
         run: |
           DYNAMIC_PART="${{ matrix.thingino-version }}"
-          echo "HOME: $HOME"
-          ls -ltr $HOME
           echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
           ls -ltr $GITHUB_WORKSPACE
+          echo "-------------------------------------"
+          ls -ltr $FW_PATH
           FW_PATH=${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/
           FULL_FW=$(find ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/ -name "thingino-${DYNAMIC_PART}.bin" ! -name "*update.bin" | head -n 1)
           FULL_FW_UBOOT=$(find ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/ -name "u-boot-lzo-with-spl.bin" | head -n 1)
@@ -871,6 +871,8 @@ jobs:
       - name: Encrypt firmware artifacts with 7z
         run: |
           mkdir -p encrypted-artifacts
+          echo "FULL_FW:${{ env.FULL_FW }}"
+          ls -ltr ${{ env.FULL_FW }}
           7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z \
             "${{ env.FULL_FW }}" \
             "${{ env.FULL_FW_UBOOT }}" \
