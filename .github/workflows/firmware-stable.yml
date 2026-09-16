@@ -869,6 +869,11 @@ jobs:
 
       - name: Encrypt firmware artifacts with 7z
         run: |
+          echo "FULL_FW: ${{ env.FULL_FW }}"
+          ls -ltr ${{ env.FULL_FW }}
+          echo "-----------------------1"
+          ls -ltra ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/
+          echo "-----------------------2"
           mkdir -p encrypted-artifacts
           7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z \
             "${{ env.FULL_FW }}" \
