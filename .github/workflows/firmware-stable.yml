@@ -872,18 +872,23 @@ jobs:
           echo "FULL_FW: ${{ env.FULL_FW }}"
           ls -ltr ${{ env.FULL_FW }}
           echo "-----------------------1"
+          echo "${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/"
           ls -ltra ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/
           echo "-----------------------2"
           mkdir -p encrypted-artifacts
-          7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z \
-            "${{ env.FULL_FW }}" \
-            "${{ env.FULL_FW_UBOOT }}" \
-            "${{ env.FULL_FW_KERNEL }}" \
-            "${{ env.FULL_FW_ROOTFS }}" \
-            "${{ env.FULL_FW_ROOTFS_TAR }}" \
-            "${{ env.FULL_FW_SHA }}" \
-            "${{ env.UPDATE_FW }}" \
-            "${{ env.UPDATE_FW_SHA }}"
+          # 只收集实际存在的文件，避免向 7z 传空路径
+          FILES=()
+          for f in "${{ env.FULL_FW }}" "${{ env.FULL_FW_UBOOT }}" \
+                   "${{ env.FULL_FW_KERNEL }}" "${{ env.FULL_FW_ROOTFS }}" \
+                   "${{ env.FULL_FW_ROOTFS_TAR }}" "${{ env.FULL_FW_SHA }}" \
+                   "${{ env.UPDATE_FW }}" "${{ env.UPDATE_FW_SHA }}"; do
+            if [[ -n "$f" && -f "$f" ]]; then
+              FILES+=("$f")
+            else
+              echo "WARNING: skipping missing/empty file: '$f'"
+            fi
+          done
+          7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z "${FILES[@]}"
 
       - name: Upload encrypted firmware artifacts
         uses: actions/upload-artifact@v4
