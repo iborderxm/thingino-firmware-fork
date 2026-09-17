@@ -598,9 +598,15 @@ jobs:
           cd /tmp/$REPO_NAME
           echo "current branch: $(git branch), prepare to checkout iborder branch"
           git fetch --all
-          git branch -a | grep iborder
-          git checkout iborder
-          echo "iborder branch checked out successfully"
+          echo "fetched all branches"
+          if [ $(git branch -a | grep iborder ]; then
+            echo "iborder branch found"
+            git checkout iborder 
+            echo "iborder branch checked out successfully"
+          else
+            echo "iborder branch not found"
+            exit 1
+          fi
 
           cd $GITHUB_WORKSPACE
           # fix jct
