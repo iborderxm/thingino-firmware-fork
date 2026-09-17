@@ -597,9 +597,9 @@ jobs:
           ls -ltr /tmp/$REPO_NAME
           cd /tmp/$REPO_NAME
           echo "current branch: $(git branch), prepare to checkout iborder branch"
-          git fetch --all
+          git fetch --all --no-recurse-submodules
           echo "fetched all branches"
-          if [ $(git branch -a | grep iborder ]; then
+          if git show-ref --verify --quiet refs/remotes/origin/iborder; then
             echo "iborder branch found"
             git checkout iborder 
             echo "iborder branch checked out successfully"
