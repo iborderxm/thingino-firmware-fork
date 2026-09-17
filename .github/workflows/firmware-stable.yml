@@ -596,7 +596,11 @@ jobs:
           cp -r $REPO_NAME /tmp/$REPO_NAME
           ls -ltr /tmp/$REPO_NAME
           cd /tmp/$REPO_NAME
+          echo "current branch: $(git branch), prepare to checkout iborder branch"
+          git fetch --all
+          git branch -a | grep iborder
           git checkout iborder
+          echo "iborder branch checked out successfully"
 
           cd $GITHUB_WORKSPACE
           # fix jct
