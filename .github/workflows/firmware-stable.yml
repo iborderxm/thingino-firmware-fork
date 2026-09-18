@@ -19,7 +19,7 @@ on:
         type: boolean
         description: 'Disable Telegram notifications'
         required: false
-        default: false
+        default: true
       tg_scratch:
         type: boolean
         description: 'Use TG scratch channel'
@@ -49,7 +49,7 @@ on:
         type: boolean
         description: 'Do not publish to a GitHub release (test build)'
         required: false
-        default: false
+        default: true
 
 env:
   BR2_DL_DIR: ~/dl
