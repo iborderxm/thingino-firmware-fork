@@ -50,6 +50,11 @@ on:
         description: 'Do not publish to a GitHub release (test build)'
         required: false
         default: true
+      update_ingenic_lib_config:
+        type: boolean
+        description: 'Update ingenic-lib configuration'
+        required: false
+        default: false
       update_prudynt_config:
         type: boolean
         description: 'Update prudynt-t.mk configuration'
@@ -72,26 +77,6 @@ on:
         type: string
         description: 'MAC address for the prudynt-t build'
         required: false
-      prudynt-t_ws_enable:
-        type: boolean
-        description: 'Enable prudynt-t websockets'
-        required: false
-        default: false
-      update_live555_config:
-        type: boolean
-        description: 'Update live555 configuration'
-        required: false
-        default: false
-      live555_version:
-        type: string
-        description: 'live555 version (e.g. 2026.05.28)'
-        required: false
-        default: '2026.05.28'
-      update_submodules:
-        type: boolean
-        description: 'Update submodules'
-        required: false
-        default: false
 
 env:
   BR2_DL_DIR: ~/dl
@@ -520,16 +505,8 @@ jobs:
           buildscope --version
 
       # -------------------------------start-------------------------------
-      - name: Restore libimp-samples-musl cache
-        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
-        id: cache-libimp
-        uses: actions/cache@v5
-        with:
-          path: ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz
-          key: libimp-samples-musl-${{ runner.os }}-${{ hashFiles('~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz') }}
-
       - name: download libimp-samples-musl
-        if: ${{ github.event.inputs.update_prudynt_config != 'false' && steps.cache-libimp.outputs.cache-hit != 'true' }}
+        if: ${{ github.event.inputs.update_ingenic_lib_config != 'false' }}
         run: |
           gh repo clone gtxaspec/libimp-samples-musl /tmp/libimp-samples-musl
           echo "libimp-samples-musl cloned successfully"
@@ -545,6 +522,7 @@ jobs:
           echo "targzFileName: $targzFileName"
           hashcode=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz | cut -d '-' -f 3)
           echo "hashcode: $hashcode"
+          echo "HASHCODE=${hashcode}" >> ${GITHUB_ENV}
 
           tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}*.tar.gz -C ~/dl/ingenic-lib/
           rm -f ~/dl/ingenic-lib/$targzFileName
@@ -562,6 +540,17 @@ jobs:
           ls -ltr
           echo "$targzFileName compressed successfully"
           cd $currPath
+
+      - name: Update ingenic-lib configuration
+        if: ${{ github.event.inputs.update_ingenic_lib_config != 'false' }}
+        run: |
+          sed -i 's/^INGENIC_LIB_VERSION/# INGENIC_LIB_VERSION/' package/ingenic-lib/ingenic-lib.mk
+          sed -i '4i\INGENIC_LIB_VERSION = ${{ env.HASHCODE }}' package/ingenic-lib/ingenic-lib.mk
+          cat package/ingenic-lib/ingenic-lib.mk | head -10
+
+          sed -i '51i\default y' package/ingenic-lib/Config.in
+          sed -i '58i\default y' package/ingenic-lib/Config.in
+          cat package/ingenic-lib/Config.in
 
       - name: Checkout prudynt-t
         uses: actions/checkout@v5
@@ -638,23 +627,6 @@ jobs:
           echo "PRUDYNT_T_TAG=${TAG}" >> $GITHUB_ENV
           cd $GITHUB_WORKSPACE
 
-      - name: Sync submodules to correct commit
-        if: ${{ github.event.inputs.update_submodules }}
-        run: |
-          echo "check .gitmodules"
-          cat .gitmodules
-
-          git submodule sync
-          git submodule update --init --recursive --remote
-
-          # buildroot/package/libwebsockets/libwebsockets.mk
-          if [ -d buildroot/package/libwebsockets ]; then
-            echo "libwebsockets directory exists"
-            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
-          else
-            echo "libwebsockets directory does not exist"
-          fi
-
       - name: Update webui files
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
@@ -730,8 +702,11 @@ jobs:
 
           # thingino-wpa_supplicant.mk
           # cp -r /tmp/$REPO_NAME/package/thingino-wpa_supplicant/thingino-wpa_supplicant.mk package/thingino-wpa_supplicant/thingino-wpa_supplicant.mk
-          # 替换bootstrap国内cdn
+
           cd package/thingino-webui/files/www
+          # 添加html全自动翻译
+          sed -i 's@</body>@<script src="https://res.zvo.cn/translate/translate.js"></script><script>translate.language.setLocal('english');translate.language.setDefaultTo('chinese_simplified');translate.listener.start();translate.execute();</script></body>@' *.html
+          # 替换bootstrap国内cdn
           sed -i "s|integrity=|integrity1=|g" *.html
           target_key="bootstrap.min.css"
           result=$(grep -r "$target_key" . --include="*.html" | \
@@ -772,19 +747,6 @@ jobs:
 
           cd $GITHUB_WORKSPACE
       
-      - name: Update ingenic-lib.mk configuration
-        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
-        run: |
-          sed -i 's/gtxaspec/iborderxm/' package/ingenic-lib/ingenic-lib.mk
-          sed -i 's/master/iborder/' package/ingenic-lib/ingenic-lib.mk
-          sed -i 's/^INGENIC_LIB_VERSION/# INGENIC_LIB_VERSION/' package/ingenic-lib/ingenic-lib.mk
-          sed -i '4i\INGENIC_LIB_VERSION = $(shell git ls-remote $(INGENIC_LIB_SITE) $(INGENIC_LIB_SITE_BRANCH) | head -1 | cut -f1)' package/ingenic-lib/ingenic-lib.mk
-          
-          # Verify the changes
-          echo "Updated ingenic-lib.mk file:"
-          pwd
-          cat package/ingenic-lib/ingenic-lib.mk | head -10
-
       - name: Update prudynt-t.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
@@ -794,7 +756,7 @@ jobs:
           sed -i '1i\PRUDYNT_T_VERSION = ${{ env.PRUDYNT_T_TAG }}' package/prudynt-t/prudynt-t.mk
           sed -i '2i\PRUDYNT_T_SOURCE = prudynt-t-$(PRUDYNT_T_VERSION).tar.gz' package/prudynt-t/prudynt-t.mk
           sed -i '3i\PRUDYNT_T_SITE = http://127.0.0.1:8000' package/prudynt-t/prudynt-t.mk
-          sed -i 's/\$(shell git show -s --format=%h)/${{ env.PRUDYNT_T_TAG }}/' package/prudynt-t/prudynt-t.mk
+          # sed -i 's/\$(shell git show -s --format=%h)/${{ env.PRUDYNT_T_TAG }}/' package/prudynt-t/prudynt-t.mk
           if [[ "${{ github.event.inputs.prudynt-t-signature }}" == "true" ]]; then
             sed -i 's|SDK_VERSION=\"$(SDK_VERSION)\"|SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" MAC_ADDRESS=\"${{ github.event.inputs.prudynt-t-mac }}\" SDK_VERSION=\"$(SDK_VERSION)\"|' package/prudynt-t/prudynt-t.mk
             sed -i 's/$(TARGET_CROSS)strip/# $(TARGET_CROSS)strip/' package/prudynt-t/prudynt-t.mk
@@ -808,68 +770,6 @@ jobs:
 
           # 临时移除patch
           rm -rf package/prudynt-t/*.patch
-
-      - name: prudynt-t websockets Enable
-        if: ${{ github.event.inputs.prudynt-t_ws_enable != 'false' }}
-        run: |
-          # 文件configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig末尾插入BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y
-          sed -i '$a\BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
-          # Verify the changes
-          echo "Updated configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig file:"
-          cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig | head -20
-
-          # buildroot/package/libwebsockets/libwebsockets.mk
-          if [ -d buildroot/package/libwebsockets ]; then
-            echo "libwebsockets directory exists"
-            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
-            # 版本4.5.8替换成4.5.7
-            echo "Replace libwebsockets version to 4.5.7"
-            sed -i 's/4.5.8/4.5.7/' buildroot/package/libwebsockets/libwebsockets.mk
-            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
-          else
-            echo "libwebsockets directory does not exist"
-          fi
-
-          echo "check .gitmodules"
-          cat .gitmodules
-
-      - name: Update live555 configuration
-        if: ${{ github.event.inputs.update_live555_config != 'false' }}
-        run: |
-          # 临时修改live555配置
-          # 下载 https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz 到/tmp
-          wget https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz -P /tmp/
-          # 获取 sha256sum
-          hashcode=$(sha256sum /tmp/live.${{ inputs.live555_version }}.tar.gz | awk '{print $1}')
-          echo "hashcode: $hashcode"
-          # 计算sh1sum
-          sh1sum=$(sha1sum /tmp/live.${{ inputs.live555_version }}.tar.gz | awk '{print $1}')
-          echo "sh1sum: $sh1sum"
-          # 替换live555.hash
-          sed -i "s/44eb6ae4ae02ef68a5028d9fc8b70c45b9ba45c058f846b68bc4d32c74355f49/$hashcode/" buildroot/package/live555/live555.hash
-          sed -i "s/483146b15c5fdb973b88fc318f2772f022253563/$sh1sum/" buildroot/package/live555/live555.hash
-          # buildroot/package/live555/live555.hash 替换 live.2025.10.13.tar.gz 为 live.${{ inputs.live555_version }}.tar.gz
-          sed -i 's/2025.10.13/${{ inputs.live555_version }}/' buildroot/package/live555/live555.hash
-          # buildroot/package/live555/live555.mk文件 2025.10.13 替换为 ${{ inputs.live555_version }}
-          sed -i 's/2025.10.13/${{ inputs.live555_version }}/' buildroot/package/live555/live555.mk
-          # buildroot/package/live555/live555.mk文件 替换LIVE555_SOURCE live替换为v$(LIVE555_VERSION)/live
-          # sed -i 's/live/v\$(LIVE555_VERSION)\/live/' buildroot/package/live555/live555.mk
-          # buildroot/package/live555/live555.mk文件 替换下载地址
-          sed -i 's|https://download.videolan.org/contrib/live555|https://github.com/gtxaspec/live555-release-mirror/releases/download/v\$(LIVE555_VERSION)|' buildroot/package/live555/live555.mk
-
-          # Verify the changes
-          echo "Updated live555 configuration:"
-          cat buildroot/package/live555/live555.hash
-          cat buildroot/package/live555/live555.mk | head -12
-
-          # package/thingino-uboot/thingino-uboot.mk 移除host-libyaml
-          sed -i 's/host-libyaml //' package/thingino-uboot/thingino-uboot.mk
-          cat package/thingino-uboot/thingino-uboot.mk | head -10
-
-          # configs/fragments/core.fragment 新增 BR2_TARGET_UBOOT_NEEDS_OPENSSL=y
-          # BR2_TARGET_UBOOT_NEEDS_LZOP=y的下一行新增BR2_TARGET_UBOOT_NEEDS_OPENSSL=y
-          # sed -i '/BR2_TARGET_UBOOT_NEEDS_LZOP=y/a\BR2_TARGET_UBOOT_NEEDS_OPENSSL=y' configs/fragments/core.fragment
-          # cat configs/fragments/core.fragment | head -10
 
       # --------------------------------end--------------------------------
 
