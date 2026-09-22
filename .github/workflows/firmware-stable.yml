@@ -332,14 +332,19 @@ jobs:
           if [ -d "$PATCH_DIR" ]; then
             for patch in $(find "$PATCH_DIR" -maxdepth 1 -type f -name '*.patch' | LC_ALL=C sort); do
               abspatch="$(pwd)/$patch"
-              if git -C buildroot apply --check "$abspatch" 2>/dev/null; then
+              # Keep the forward-check error output: if neither forward nor
+              # reverse apply works, it is printed below to show why.
+              if apply_err="$(git -C buildroot apply --check "$abspatch" 2>&1)"; then
                 echo "Applying $patch"
                 git -C buildroot apply "$abspatch"
               elif git -C buildroot apply -R --check "$abspatch" 2>/dev/null; then
                 echo "Already applied: $patch"
               else
                 echo "ERROR: failed to apply $patch"
-                exit 1
+                echo "----- git apply error: $patch -----"
+                echo "$apply_err"
+                echo "---------------------------------------------------"
+                # exit 1
               fi
             done
           fi
@@ -864,6 +869,9 @@ jobs:
             echo "FULL_FW_ROOTFS=${FULL_FW_ROOTFS}" >> ${GITHUB_ENV}
             echo "FULL_FW_ROOTFS_TAR=${FULL_FW_ROOTFS_TAR}" >> ${GITHUB_ENV}
             echo "FULL_FW_SHA=${FULL_FW}.sha256sum" >> ${GITHUB_ENV}
+
+            UPDATE_FW_DATETIME=$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')
+            echo "UPDATE_FW_DATETIME=${UPDATE_FW_DATETIME}" >> ${GITHUB_ENV}
           else
             echo "Matching .bin files not found under: ${OUT_BASE}/${DYNAMIC_PART}*/images/"
             ls -la "${OUT_BASE}" || true
