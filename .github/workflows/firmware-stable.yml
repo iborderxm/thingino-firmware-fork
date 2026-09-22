@@ -332,19 +332,14 @@ jobs:
           if [ -d "$PATCH_DIR" ]; then
             for patch in $(find "$PATCH_DIR" -maxdepth 1 -type f -name '*.patch' | LC_ALL=C sort); do
               abspatch="$(pwd)/$patch"
-              # Keep the forward-check error output: if neither forward nor
-              # reverse apply works, it is printed below to show why.
-              if apply_err="$(git -C buildroot apply --check "$abspatch" 2>&1)"; then
+              if git -C buildroot apply --check "$abspatch" 2>/dev/null; then
                 echo "Applying $patch"
                 git -C buildroot apply "$abspatch"
               elif git -C buildroot apply -R --check "$abspatch" 2>/dev/null; then
                 echo "Already applied: $patch"
               else
                 echo "ERROR: failed to apply $patch"
-                echo "----- git apply error: $patch -----"
-                echo "$apply_err"
-                echo "---------------------------------------------------"
-                # exit 1
+                exit 1
               fi
             done
           fi
