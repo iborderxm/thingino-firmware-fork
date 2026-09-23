@@ -505,53 +505,6 @@ jobs:
           buildscope --version
 
       # -------------------------------start-------------------------------
-      - name: download libimp-samples-musl
-        if: ${{ github.event.inputs.update_ingenic_lib_config != 'false' }}
-        run: |
-          gh repo clone gtxaspec/libimp-samples-musl /tmp/libimp-samples-musl
-          echo "libimp-samples-musl cloned successfully"
-          echo "libimp-samples-musl files:"
-          # ls -la /tmp/libimp-samples-musl/
-          # ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
-          # ls -la ~/dl/ingenic-lib/
-          if [ ! -f ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz ]; then
-            echo "Warning: ingenic-lib-${hashcode}-git4.tar.gz not found in ~/dl/ingenic-lib/"
-            exit 1
-          fi
-          targzFileName=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz)
-          echo "targzFileName: $targzFileName"
-          hashcode=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz | cut -d '-' -f 3)
-          echo "hashcode: $hashcode"
-          echo "HASHCODE=${hashcode}" >> ${GITHUB_ENV}
-
-          tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}*.tar.gz -C ~/dl/ingenic-lib/
-          rm -f ~/dl/ingenic-lib/$targzFileName
-          dirName=$(basename ~/dl/ingenic-lib/ingenic-lib-*)
-          # ls -ltr
-          ls -ltr ~/dl/ingenic-lib/${dirName}/
-          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
-          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
-          echo "libimp-samples-musl files copied successfully"
-          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
-          currPath=`pwd`
-          cd ~/dl/ingenic-lib/
-          tar -czf ./$targzFileName ${dirName}
-          rm -rf ./${dirName}
-          ls -ltr
-          echo "$targzFileName compressed successfully"
-          cd $currPath
-
-      - name: Update ingenic-lib configuration
-        if: ${{ github.event.inputs.update_ingenic_lib_config != 'false' }}
-        run: |
-          sed -i 's/^INGENIC_LIB_VERSION/# INGENIC_LIB_VERSION/' package/ingenic-lib/ingenic-lib.mk
-          sed -i '4i\INGENIC_LIB_VERSION = ${{ env.HASHCODE }}' package/ingenic-lib/ingenic-lib.mk
-          cat package/ingenic-lib/ingenic-lib.mk | head -10
-
-          sed -i '51i\default y' package/ingenic-lib/Config.in
-          sed -i '58i\default y' package/ingenic-lib/Config.in
-          cat package/ingenic-lib/Config.in
-
       - name: Checkout prudynt-t
         uses: actions/checkout@v5
         with:
@@ -786,6 +739,53 @@ jobs:
 
           # 临时移除patch
           rm -rf package/prudynt-t/*.patch
+
+      - name: download libimp-samples-musl
+        if: ${{ github.event.inputs.update_ingenic_lib_config != 'false' }}
+        run: |
+          gh repo clone gtxaspec/libimp-samples-musl /tmp/libimp-samples-musl
+          echo "libimp-samples-musl cloned successfully"
+          echo "libimp-samples-musl files:"
+          # ls -la /tmp/libimp-samples-musl/
+          # ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
+          # ls -la ~/dl/ingenic-lib/
+          if [ ! -f ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz ]; then
+            echo "Warning: ingenic-lib-${hashcode}-git4.tar.gz not found in ~/dl/ingenic-lib/"
+            exit 1
+          fi
+          targzFileName=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz)
+          echo "targzFileName: $targzFileName"
+          hashcode=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz | cut -d '-' -f 3)
+          echo "hashcode: $hashcode"
+          echo "HASHCODE=${hashcode}" >> ${GITHUB_ENV}
+
+          tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}*.tar.gz -C ~/dl/ingenic-lib/
+          rm -f ~/dl/ingenic-lib/$targzFileName
+          dirName=$(basename ~/dl/ingenic-lib/ingenic-lib-*)
+          # ls -ltr
+          ls -ltr ~/dl/ingenic-lib/${dirName}/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          echo "libimp-samples-musl files copied successfully"
+          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          currPath=`pwd`
+          cd ~/dl/ingenic-lib/
+          tar -czf ./$targzFileName ${dirName}
+          rm -rf ./${dirName}
+          ls -ltr
+          echo "$targzFileName compressed successfully"
+          cd $currPath
+
+      - name: Update ingenic-lib configuration
+        if: ${{ github.event.inputs.update_ingenic_lib_config != 'false' }}
+        run: |
+          sed -i 's/^INGENIC_LIB_VERSION/# INGENIC_LIB_VERSION/' package/ingenic-lib/ingenic-lib.mk
+          sed -i '4i\INGENIC_LIB_VERSION = ${{ env.HASHCODE }}' package/ingenic-lib/ingenic-lib.mk
+          cat package/ingenic-lib/ingenic-lib.mk | head -10
+
+          sed -i '51i\default y' package/ingenic-lib/Config.in
+          sed -i '58i\default y' package/ingenic-lib/Config.in
+          cat package/ingenic-lib/Config.in
 
       # --------------------------------end--------------------------------
 
