@@ -708,18 +708,18 @@ jobs:
           # 在 </body> 前注入中英自动翻译脚本。
           # 排除 buildroot/linux 等 git 子模块以及构建/下载目录，避免污染无关文件。
           # 已注入过翻译脚本或不含 </body> 的文件自动跳过，保证可重复执行。
-          TRANSLATE_SNIPPET='<script src="https://res.zvo.cn/translate/translate.js"></script><script>translate.language.setLocal('"'"'english'"'"');translate.language.setDefaultTo('"'"'chinese_simplified'"'"');translate.listener.start();translate.execute();</script>'
-          find . \( -path ./buildroot -o -path ./linux -o -path ./output -o -path ./dl -o -path ./.git \) -prune -o -type f -name "*.html" -print0 \
-            | while IFS= read -r -d '' htmlfile; do
-                if grep -q 'res.zvo.cn/translate/translate.js' "$htmlfile"; then
-                  echo "skip (translate already injected): $htmlfile"
-                elif grep -q '</body>' "$htmlfile"; then
-                  sed -i "s@</body>@${TRANSLATE_SNIPPET}</body>@" "$htmlfile"
-                  echo "translate injected: $htmlfile"
-                else
-                  echo "skip (no </body> tag): $htmlfile"
-                fi
-              done
+          # TRANSLATE_SNIPPET='<script src="https://res.zvo.cn/translate/translate.js"></script><script>translate.language.setLocal('"'"'english'"'"');translate.language.setDefaultTo('"'"'chinese_simplified'"'"');translate.listener.start();translate.execute();</script>'
+          # find . \( -path ./buildroot -o -path ./linux -o -path ./output -o -path ./dl -o -path ./.git \) -prune -o -type f -name "*.html" -print0 \
+          #   | while IFS= read -r -d '' htmlfile; do
+          #       if grep -q 'res.zvo.cn/translate/translate.js' "$htmlfile"; then
+          #         echo "skip (translate already injected): $htmlfile"
+          #       elif grep -q '</body>' "$htmlfile"; then
+          #         sed -i "s@</body>@${TRANSLATE_SNIPPET}</body>@" "$htmlfile"
+          #         echo "translate injected: $htmlfile"
+          #       else
+          #         echo "skip (no </body> tag): $htmlfile"
+          #       fi
+          #     done
 
           cd package/thingino-webui/files/www
           # 替换bootstrap国内cdn
