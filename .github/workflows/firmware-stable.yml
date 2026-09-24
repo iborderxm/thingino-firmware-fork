@@ -506,6 +506,7 @@ jobs:
 
       # -------------------------------start-------------------------------
       - name: Checkout prudynt-t
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         uses: actions/checkout@v5
         with:
           token: ${{ secrets.PRIVATE_TOKEN }}
@@ -513,6 +514,7 @@ jobs:
           path: ./prudynt-t
 
       - name: Prepare prudynt-t
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
           ls -ltr ./prudynt-t/
           mv ./prudynt-t /tmp/prudynt-t
@@ -794,11 +796,13 @@ jobs:
         env:
           CCACHE_MAXSIZE: "1G"   # bound the per-branch cache so its release asset stays well under 2 GiB
         run: |
-          ls -ltr /tmp/webdir/
-          cd /tmp/webdir/
-          python3 -m http.server 8000 &
-          sleep 5
-          ps -ef | grep python
+          if [[ "${{ github.event.inputs.update_prudynt_config }}" == "true" ]]; then
+            ls -ltr /tmp/webdir/
+            cd /tmp/webdir/
+            python3 -m http.server 8000 &
+            sleep 5
+            ps -ef | grep python
+          fi
           cd $GITHUB_WORKSPACE
           ls -ltr
           BOARD=${{ matrix.thingino-version }} make fast WORKFLOW=1
