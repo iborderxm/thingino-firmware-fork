@@ -1,0 +1,93 @@
+diff --git a/package/prudynt-t/files/www/a/preview-fmp4.js b/package/prudynt-t/files/www/a/preview-fmp4.js
+index a98eb83d9..6d6c7ad8a 100644
+--- a/package/prudynt-t/files/www/a/preview-fmp4.js
++++ b/package/prudynt-t/files/www/a/preview-fmp4.js
+@@ -29,8 +29,31 @@
+   };
+   const hex = (v) => v.toString(16).toUpperCase().padStart(2, "0");
+ 
++  function hevcCodecCandidates(u8, p) {
++    // HEVCDecoderConfigurationRecord payload: byte 0 = configurationVersion,
++    // byte 1 = profile_space(2)|tier(1)|profile_idc(5), bytes 2..5 = compat
++    // flags, bytes 6..11 = constraint flags, byte 12 = level_idc.
++    const profileByte = u8[p + 1];
++    if (profileByte === undefined) return [];
++    const profile = profileByte & 0x1f;
++    const tier = profileByte & 0x20 ? "H" : "L";
++    const level = u8[p + 12];
++    let compat = "";
++    for (let i = 0; i < 4; i++) compat += hex(u8[p + 2 + i]);
++    compat = compat.replace(/^0+/, "") || "0";
++    let constraint = "";
++    for (let i = 0; i < 6; i++) constraint += hex(u8[p + 6 + i]);
++    constraint = constraint.replace(/^0+/, "").replace(/0+$/, "");
++    const base = `hvc1.${profile}.${compat}`;
++    const candidates = [];
++    if (constraint) candidates.push(`${base}.${constraint}${tier}${level}`);
++    candidates.push(`${base}.${tier}${level}`);
++    candidates.push(`hvc1.1.6.${tier}${level}`);
++    return candidates;
++  }
++
+   function codecFromInit(u8) {
+-    let videoCodec = "avc1.42E01E";
++    let videoCandidates = ["avc1.42E01E"];
+     let hasAudio = false;
+     for (let i = 0; i + 8 <= u8.length; i++) {
+       if (
+@@ -39,7 +62,16 @@
+         u8[i + 2] === 0x63 &&
+         u8[i + 3] === 0x43
+       ) {
+-        videoCodec = `avc1.${hex(u8[i + 5])}${hex(u8[i + 6])}${hex(u8[i + 7])}`;
++        videoCandidates = [
++          `avc1.${hex(u8[i + 5])}${hex(u8[i + 6])}${hex(u8[i + 7])}`,
++        ];
++      } else if (
++        u8[i] === 0x68 &&
++        u8[i + 1] === 0x76 &&
++        u8[i + 2] === 0x63 &&
++        u8[i + 3] === 0x43
++      ) {
++        videoCandidates = hevcCodecCandidates(u8, i + 8);
+       } else if (
+         u8[i] === 0x6d &&
+         u8[i + 1] === 0x70 &&
+@@ -49,9 +81,21 @@
+         hasAudio = true;
+       }
+     }
+-    return hasAudio
+-      ? `video/mp4; codecs="${videoCodec}, mp4a.40.2"`
+-      : `video/mp4; codecs="${videoCodec}"`;
++    const toMime = (c) =>
++      hasAudio
++        ? `video/mp4; codecs="${c}, mp4a.40.2"`
++        : `video/mp4; codecs="${c}"`;
++    const accepted = (mime) =>
++      !window.MediaSource ||
++      !MediaSource.isTypeSupported ||
++      MediaSource.isTypeSupported(mime);
++    // HEVC codec strings have browser-dependent spellings; prefer the first
++    // candidate the platform accepts.
++    for (const c of videoCandidates) {
++      const mime = toMime(c);
++      if (accepted(mime)) return mime;
++    }
++    return null;
+   }
+ 
+   function boxAt(u8, off) {
+@@ -190,6 +234,12 @@
+         if (moovEnd > 0) {
+           if (mySession !== sessionId) return;
+           const codecs = codecFromInit(buf.subarray(0, moovEnd));
++          if (!codecs) {
++            setStatus(
++              "Browser cannot decode this stream (no MSE support for its codec).",
++            );
++            return;
++          }
+           try {
+             sourceBuffer = mediaSource.addSourceBuffer(codecs);
+             sourceBuffer.mode = "segments";

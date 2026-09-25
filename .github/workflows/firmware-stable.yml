@@ -505,6 +505,30 @@ jobs:
           buildscope --version
 
       # -------------------------------start-------------------------------
+      - name: copy current repo to /tmp
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        run: |
+          # 复制当前项目目录到/tmp
+          REPO_FULL="${{ github.repository }}"
+          REPO_NAME="${REPO_FULL#*/}"
+          echo "Repository name: $REPO_NAME"
+          echo "copied repository to /tmp/$REPO_NAME"
+          cd ../
+          cp -r $REPO_NAME /tmp/$REPO_NAME
+          ls -ltr /tmp/$REPO_NAME
+          cd /tmp/$REPO_NAME
+          echo "current branch: $(git branch), prepare to checkout newiborder branch"
+          git fetch --all --no-recurse-submodules
+          echo "fetched all branches"
+          if git show-ref --verify --quiet refs/remotes/origin/newiborder; then
+            echo "newiborder branch found"
+            git checkout newiborder 
+            echo "newiborder branch checked out successfully"
+          else
+            echo "newiborder branch not found"
+            exit 1
+          fi
+
       - name: Checkout prudynt-t
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         uses: actions/checkout@v5
@@ -555,22 +579,16 @@ jobs:
           cd /tmp
           ls -ltr prudynt-t/include/
 
-          # JSON库升级导编译失败
-          if [[ "${{ github.event.inputs.prutynt_is_json_new_version }}" == 'false' ]]; then
-            echo "prudynt-t JSON library is not new version, update JsonAPI.cpp and Config.cpp"
-            # number.integer 替换为 number
-            sed -i 's/number.integer/number/g' prudynt-t/src/JsonAPI.cpp
-            sed -i 's/number.integer/number/g' prudynt-t/src/Config.cpp
-            # number.kind 替换为 number
-            sed -i 's/number.kind/number/g' prudynt-t/src/JsonAPI.cpp
-            sed -i 's/number.kind/number/g' prudynt-t/src/Config.cpp
-            # number.real 替换为 number
-            sed -i 's/number.real/number/g' prudynt-t/src/JsonAPI.cpp
-            sed -i 's/number.real/number/g' prudynt-t/src/Config.cpp
-            # JSON_NUMBER_INT 替换为 JSON_NUMBER
-            sed -i 's/JSON_NUMBER_INT/JSON_NUMBER/g' prudynt-t/src/JsonAPI.cpp
-            sed -i 's/JSON_NUMBER_INT/JSON_NUMBER/g' prudynt-t/src/Config.cpp
-          fi
+          # 应用patch修复HTTPMJPEG的H265解码问题
+          REPO_FULL="${{ github.repository }}"
+          REPO_NAME="${REPO_FULL#*/}"
+          echo "Repository name: $REPO_NAME"
+          cd prudynt-t
+          patch -p1 < /tmp/$REPO_NAME/custom/patch/HTTPMJPEG_h265.patch
+          echo "----------------------------------------------------"
+          cat src/network/HTTPMJPEG.cpp
+          echo "----------------------------------------------------"
+          cd ../
 
           mv prudynt-t prudynt-t-${TAG}
 
@@ -585,26 +603,9 @@ jobs:
       - name: Update webui files
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
-          # 复制当前项目目录到/tmp
           REPO_FULL="${{ github.repository }}"
           REPO_NAME="${REPO_FULL#*/}"
           echo "Repository name: $REPO_NAME"
-          echo "copied repository to /tmp/$REPO_NAME"
-          cd ../
-          cp -r $REPO_NAME /tmp/$REPO_NAME
-          ls -ltr /tmp/$REPO_NAME
-          cd /tmp/$REPO_NAME
-          echo "current branch: $(git branch), prepare to checkout newiborder branch"
-          git fetch --all --no-recurse-submodules
-          echo "fetched all branches"
-          if git show-ref --verify --quiet refs/remotes/origin/newiborder; then
-            echo "newiborder branch found"
-            git checkout newiborder 
-            echo "newiborder branch checked out successfully"
-          else
-            echo "newiborder branch not found"
-            exit 1
-          fi
 
           cd $GITHUB_WORKSPACE
           mkdir -p overlay/etc/init.d
@@ -741,6 +742,15 @@ jobs:
 
           # 临时移除patch
           rm -rf package/prudynt-t/*.patch
+
+          # 应用patch修复preview-fmp4.js的H265解码问题
+          REPO_FULL="${{ github.repository }}"
+          REPO_NAME="${REPO_FULL#*/}"
+          echo "Repository name: $REPO_NAME"
+          patch -p1 < /tmp/$REPO_NAME/custom/patch/prudynt-t_preview-fmp4_js.patch
+          echo "----------------------------------------------------"
+          cat package/prudynt-t/files/www/a/preview-fmp4.js
+          echo "----------------------------------------------------"
 
       - name: download libimp-samples-musl
         if: ${{ github.event.inputs.update_ingenic_lib_config != 'false' }}

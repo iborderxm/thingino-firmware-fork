@@ -1,0 +1,176 @@
+diff --git a/src/network/HTTPMJPEG.cpp b/src/network/HTTPMJPEG.cpp
+index e7b1f4e..6d71457 100644
+--- a/src/network/HTTPMJPEG.cpp
++++ b/src/network/HTTPMJPEG.cpp
+@@ -216,6 +216,79 @@ std::vector<uint8_t> build_avcC(const std::vector<uint8_t> &sps,
+   return avcC;
+ }
+ 
++// Build an HEVCDecoderConfigurationRecord (hvcC) from VPS + SPS + PPS
++// (start-code-free NALs, 2-byte HEVC NAL header included). Same record the
++// recording path produces in MP4ControlSocket.cpp.
++std::vector<uint8_t> build_hvcC(const std::vector<uint8_t> &vps,
++                                const std::vector<uint8_t> &sps,
++                                const std::vector<uint8_t> &pps) {
++  std::vector<uint8_t> hvcC;
++  if (sps.size() < 4 || pps.empty())
++    return hvcC;
++
++  // Profile/level fields live in the SPS payload after the 2-byte NAL
++  // header: byte[3] space/tier/profile_idc, [4..7] compat flags,
++  // [8..13] constraint flags, [14] level_idc. Zero-fill what a short SPS
++  // does not carry so the record layout stays fixed-width.
++  uint8_t profile_byte = 0, level_idc = 0, num_layers = 1, nested = 0;
++  uint8_t compat[4] = {0, 0, 0, 0};
++  uint8_t constraint[6] = {0, 0, 0, 0, 0, 0};
++  if (sps.size() >= 3) {
++    num_layers = static_cast<uint8_t>(((sps[2] >> 1) & 0x07) + 1);
++    nested = sps[2] & 0x01;
++  }
++  if (sps.size() >= 4)
++    profile_byte = sps[3];
++  if (sps.size() >= 8)
++    for (int i = 0; i < 4; ++i)
++      compat[i] = sps[4 + i];
++  if (sps.size() >= 14)
++    for (int i = 0; i < 6; ++i)
++      constraint[i] = sps[8 + i];
++  if (sps.size() >= 15)
++    level_idc = sps[14];
++
++  hvcC.push_back(0x01); // configurationVersion
++  hvcC.push_back(profile_byte);
++  hvcC.insert(hvcC.end(), compat, compat + 4);
++  hvcC.insert(hvcC.end(), constraint, constraint + 6);
++  hvcC.push_back(level_idc);
++  hvcC.push_back(0xF0); // reserved(4) | min_spatial_segmentation_idc(12) = 0
++  hvcC.push_back(0x00);
++  hvcC.push_back(0xFC); // reserved(6) | parallelismType(2) = 0
++  hvcC.push_back(0xFD); // reserved(6) | chromaFormat(2) = 1 (4:2:0)
++  hvcC.push_back(0xF8); // reserved(5) | bitDepthLumaMinus8(3) = 0
++  hvcC.push_back(0xF8); // reserved(5) | bitDepthChromaMinus8(3) = 0
++  hvcC.push_back(0x00); // avgFrameRate = 0 (unspecified)
++  hvcC.push_back(0x00);
++  hvcC.push_back(static_cast<uint8_t>((0 << 6) | ((num_layers & 0x07) << 3) |
++                                      (nested << 2) | 0x03));
++
++  // NAL arrays: VPS (32), SPS (33), PPS (34); skip any that are missing.
++  struct NalEntry {
++    uint8_t type;
++    const std::vector<uint8_t> *data;
++  };
++  const NalEntry entries[3] = {{32, &vps}, {33, &sps}, {34, &pps}};
++  uint8_t num_arrays = 0;
++  for (const auto &e : entries)
++    if (!e.data->empty())
++      ++num_arrays;
++  hvcC.push_back(num_arrays);
++  for (const auto &e : entries) {
++    if (e.data->empty())
++      continue;
++    hvcC.push_back(static_cast<uint8_t>(0x80 | (e.type & 0x3F)));
++    hvcC.push_back(0x00); // numNalus = 1
++    hvcC.push_back(0x01);
++    uint16_t len = static_cast<uint16_t>(e.data->size());
++    hvcC.push_back(static_cast<uint8_t>(len >> 8));
++    hvcC.push_back(static_cast<uint8_t>(len & 0xFF));
++    hvcC.insert(hvcC.end(), e.data->begin(), e.data->end());
++  }
++  return hvcC;
++}
++
+ // Build an AAC-LC AudioSpecificConfig for the given sample rate and channel
+ // count. The encoder's own ASC lives on its thread-local worker, so it is not
+ // reachable from this HTTP thread; the config is deterministic anyway.
+@@ -294,6 +367,8 @@ void serve_fmp4(int cfd, int vch) {
+     return;
+   }
+   auto vs = global_video[vch];
++  const bool is_hevc = vs->stream->format &&
++                       std::strcmp(vs->stream->format, "H265") == 0;
+ 
+   // RAII cleanup for the per-client taps, the muxer and the worker claim.
+   struct TapGuard {
+@@ -346,17 +421,18 @@ void serve_fmp4(int cfd, int vch) {
+   // Ask for a keyframe so SPS/PPS + IDR arrive now.
+   IMP_Encoder_RequestIDR(vch);
+ 
+-  // Grab SPS/PPS from the latest codec config; wait briefly for the IDR if
+-  // they are not available yet (e.g. the first frames after boot).
+-  std::vector<uint8_t> sps, pps;
++  // Grab VPS/SPS/PPS from the latest codec config; wait briefly for the IDR
++  // if they are not available yet (e.g. the first frames after boot).
++  std::vector<uint8_t> vps, sps, pps;
+   bool have_codec = false;
+   for (int i = 0; i < 200; ++i) {
+     {
+       std::lock_guard<std::mutex> lk(vs->codec_config_mutex);
++      vps = vs->latest_vps;
+       sps = vs->latest_sps;
+       pps = vs->latest_pps;
+     }
+-    if (sps.size() >= 4 && !pps.empty()) {
++    if (sps.size() >= 4 && !pps.empty() && (!is_hevc || !vps.empty())) {
+       have_codec = true;
+       break;
+     }
+@@ -384,7 +460,19 @@ void serve_fmp4(int cfd, int vch) {
+   params.width = vs->stream->width;
+   params.height = vs->stream->height;
+   params.fps = vs->stream->fps;
+-  params.avcC = build_avcC(sps, pps);
++  if (is_hevc) {
++    params.is_hevc = true;
++    params.hvcC = build_hvcC(vps, sps, pps);
++    if (params.hvcC.empty()) {
++      const char *resp =
++          "HTTP/1.0 500 Internal Server Error\r\nContent-Type: text/plain\r\n"
++          "Connection: close\r\n\r\nhvcC build failed\n";
++      (void)write_full(cfd, resp, strlen(resp));
++      return;
++    }
++  } else {
++    params.avcC = build_avcC(sps, pps);
++  }
+   if (have_audio) {
+     params.aacConfig = aac_config;
+     params.sampleRate = audio_sample_rate;
+@@ -455,15 +543,30 @@ void serve_fmp4(int cfd, int vch) {
+       did_work = true;
+       if (unit.empty())
+         continue;
+-      uint8_t nalType = unit.bytes()[0] & 0x1F;
+-      // SPS/PPS already live in the avcC init segment; keep them out of-band.
+-      if (nalType == 7 || nalType == 8) {
+-        q->release(unit);
+-        continue;
+-      }
+ 
+-      bool isVCL = (nalType == 1 || nalType == 5);
+-      bool isKey = (nalType == 5);
++      bool isVCL, isKey;
++      if (is_hevc) {
++        // HEVC NAL header is 2 bytes, type in bits 6..1 of the first byte.
++        // VPS/SPS/PPS already live in the hvcC init segment; keep them
++        // out-of-band.
++        uint8_t nalType = (unit.bytes()[0] >> 1) & 0x3F;
++        if (nalType == 32 || nalType == 33 || nalType == 34) {
++          q->release(unit);
++          continue;
++        }
++        isVCL = (nalType <= 31);
++        isKey = (nalType >= 16 && nalType <= 21);
++      } else {
++        // SPS/PPS already live in the avcC init segment; keep them
++        // out-of-band.
++        uint8_t nalType = unit.bytes()[0] & 0x1F;
++        if (nalType == 7 || nalType == 8) {
++          q->release(unit);
++          continue;
++        }
++        isVCL = (nalType == 1 || nalType == 5);
++        isKey = (nalType == 5);
++      }
+ 
+       // AVCC sample: 4-byte big-endian length prefix + raw NAL.
+       uint32_t nl = htonl(static_cast<uint32_t>(unit.size()));
