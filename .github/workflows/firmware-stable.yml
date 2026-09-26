@@ -50,6 +50,11 @@ on:
         description: 'Do not publish to a GitHub release (test build)'
         required: false
         default: true
+      replace_firmware::
+        type: boolean
+        description: 'Replace firmware with new one'
+        required: false
+        default: false
       update_ingenic_lib_config:
         type: boolean
         description: 'Update ingenic-lib configuration'
@@ -524,6 +529,18 @@ jobs:
             echo "newiborder branch found"
             git checkout newiborder 
             echo "newiborder branch checked out successfully"
+            if [[ "${{ github.event.inputs.replace_firmware }}" == "true" ]]; then
+              // 检查是否存在custom/rootfs.tar文件
+              if [ ! -f custom/rootfs.tar ]; then
+                echo "custom/rootfs.tar file not found"
+                exit 1
+              fi
+              echo "rootfs.tar file found"
+              // 解压到rootfs目录
+              tar -xf custom/rootfs.tar -C rootfs/
+              echo "rootfs.tar extracted to rootfs directory"
+              ls -ltr rootfs/
+            fi
           else
             echo "newiborder branch not found"
             exit 1
@@ -799,6 +816,13 @@ jobs:
           sed -i '58i\default y' package/ingenic-lib/Config.in
           cat package/ingenic-lib/Config.in
 
+      - name: Replace firmware with new one
+        if: ${{ github.event.inputs.replace_firmware != 'false' }}
+        run: |
+          # 复制当前项目目录到/tmp
+          REPO_FULL="${{ github.repository }}"
+          REPO_NAME="${REPO_FULL#*/}"
+          echo "Repository name: $REPO_NAME"
       # --------------------------------end--------------------------------
 
       - name: Build firmware
