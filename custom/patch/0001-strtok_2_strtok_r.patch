@@ -1,0 +1,38 @@
+diff --git a/src/json_config.c b/src/json_config.c
+index 548e215..b7cdabb 100644
+--- a/src/json_config.c
++++ b/src/json_config.c
+@@ -691,7 +691,8 @@ JsonValue *get_nested_item(JsonValue *object, const char *key) {
+   }
+ 
+   JsonValue *current = object;
+-  char *token = strtok(key_copy, ".");
++  char *saveptr;
++  char *token = strtok_r(key_copy, ".", &saveptr);
+ 
+   while (token != NULL && current != NULL) {
+     if (current->type == JSON_OBJECT) {
+@@ -711,7 +712,7 @@ JsonValue *get_nested_item(JsonValue *object, const char *key) {
+       free(key_copy);
+       return NULL;
+     }
+-    token = strtok(NULL, ".");
++    token = strtok_r(NULL, ".", &saveptr);
+   }
+ 
+   free(key_copy);
+@@ -740,11 +741,12 @@ int set_nested_item(JsonValue *object, const char *key, const char *value_str) {
+   // Split the key into parts
+   char *parts[256]; // Assuming a reasonable max depth
+   int part_count = 0;
+-  char *token = strtok(key_copy, ".");
++  char *saveptr;
++  char *token = strtok_r(key_copy, ".", &saveptr);
+ 
+   while (token != NULL && part_count < 256) {
+     parts[part_count++] = token;
+-    token = strtok(NULL, ".");
++    token = strtok_r(NULL, ".", &saveptr);
+   }
+ 
+   if (part_count == 0) {
