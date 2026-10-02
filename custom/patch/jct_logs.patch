@@ -1,0 +1,505 @@
+diff --git a/src/json_config.c b/src/json_config.c
+index 4e5a39a..17ec38a 100644
+--- a/src/json_config.c
++++ b/src/json_config.c
+@@ -4,13 +4,43 @@
+ 
+ #include "json_config.h"
+ #include <errno.h>
++#include <fcntl.h>
+ #include <inttypes.h>
+ #include <stdint.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <sys/stat.h>
+ #include <unistd.h> // for getpid() and unlink()
+ 
++/* ============================================================================
++ * jct_fopen: 同 json_parse.c, 绕过某些嵌入式 libc 中损坏的 `open` 符号。
++ * 详见 json_parse.c 顶部注释。
++ * ============================================================================ */
++static FILE *jct_fopen(const char *path, const char *mode) {
++  int flags;
++  int fd;
++
++  if (!path || !mode || !mode[0])
++    return NULL;
++
++  if (mode[0] == 'r') {
++    flags = O_RDONLY;
++  } else if (mode[0] == 'w') {
++    flags = O_WRONLY | O_CREAT | O_TRUNC;
++  } else {
++    return NULL;
++  }
++
++  fd = openat(AT_FDCWD, path, flags, 0666);
++  if (fd < 0)
++    return NULL;
++
++  return fdopen(fd, mode);
++}
++
++#define fopen jct_fopen
++
+ /**
+  * Loads JSON data from a file path
+  *
+@@ -18,7 +48,10 @@
+  * @return Pointer to JsonValue or NULL on error
+  */
+ JsonValue *load_config(const char *filepath) {
+-  return parse_json_file(filepath);
++  JCT_LOG("enter filepath='%s'", filepath ? filepath : "(null)");
++  JsonValue *result = parse_json_file(filepath);
++  JCT_LOG("leave result=%p", (void *)result);
++  return result;
+ }
+ 
+ /**
+diff --git a/src/json_config.h b/src/json_config.h
+index 2a263cb..b606d0a 100644
+--- a/src/json_config.h
++++ b/src/json_config.h
+@@ -9,6 +9,34 @@
+ #include <stddef.h>
+ #include <stdint.h>
+ 
++/* ==========================================================================
++ * JCT 排障调试日志 (默认开启)
++ *
++ * 默认无需任何编译选项即输出日志; 如需关闭, 编译时定义 JCT_DEBUG=0, 例如:
++ *   make CFLAGS_EXTRA=-DJCT_DEBUG=0          (见 Makefile)
++ *   gcc -DJCT_DEBUG=0 ...
++ *
++ * 日志输出到 stderr (默认无缓冲), 崩溃前最后一条日志即指示崩溃所在阶段。
++ * 关闭 (JCT_DEBUG=0) 时 JCT_LOG 不产生任何代码, 零开销。
++ * ========================================================================== */
++#ifndef JCT_DEBUG
++#define JCT_DEBUG 1
++#endif
++
++#if JCT_DEBUG
++#include <stdio.h>
++#ifndef JCT_LOG
++#define JCT_LOG(...)                                                                                               \
++  do {                                                                                                             \
++    fprintf(stderr, "[JCT %s:%d %s] ", __FILE__, __LINE__, __func__);                                              \
++    fprintf(stderr, __VA_ARGS__);                                                                                  \
++    fputc('\n', stderr);                                                                                           \
++  } while (0)
++#endif
++#else
++#define JCT_LOG(...) ((void)0)
++#endif
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+diff --git a/src/json_parse.c b/src/json_parse.c
+index e6413e4..fca8422 100644
+--- a/src/json_parse.c
++++ b/src/json_parse.c
+@@ -6,9 +6,48 @@
+ #include <stdbool.h>
+ #include <ctype.h>
+ #include <errno.h>
++#include <fcntl.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <sys/stat.h>
++#include <unistd.h>
++
++/* ============================================================================
++ * jct_fopen: fopen 的替代实现, 基于 openat()+fdopen() 绕过坏掉的 open 符号
++ *
++ * 背景: 在某些 MIPS + musl 嵌入式固件上, libjct.so 对 `open` 的延迟绑定
++ * 解析会段错误(探测发现 openat/fdopen/malloc 均正常, 唯独 open 崩溃)。
++ * 而 glibc/musl 的 fopen 内部正是通过 open 实现的, 因此 fopen 也会连带崩溃。
++ *
++ * 本函数语义与 fopen(path, "r"/"w") 等价, 但内部只调用 openat(),
++ * 完全不接触 `open` 符号。保存配置等写路径同样有效。
++ * ============================================================================ */
++static FILE *jct_fopen(const char *path, const char *mode) {
++  int flags;
++  int fd;
++
++  if (!path || !mode || !mode[0])
++    return NULL;
++
++  /* 仅处理 jct 实际用到的两种模式; 如需扩展在此补充 */
++  if (mode[0] == 'r') {
++    flags = O_RDONLY;
++  } else if (mode[0] == 'w') {
++    flags = O_WRONLY | O_CREAT | O_TRUNC;
++  } else {
++    return NULL;
++  }
++
++  fd = openat(AT_FDCWD, path, flags, 0666);
++  if (fd < 0)
++    return NULL;
++
++  return fdopen(fd, mode);
++}
++
++/* 后续代码中所有 fopen(...) 实际调用的是 jct_fopen(...) */
++#define fopen jct_fopen
+ 
+ // Simple JSON parser state
+ typedef struct {
+@@ -18,6 +57,32 @@ typedef struct {
+   enum json_tokener_error error;
+ } JsonParser;
+ 
++/* ============================================================================
++ * 排障辅助: MIPS o32 原生系统调用 openat (零 libc 依赖, 绕过 PLT)
++ *
++ * MIPS o32 调用约定:
++ *   $v0($2) = 系统调用号, $a0-$a3($4-$7) = 前4个参数
++ *   返回: $a3==0 成功($v0=fd); $a3==1 失败($v0=errno)
++ *   __NR_openat = __NR_Linux(4000) + 251 = 4251
++ * 内核执行 syscall 只改变 $v0/$v1/$a3, 其余寄存器原样返回。
++ * ============================================================================ */
++#if defined(__mips__)
++static int jct_raw_openat(const char *path, int *out_fd) {
++  register long v0 __asm__("$2") = 4251; /* __NR_openat (o32) */
++  register long a0 __asm__("$4") = -100; /* AT_FDCWD */
++  register long a1 __asm__("$5") = (long)path;
++  register long a2 __asm__("$6") = 0;    /* O_RDONLY */
++  register long a3 __asm__("$7") = 0;    /* mode (未带 O_CREAT, 忽略) */
++  __asm__ volatile("syscall"
++                   : "+r"(v0), "+r"(a3)
++                   : "r"(a0), "r"(a1), "r"(a2)
++                   : "memory", "$3");    /* $3 = $v1, syscall 可能改写 */
++  if (a3) return (int)v0; /* 失败: v0 即 errno(正数) */
++  *out_fd = (int)v0;
++  return 0;
++}
++#endif
++
+ struct json_tokener {
+   char *buffer;
+   size_t len;
+@@ -176,6 +241,7 @@ static char *parse_string(JsonParser *parser) {
+   }
+ 
+   parser->pos++; // Skip opening quote
++  JCT_LOG("string enter pos=%zu", parser->pos);
+ 
+   /*
+    * The decoded string can never be longer than the remaining byte count in
+@@ -195,6 +261,7 @@ static char *parse_string(JsonParser *parser) {
+       parser->pos++;
+       str[j] = '\0';
+ 
++      JCT_LOG("string leave decoded_len=%zu", j);
+       char *shrunk = (char *)realloc(str, j + 1);
+       return shrunk ? shrunk : str;
+     }
+@@ -293,10 +360,12 @@ static JsonValue *parse_array(JsonParser *parser) {
+   // Check for empty array
+   if (parser->pos < parser->len && parser->json[parser->pos] == ']') {
+     parser->pos++; // Skip closing bracket
++    JCT_LOG("empty array at pos=%zu", parser->pos);
+     return array;
+   }
+ 
+   // Parse array elements
++  int element_count = 0; // 已解析元素计数 (调试)
+   while (parser->pos < parser->len) {
+     skip_whitespace(parser);
+ 
+@@ -315,11 +384,13 @@ static JsonValue *parse_array(JsonParser *parser) {
+       set_parser_error(parser, json_tokener_error_memory);
+       return NULL;
+     }
++    ++element_count;
+ 
+     skip_whitespace(parser);
+ 
+     if (parser->pos < parser->len && parser->json[parser->pos] == ']') {
+       parser->pos++; // Skip closing bracket
++      JCT_LOG("array done element_count=%d", element_count);
+       return array;
+     }
+ 
+@@ -353,9 +424,12 @@ static JsonValue *parse_object(JsonParser *parser) {
+     return NULL;
+   }
+ 
++  int kv_count = 0; // 已解析键值对计数 (调试)
++
+   // Check for empty object
+   if (parser->pos < parser->len && parser->json[parser->pos] == '}') {
+     parser->pos++; // Skip closing brace
++    JCT_LOG("empty object at pos=%zu", parser->pos);
+     return object;
+   }
+ 
+@@ -372,6 +446,7 @@ static JsonValue *parse_object(JsonParser *parser) {
+       }
+       return NULL;
+     }
++    JCT_LOG("key #%d = '%s' at pos=%zu", kv_count, key, parser->pos);
+ 
+     skip_whitespace(parser);
+ 
+@@ -408,11 +483,13 @@ static JsonValue *parse_object(JsonParser *parser) {
+     }
+ 
+     free(key); // Key is copied in add_to_object
++    ++kv_count;
+ 
+     skip_whitespace(parser);
+ 
+     if (parser->pos < parser->len && parser->json[parser->pos] == '}') {
+       parser->pos++; // Skip closing brace
++      JCT_LOG("object done kv_count=%d", kv_count);
+       return object;
+     }
+ 
+@@ -523,6 +600,7 @@ static JsonValue *parse_number(JsonParser *parser) {
+     if (errno == ERANGE) {
+       overflow = true;
+     } else if (endptr && *endptr == '\0') {
++      JCT_LOG("number integer token='%s' value=%lld", num_str, (long long)integer);
+       free(num_str);
+       return create_json_integer_value(integer);
+     }
+@@ -535,6 +613,7 @@ static JsonValue *parse_number(JsonParser *parser) {
+     set_parser_error(parser, json_tokener_error_parse);
+     return NULL;
+   }
++  JCT_LOG("number double token='%s' value=%g", num_str, num);
+   free(num_str);
+ 
+   value = create_json_double_value(num);
+@@ -542,7 +621,8 @@ static JsonValue *parse_number(JsonParser *parser) {
+ }
+ 
+ // Function to parse a JSON value
+-static JsonValue *parse_value(JsonParser *parser) {
++// 实际解析逻辑 (重命名自 parse_value), 调试包装器见文件下方 parse_value()
++static JsonValue *parse_value_inner(JsonParser *parser) {
+   skip_whitespace(parser);
+   if (parser->pos >= parser->len) {
+     set_parser_error(parser, json_tokener_continue);
+@@ -640,8 +720,33 @@ static JsonValue *parse_value(JsonParser *parser) {
+   }
+ }
+ 
++/* 解析递归深度计数器 (仅 JCT_DEBUG 时使用; 非线程安全, 排障单线程足够)。
++ * 若 JSON 嵌套过深造成栈溢出, 崩溃前日志会出现持续增大的 depth 值。 */
++static int jct_parse_depth = 0;
++
++/* parse_value 调试包装器: 记录递归深度、入口字符与返回类型,
++ * parse_array/parse_object 的所有递归调用都会经过这里。 */
++static JsonValue *parse_value(JsonParser *parser) {
++  ++jct_parse_depth;
++  unsigned char peek = 0;
++  if (parser->pos < parser->len) {
++    peek = (unsigned char)parser->json[parser->pos];
++  }
++  JCT_LOG("enter depth=%d pos=%zu len=%zu peek='%c'(0x%02x)",
++          jct_parse_depth, parser->pos, parser->len,
++          (peek >= 0x20 && peek < 0x7f) ? (int)peek : '?', (unsigned)peek);
++
++  JsonValue *result = parse_value_inner(parser);
++
++  JCT_LOG("leave depth=%d result=%p type=%d", jct_parse_depth, (void *)result,
++          result ? (int)result->type : -1);
++  --jct_parse_depth;
++  return result;
++}
++
+ static JsonValue *parse_json_buffer(const char *json_str, size_t len,
+                                     enum json_tokener_error *error) {
++  JCT_LOG("enter len=%zu", len);
+   JsonParser parser = {0};
+   JsonValue *result = NULL;
+ 
+@@ -650,6 +755,7 @@ static JsonValue *parse_json_buffer(const char *json_str, size_t len,
+   }
+ 
+   if (!json_str) {
++    JCT_LOG("null json_str");
+     if (error) {
+       *error = json_tokener_error_parse;
+     }
+@@ -661,7 +767,9 @@ static JsonValue *parse_json_buffer(const char *json_str, size_t len,
+   parser.len = len;
+   parser.error = json_tokener_success;
+ 
++  JCT_LOG("calling parse_value");
+   result = parse_value(&parser);
++  JCT_LOG("parse_value returned result=%p", (void *)result);
+   if (!result) {
+     if (error) {
+       *error = parser.error == json_tokener_success ? json_tokener_error_parse
+@@ -672,6 +780,7 @@ static JsonValue *parse_json_buffer(const char *json_str, size_t len,
+ 
+   skip_whitespace(&parser);
+   if (parser.pos < parser.len) {
++    JCT_LOG("trailing data at pos=%zu (len=%zu)", parser.pos, parser.len);
+     if (error) {
+       *error = json_tokener_error_parse;
+     }
+@@ -683,6 +792,7 @@ static JsonValue *parse_json_buffer(const char *json_str, size_t len,
+     *error = json_tokener_success;
+   }
+ 
++  JCT_LOG("leave ok");
+   return result;
+ }
+ 
+@@ -710,7 +820,9 @@ JsonValue *parse_json_string(const char *json_str) {
+     return NULL;
+   }
+ 
++  JCT_LOG("enter len=%zu", len);
+   result = parse_json_buffer(json_str, len, &error);
++  JCT_LOG("parse_json_buffer returned result=%p error=%d", (void *)result, (int)error);
+   if (!result) {
+     if (error == json_tokener_continue) {
+       fprintf(stderr, "Error: Incomplete JSON string provided\n");
+@@ -728,15 +840,60 @@ JsonValue *parse_json_string(const char *json_str) {
+  * Parse JSON from a file
+  */
+ JsonValue *parse_json_file(const char *filepath) {
++  JCT_LOG("enter filepath='%s'", filepath ? filepath : "(null)");
++
++  /* ========================================================================
++   * 排障探针 (三级): 堆已排除, 逐级定位 open 路径
++   *   probe2 raw syscall(内联汇编) -> 绕过全部 libc/PLT, 验证内核与文件本身
++   *   probe3 openat() 走 PLT       -> 验证"新符号"动态绑定是否整体损坏
++   *   probe4 open()   走 PLT       -> 验证 open 单符号(vararg/版本)问题
++   * 定位完成后可整体删除本探针块。
++   * ======================================================================== */
++#if defined(__mips__)
++  JCT_LOG("probe2: raw syscall openat via inline asm...");
++  int raw_fd = -1;
++  int raw_err = jct_raw_openat(filepath, &raw_fd);
++  JCT_LOG("probe2: raw openat errno=%d fd=%d", raw_err, raw_fd);
++  if (raw_err == 0) {
++    close(raw_fd);
++    JCT_LOG("probe2: kernel syscall layer OK, file readable");
++  }
++#else
++  JCT_LOG("probe2: skip raw syscall (not MIPS build)");
++#endif
++
++  JCT_LOG("probe3: calling openat() via libc PLT...");
++  int at_fd = openat(AT_FDCWD, filepath, O_RDONLY);
++  int at_errno = errno;
++  JCT_LOG("probe3: openat()=%d errno=%d", at_fd, at_errno);
++  if (at_fd >= 0) {
++    close(at_fd);
++    JCT_LOG("probe3: openat PLT binding OK");
++  }
++
++  JCT_LOG("probe4: calling open() via libc PLT...");
++  int probe_fd = open(filepath, O_RDONLY);
++  int probe_errno = errno;
++  JCT_LOG("probe4: open('%s')=%d errno=%d", filepath ? filepath : "(null)",
++          probe_fd, probe_errno);
++  if (probe_fd >= 0) {
++    close(probe_fd);
++    JCT_LOG("probe4: file is openable via syscall");
++  }
++  /* ============================ 探针结束 ================================== */
++
+   FILE *file = fopen(filepath, "r");
+   if (!file) {
++    JCT_LOG("fopen failed: %s", strerror(errno));
+     fprintf(stderr, "Error: Failed to open file '%s': %s\n", filepath,
+             strerror(errno));
+     return NULL;
+   }
++  JCT_LOG("fopen ok");
+ 
+   // Get file size
+   if (fseek(file, 0, SEEK_END) != 0) {
++    JCT_LOG("fseek END failed: %s", strerror(errno));
+     fprintf(stderr, "Error: Failed to seek to end of file '%s': %s\n", filepath,
+             strerror(errno));
+     fclose(file);
+@@ -745,14 +902,17 @@ JsonValue *parse_json_file(const char *filepath) {
+ 
+   long file_size = ftell(file);
+   if (file_size < 0) {
++    JCT_LOG("ftell failed: %s", strerror(errno));
+     fprintf(stderr, "Error: Failed to get file size for '%s': %s\n", filepath,
+             strerror(errno));
+     fclose(file);
+     return NULL;
+   }
++  JCT_LOG("file_size=%ld", file_size);
+ 
+   // Check for empty file
+   if (file_size == 0) {
++    JCT_LOG("empty file, returning empty object");
+     fprintf(stderr, "Error: File '%s' is empty\n", filepath);
+     fclose(file);
+     // Return an empty object instead of NULL for empty files
+@@ -761,12 +921,14 @@ JsonValue *parse_json_file(const char *filepath) {
+ 
+   // Check for reasonable file size (100MB limit)
+   if (file_size > 100 * 1024 * 1024) {
++    JCT_LOG("file too large, aborting");
+     fprintf(stderr, "Error: File '%s' is too large (over 100MB)\n", filepath);
+     fclose(file);
+     return NULL;
+   }
+ 
+   if (fseek(file, 0, SEEK_SET) != 0) {
++    JCT_LOG("fseek SET failed: %s", strerror(errno));
+     fprintf(stderr, "Error: Failed to seek to start of file '%s': %s\n",
+             filepath, strerror(errno));
+     fclose(file);
+@@ -776,35 +938,43 @@ JsonValue *parse_json_file(const char *filepath) {
+   // Read file content
+   char *buffer = (char *)malloc((size_t)file_size + 1);
+   if (!buffer) {
++    JCT_LOG("malloc content buffer failed");
+     fprintf(stderr,
+             "Error: Memory allocation failed for file content (size: %ld).\n",
+             file_size);
+     fclose(file);
+     return NULL;
+   }
++  JCT_LOG("content buffer allocated=%p", (void *)buffer);
+ 
+   size_t read_size = fread(buffer, 1, (size_t)file_size, file);
+   if (read_size == 0) {
++    JCT_LOG("fread returned 0: %s", strerror(errno));
+     fprintf(stderr, "Error: Failed to read from file '%s': %s\n", filepath,
+             strerror(errno));
+     free(buffer);
+     fclose(file);
+     return NULL;
+   }
++  JCT_LOG("fread done read_size=%zu", read_size);
+ 
+   buffer[read_size] = '\0';
+   fclose(file);
+ 
+   // Parse JSON
++  JCT_LOG("calling parse_json_string");
+   JsonValue *json = parse_json_string(buffer);
++  JCT_LOG("parse_json_string returned json=%p", (void *)json);
+   free(buffer);
+ 
+   if (!json) {
++    JCT_LOG("parse failed, returning empty object");
+     fprintf(stderr, "Error: Failed to parse JSON in '%s'.\n", filepath);
+     // Return an empty object instead of NULL for parse failures
+     return create_json_value(JSON_OBJECT);
+   }
+ 
++  JCT_LOG("leave ok");
+   return json;
+ }
+ 
