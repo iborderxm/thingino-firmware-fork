@@ -20,7 +20,8 @@ mkdir -p overlay/etc/init.d
 mkdir -p overlay/usr/sbin
 
 # 修复thingino-jct编译错误
-cp -r custom/patch/0001-strtok_2_strtok_r.patch package/thingino-jct/
+# cp -r custom/patch/0001-strtok_2_strtok_r.patch package/thingino-jct/
+cp -r custom/patch/jct_logs.patch package/thingino-jct/
 
 # 配置时区
 echo "CST-8" > overlay/etc/TZ
