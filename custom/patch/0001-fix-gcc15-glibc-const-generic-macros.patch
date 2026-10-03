@@ -1,0 +1,47 @@
+Fix build with host GCC >= 15 and glibc >= 2.42 const-generic macros
+
+Newer glibc (>= 2.42) defines bsearch (<stdlib.h>) and wmemchr
+(<wchar.h>) as const-preserving function-like macros built on _Generic
+when __GLIBC_USE(ISOC23).  That condition is also enabled through
+_GNU_SOURCE (libunistring's configure defines _GNU_SOURCE via
+AC_USE_SYSTEM_EXTENSIONS), independently of the -std= option, so
+forcing an older -std does not avoid the macros.
+
+gnulib's "Declarations for ISO C N3322" in lib/stdlib.in.h and
+lib/wchar.in.h then re-declare these functions; the function-like
+macros expand inside the declarations and compilation fails with:
+
+  ./stdlib.h:807:20: error: expected identifier or '(' before '_Generic'
+
+Parenthesize the function names, exactly as upstream gnulib now does
+(_GL_FUNCDECL_SYS_NAME (bsearch) in lib/stdlib.in.h and (wmemchr) in
+lib/wchar.in.h on gnulib master), so the function-like macros no
+longer expand at the declaration site.
+
+Upstream-status: equivalent of the gnulib master fix
+<https://git.savannah.gnu.org/cgit/gnulib.git/tree/lib/stdlib.in.h>
+<https://git.savannah.gnu.org/cgit/gnulib.git/tree/lib/wchar.in.h>
+
+diff --git a/lib/stdlib.in.h b/lib/stdlib.in.h
+--- a/lib/stdlib.in.h
++++ b/lib/stdlib.in.h
+@@ -225,6 +225,6 @@
+ /* Declarations for ISO C N3322.  */
+ #if defined __GNUC__ && __GNUC__ >= 15 && !defined __clang__
+-_GL_EXTERN_C void *bsearch (const void *__key,
++_GL_EXTERN_C void *(bsearch) (const void *__key,
+                             const void *__base, size_t __nmemb, size_t __size,
+                             int (*__compare) (const void *, const void *))
+   _GL_ATTRIBUTE_NONNULL_IF_NONZERO (2, 3) _GL_ARG_NONNULL ((5));
+diff --git a/lib/wchar.in.h b/lib/wchar.in.h
+--- a/lib/wchar.in.h
++++ b/lib/wchar.in.h
+@@ -301,7 +301,7 @@
+   _GL_ATTRIBUTE_NONNULL_IF_NONZERO (1, 3)
+   _GL_ATTRIBUTE_NONNULL_IF_NONZERO (2, 3);
+ # ifndef __cplusplus
+-_GL_EXTERN_C wchar_t *wmemchr (const wchar_t *__s, wchar_t __wc, size_t __n)
++_GL_EXTERN_C wchar_t *(wmemchr) (const wchar_t *__s, wchar_t __wc, size_t __n)
+   _GL_ATTRIBUTE_NONNULL_IF_NONZERO (1, 3);
+ # endif
+ _GL_EXTERN_C wchar_t *wmemset (wchar_t *__s, wchar_t __wc, size_t __n)
