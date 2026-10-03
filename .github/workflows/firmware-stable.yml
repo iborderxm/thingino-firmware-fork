@@ -1,27 +1,13 @@
 name: firmware-stable
 on:
-  schedule:
-    - cron:  '30 8 * * 1'
   workflow_dispatch:
     inputs:
       branch:
-        type: choice
-        description: 'Branch to build from'
-        required: false
-        default: 'stable'
-        options:
-          - stable
-          - master
-      tg_disabled:
-        type: boolean
-        description: 'Disable Telegram notifications'
-        required: false
-        default: false
-      tg_scratch:
-        type: boolean
-        description: 'Use TG scratch channel'
-        required: false
-        default: false
+        type: string
+        description: 'Branch, tag, or commit SHA to build from'
+        required: true
+        default: 'stable20260419'
+
       graph_enabled:
         type: boolean
         description: 'Enable build time graph'
@@ -37,10 +23,58 @@ on:
         description: 'Debug: Generate dummy image files'
         required: false
         default: false
+      update_prudynt_config:
+        type: boolean
+        description: 'Update prudynt-t.mk configuration'
+        required: false
+        default: true
       board_list:
         type: string
         description: 'Comma-separated list of boards to build (e.g. board1,board2)'
+        required: true
+        default: 'iflytek_xfp301m_t31x_jxq03_rtl8188ftv'
+      create_release:
+        type: boolean
+        description: 'Create GitHub release'
         required: false
+        default: false
+      prudynt-t-checkout:
+        type: string
+        description: 'Tag or branch name to checkout for prudynt-t. If not provided, uses latest tag.'
+        required: false
+      prudynt-t-signature:
+        type: boolean
+        description: 'Enable prudynt-t signature verification'
+        required: false
+        default: true
+      prudynt-t-device-id:
+        type: string
+        description: 'Device ID for the prudynt-t build'
+        required: false
+      prudynt-t-mac:
+        type: string
+        description: 'MAC address for the prudynt-t build'
+        required: false
+      update_live555_download_path:
+        type: boolean
+        description: 'Update live555 download path'
+        required: false
+        default: true
+      update_live555_config:
+        type: boolean
+        description: 'Update live555 configuration'
+        required: false
+        default: false
+      live555_version:
+        type: string
+        description: 'live555 version (e.g. 2026.05.28)'
+        required: false
+        default: '2026.05.28'
+      update_buildroot:
+        type: boolean
+        description: 'Update buildroot'
+        required: false
+        default: true
 
 env:
   BR2_DL_DIR: ~/dl
@@ -48,20 +82,31 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TAG_NAME: firmware
   TERM: linux
-  TG_TOKEN: ${{secrets.TELEGRAM_TOKEN_BOT_THINGINO}}
-  TG_CHANNEL: ${{secrets.TELEGRAM_CHANNEL_THINGINO_MULTI}}
-  TG_TOPIC: ${{secrets.TELEGRAM_CHANNEL_THINGINO_MULTI_TOPIC_FIRMWARE}}
-  TG_CHANNEL_SCRATCH: ${{secrets.TELEGRAM_CHANNEL_THINGINO_SCRATCH}}
-  TZ: UTC
+
+  TZ: Asia/Shanghai
 
 jobs:
   check-updates:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       should_build: ${{ steps.check.outputs.should_build }}
     steps:
+      - name: check inputs
+        run: |
+          # inputs.branch is required
+          if [[ -z "${{ github.event.inputs.branch }}" ]]; then
+            echo "inputs.branch is required"
+            exit 1
+          fi
+          # prudynt-t-signature required device-id and MAC address
+          if [[ "${{ github.event.inputs.prudynt-t-signature }}" == "true" ]]; then
+            if [[ -z "${{ github.event.inputs.prudynt-t-device-id }}" || -z "${{ github.event.inputs.prudynt-t-mac }}" ]]; then
+              echo "prudynt-t-signature required device-id and MAC address"
+              exit 1
+            fi
+          fi
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: 0
@@ -74,6 +119,11 @@ jobs:
           git rev-parse HEAD
           echo "Last commit:"
           git log --oneline -1
+          # 检查当前仓库是否存在github.event.inputs.branch分支、标签或commit SHA
+          if ! git ls-remote --exit-code origin "${{ github.event.inputs.branch }}" | grep -qE "refs/(heads|tags)/${{ github.event.inputs.branch }}|${{ github.event.inputs.branch }}"; then
+            echo "Branch, tag, or commit SHA ${{ github.event.inputs.branch }} not found in remote repository"
+            exit 1
+          fi
 
       - name: Check for updates since last release
         id: check
@@ -84,17 +134,20 @@ jobs:
             echo "should_build=true" >> $GITHUB_OUTPUT
             exit 0
           fi
-          LATEST_RELEASE=$(gh release list --repo ${{ github.repository }} --json tagName,name | jq -r '.[] | select(.name | startswith("firmware-")) | .tagName' | head -1)
+          REPO="${{ github.repository }}"
+          BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
+          LATEST_RELEASE=$(gh release list --repo "$REPO" --json tagName,name | jq -r '.[] | select(.name | startswith("firmware-")) | .tagName' | head -1)
           if [[ -z "$LATEST_RELEASE" ]]; then
             echo "No previous firmware release found - building"
             echo "should_build=true" >> $GITHUB_OUTPUT
             exit 0
           fi
           echo "Latest firmware release: $LATEST_RELEASE"
-          LATEST_RELEASE_COMMIT=$(gh api repos/${{ github.repository }}/git/ref/tags/$LATEST_RELEASE | jq -r '.object.sha')
-          CURRENT_COMMIT=$(git rev-parse HEAD)
+          # SHAs entirely via the API — no checkout needed
+          LATEST_RELEASE_COMMIT=$(gh api "repos/$REPO/git/ref/tags/$LATEST_RELEASE" --jq '.object.sha')
+          CURRENT_COMMIT=$(gh api "repos/$REPO/commits/$BRANCH" --jq '.sha')
           echo "Latest release commit: $LATEST_RELEASE_COMMIT"
-          echo "Current commit: $CURRENT_COMMIT"
+          echo "Current commit:        $CURRENT_COMMIT"
           if [[ "$LATEST_RELEASE_COMMIT" == "$CURRENT_COMMIT" ]]; then
             echo "No new commits since last release - skipping build"
             echo "should_build=false" >> $GITHUB_OUTPUT
@@ -104,7 +157,7 @@ jobs:
           fi
 
   notify-no-build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: check-updates
     if: needs.check-updates.outputs.should_build == 'false'
     steps:
@@ -114,7 +167,7 @@ jobs:
           echo "Skipping scheduled build. Manual runs always build."
 
   prepare-release:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: check-updates
     if: needs.check-updates.outputs.should_build == 'true'
     outputs:
@@ -127,12 +180,13 @@ jobs:
       - name: Configure TAG_NAME
         id: set_tag
         run: |
-          TAG_NAME="$TAG_NAME-$(TZ=UTC date +'%Y-%m-%d')"
+          BRANCH=${{ github.event.inputs.branch || 'stable' }}
+          TAG_NAME="$TAG_NAME-$BRANCH-$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "1"
@@ -149,6 +203,7 @@ jobs:
           fi
 
       - name: Create release
+        if: github.event.inputs.create_release == 'true'
         continue-on-error: true
         run: |
           TAG_NAME="${{ env.TAG_NAME }}"
@@ -160,12 +215,11 @@ jobs:
           fi
 
   notify-begin:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: prepare-release
     if: needs.check-updates.outputs.should_build == 'true'
     outputs:
       start_time: ${{ steps.set_output.outputs.time }}
-      tg_disabled: ${{ steps.set_env.outputs.tg_disabled }}
     steps:
       - name: Set timezone
         run: |
@@ -178,27 +232,18 @@ jobs:
       - name: Configure Environment Variables
         id: set_env
         run: |
-          echo "TG_DISABLED=${{ github.event.inputs.tg_disabled || 'false' }}" >> $GITHUB_ENV
-          echo "tg_disabled=${{ github.event.inputs.tg_disabled || 'false' }}" >> $GITHUB_OUTPUT
           echo "TAG_NAME=${{ needs.prepare-release.outputs.tag_name }}" >> $GITHUB_ENV
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "1"
 
-      - name: Send build start notification via Telegram
-        if: env.TG_DISABLED == 'false'
-        run: |
-          if [[ "${{ github.event.inputs.tg_scratch }}" == 'true' ]]; then
-            TG_CHANNEL=${{ env.TG_CHANNEL_SCRATCH }}
-            export TG_TOPIC=""
-          fi
-          .github/scripts/tg-notify.sh -s $TG_TOKEN $TG_CHANNEL $TG_TOPIC start $TAG_NAME ${{ github.run_id }} ${{ github.repository }}
+
 
   generate-matrix:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: check-updates
     if: needs.check-updates.outputs.should_build == 'true'
     outputs:
@@ -212,7 +257,7 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "0"
@@ -247,7 +292,7 @@ jobs:
   buildroot:
     name: ${{ matrix.thingino-version }}
     needs: [generate-matrix, notify-begin, prepare-release]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     outputs:
       GIT_HASH: ${{ steps.env.outputs.git_hash }}
@@ -256,7 +301,7 @@ jobs:
       run:
         shell: bash
     container:
-      image: debian:trixie
+      image: debian:forky
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.generate-matrix.outputs.matrix)}}
@@ -274,7 +319,66 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 rsync tzdata u-boot-tools unzip wget
+          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 python3-dev python3-setuptools lzop rsync tzdata u-boot-tools unzip wget libncurses-dev swig
+
+      - name: Checkout prudynt-t
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PRIVATE_TOKEN }}
+          repository: iborderxm/prudynt-t
+          path: ./prudynt-t
+
+      - name: Prepare prudynt-t
+        run: |
+          ls -ltr ./prudynt-t/
+          mv ./prudynt-t /tmp/prudynt-t
+          cd /tmp/prudynt-t
+          git fetch --all
+
+          CHECKOUT_TARGET="${{ github.event.inputs.prudynt-t-checkout }}"
+          
+          if [ -n "$CHECKOUT_TARGET" ]; then
+            echo "Checking if $CHECKOUT_TARGET exists as branch or tag..."
+            # Try to checkout directly (will work for tags and existing local branches)
+            if git checkout $CHECKOUT_TARGET; then
+              echo "Successfully checked out $CHECKOUT_TARGET"
+              TAG=$CHECKOUT_TARGET
+            else
+              # If direct checkout fails, try to checkout remote branch
+              if git checkout -b $CHECKOUT_TARGET origin/$CHECKOUT_TARGET; then
+                echo "Successfully checked out remote branch $CHECKOUT_TARGET"
+                TAG=$CHECKOUT_TARGET
+              else
+                echo "ERROR: $CHECKOUT_TARGET not found as branch or tag"
+                exit 1
+              fi
+            fi
+          else
+            # Use original logic - get latest tag
+            TAG=$(git tag --sort=-v:refname | head -1)
+            echo "Latest Tag: $TAG"
+            
+            if [ -z "$TAG" ]; then
+              echo "ERROR: No tags found in repository"
+              exit 1
+            fi
+            
+            git checkout $TAG
+          fi
+          
+          cd /tmp
+          ls -ltr prudynt-t/include/
+
+          mv prudynt-t prudynt-t-${TAG}
+
+          tar -czf ./prudynt-t-${TAG}.tar.gz prudynt-t-${TAG}
+          ls -ltr
+          mkdir webdir
+          mv ./prudynt-t-${TAG}.tar.gz ./webdir/
+
+          echo "PRUDYNT_T_TAG=${TAG}" >> $GITHUB_ENV
+          cd $GITHUB_WORKSPACE
+      
       - name: Set timezone
         run: |
           ln -sf /usr/share/zoneinfo/${{ env.TZ }} /etc/localtime
@@ -285,11 +389,11 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Checkout repository source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: 'true'
-          ref: ${{ github.event.inputs.branch || 'stable' }}
-          fetch-depth: "0"
+          ref: ${{ github.event.inputs.branch }}
+          fetch-depth: "1"
 
       - name: Debug checked out branch and commit
         run: |
@@ -307,7 +411,6 @@ jobs:
           echo "CURRENT_YEAR=$(date +%Y)" >> $GITHUB_ENV
           echo "GIT_HASH=$(git rev-parse --short ${GITHUB_SHA})" >> $GITHUB_ENV
           echo "GIT_BRANCH=$(git branch --show-current)" >> $GITHUB_ENV
-          echo "TG_DISABLED=${{ github.event.inputs.tg_disabled || 'false' }}" >> $GITHUB_ENV
           echo "TAG_NAME=${{ needs.prepare-release.outputs.tag_name }}" >> $GITHUB_ENV
 
           echo "GIT_HASH=$(git rev-parse --short ${GITHUB_SHA})" >> $GITHUB_OUTPUT
@@ -319,7 +422,7 @@ jobs:
           mkdir -p ~/dl
 
       - name: Restore build cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: always()
         with:
           path: ~/.ccache
@@ -331,7 +434,7 @@ jobs:
       - name: Fetch buildroot-dl-cache release
         id: find_release
         run: |
-          REPO="${{ github.repository }}"
+          REPO="themactep/thingino-firmware"
           RELEASE_TAG=$(gh release list --repo "$REPO" --json name,tagName | jq -r '.[] | select(.name=="buildroot-dl-cache") | .tagName' | sort -r | head -1 || echo "")
           if [ -z "$RELEASE_TAG" ]; then
             echo "Could not find release with name 'buildroot-dl-cache', trying tags starting with 'update_cache'"
@@ -350,7 +453,7 @@ jobs:
         id: download_cache
         if: steps.find_release.outputs.release_found == 'true'
         run: |
-          REPO="${{ github.repository }}"
+          REPO="themactep/thingino-firmware"
           RELEASE_TAG="${{ steps.find_release.outputs.release_tag }}"
           mkdir -p /tmp/dl-cache
           echo "Downloading files from release with tag: $RELEASE_TAG"
@@ -394,6 +497,49 @@ jobs:
           find ~/dl -type f | wc -l
           echo "DL cache restored successfully"
 
+      - name: Restore libimp-samples-musl cache
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        id: cache-libimp
+        uses: actions/cache@v5
+        with:
+          path: ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz
+          key: libimp-samples-musl-${{ runner.os }}-${{ hashFiles('~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz') }}
+
+      - name: download libimp-samples-musl
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' && steps.cache-libimp.outputs.cache-hit != 'true' }}
+        run: |
+          gh repo clone gtxaspec/libimp-samples-musl /tmp/libimp-samples-musl
+          echo "libimp-samples-musl cloned successfully"
+          echo "libimp-samples-musl files:"
+          # ls -la /tmp/libimp-samples-musl/
+          # ls -la /tmp/libimp-samples-musl/T31/lib/uclibc/
+          # ls -la ~/dl/ingenic-lib/
+          if [ ! -f ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz ]; then
+            echo "Warning: ingenic-lib-${hashcode}-git4.tar.gz not found in ~/dl/ingenic-lib/"
+            exit 1
+          fi
+          targzFileName=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz)
+          echo "targzFileName: $targzFileName"
+          hashcode=$(basename ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz | cut -d '-' -f 3)
+          echo "hashcode: $hashcode"
+
+          tar -xzf ~/dl/ingenic-lib/ingenic-lib-${hashcode}*.tar.gz -C ~/dl/ingenic-lib/
+          rm -f ~/dl/ingenic-lib/$targzFileName
+          dirName=$(basename ~/dl/ingenic-lib/ingenic-lib-*)
+          # ls -ltr
+          ls -ltr ~/dl/ingenic-lib/${dirName}/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          \cp /tmp/libimp-samples-musl/T31/lib/uclibc/*/*.so ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          echo "libimp-samples-musl files copied successfully"
+          ls -la ~/dl/ingenic-lib/${dirName}/T31/lib/1.1.6/uclibc/5.4.0/
+          currPath=`pwd`
+          cd ~/dl/ingenic-lib/
+          tar -czf ./$targzFileName ${dirName}
+          rm -rf ./${dirName}
+          ls -ltr
+          echo "$targzFileName compressed successfully"
+          cd $currPath
+
       - name: Download buildroot sources if cache missing
         if: steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true'
         run: |
@@ -401,9 +547,131 @@ jobs:
           BOARD=${{ matrix.thingino-version }} make source WORKFLOW=1
           echo "Source download completed"
 
+      - name: Update webui files
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        run: |
+          # 复制当前项目目录到/tmp
+          REPO_FULL="${{ github.repository }}"
+          REPO_NAME="${REPO_FULL#*/}"
+          echo "Repository name: $REPO_NAME"
+          echo "copied repository to /tmp/$REPO_NAME"
+          cd ../
+          cp -r $REPO_NAME /tmp/$REPO_NAME
+          ls -ltr /tmp/$REPO_NAME
+          cd /tmp/$REPO_NAME
+          echo "current branch: $(git branch), prepare to checkout iborder branch"
+          git fetch --all --no-recurse-submodules
+          echo "fetched all branches"
+          if git show-ref --verify --quiet refs/remotes/origin/iborder; then
+            echo "iborder branch found"
+            git checkout iborder 
+            echo "iborder branch checked out successfully"
+          else
+            echo "iborder branch not found"
+            exit 1
+          fi
+
+          cd $GITHUB_WORKSPACE
+          # git更新
+          git pull --no-recurse-submodules
+
+          # 执行自定义脚本
+          echo "Executing custom.sh script..."
+          chmod +x custom/custom.sh
+          custom/custom.sh $GITHUB_WORKSPACE
+          echo "custom.sh script executed done"
+
+          cd $GITHUB_WORKSPACE
+      
+      - name: Update ingenic-lib.mk configuration
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        run: |
+          sed -i 's/gtxaspec/iborderxm/' package/ingenic-lib/ingenic-lib.mk
+          sed -i 's/master/iborder/' package/ingenic-lib/ingenic-lib.mk
+          sed -i 's/^INGENIC_LIB_VERSION/# INGENIC_LIB_VERSION/' package/ingenic-lib/ingenic-lib.mk
+          sed -i '4i\INGENIC_LIB_VERSION = $(shell git ls-remote $(INGENIC_LIB_SITE) $(INGENIC_LIB_SITE_BRANCH) | head -1 | cut -f1)' package/ingenic-lib/ingenic-lib.mk
+          
+          # Verify the changes
+          echo "Updated ingenic-lib.mk file:"
+          pwd
+          cat package/ingenic-lib/ingenic-lib.mk | head -10
+
+      - name: Update prudynt-t.mk configuration
+        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
+        run: |
+          sed -i 's/^PRUDYNT_T_SITE/# PRUDYNT_T_SITE/' package/prudynt-t/prudynt-t.mk
+          sed -i 's/^PRUDYNT_T_VERSION/# PRUDYNT_T_VERSION/' package/prudynt-t/prudynt-t.mk
+          sed -i 's/^PRUDYNT_T_GIT_SUBMODULES/# PRUDYNT_T_GIT_SUBMODULES/' package/prudynt-t/prudynt-t.mk
+          sed -i '1i\PRUDYNT_T_VERSION = ${{ env.PRUDYNT_T_TAG }}' package/prudynt-t/prudynt-t.mk
+          sed -i '2i\PRUDYNT_T_SOURCE = prudynt-t-$(PRUDYNT_T_VERSION).tar.gz' package/prudynt-t/prudynt-t.mk
+          sed -i '3i\PRUDYNT_T_SITE = http://127.0.0.1:8000' package/prudynt-t/prudynt-t.mk
+          sed -i 's/\$(shell git show -s --format=%h)/${{ env.PRUDYNT_T_TAG }}/' package/prudynt-t/prudynt-t.mk
+          if [[ "${{ github.event.inputs.prudynt-t-signature }}" == "true" ]]; then
+            sed -i 's|SDK_VERSION=\"$(SDK_VERSION)\"|SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" MAC_ADDRESS=\"${{ github.event.inputs.prudynt-t-mac }}\" SDK_VERSION=\"$(SDK_VERSION)\"|' package/prudynt-t/prudynt-t.mk
+            sed -i 's/$(TARGET_CROSS)strip/# $(TARGET_CROSS)strip/' package/prudynt-t/prudynt-t.mk
+            sed -i $'/\$(TARGET_CROSS)strip \$(@D)\/bin\/prudynt -o \$(TARGET_DIR)\/usr\/bin\/prudynt/a\\\n\tcp \$(@D)\/bin\/prudynt \$(TARGET_DIR)\/usr\/bin\/prudynt' package/prudynt-t/prudynt-t.mk
+          fi
+
+          # Verify the changes
+          echo "Updated prudynt-t.mk file:"
+          pwd
+          cat package/prudynt-t/prudynt-t.mk | head -250
+
+      - name: Update live555 download path
+        if: ${{ github.event.inputs.update_live555_download_path != 'false' }}
+        run: |
+          sed -i 's|https://download.videolan.org/contrib/live555|https://github.com/gtxaspec/live555-release-mirror/releases/download/v\$(LIVE555_VERSION)|' package/thingino-live555/live555-override.mk
+          cat package/thingino-live555/live555-override.mk | head -12
+
+      - name: Update live555 configuration
+        if: ${{ github.event.inputs.update_live555_config != 'false' }}
+        run: |
+          # 临时修改live555配置
+          # 下载 https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz 到/tmp
+          wget https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz -P /tmp/
+          # 获取 sha256sum
+          hashcode=$(sha256sum /tmp/live.${{ inputs.live555_version }}.tar.gz | awk '{print $1}')
+          echo "hashcode: $hashcode"
+          # 计算sh1sum
+          sh1sum=$(sha1sum /tmp/live.${{ inputs.live555_version }}.tar.gz | awk '{print $1}')
+          echo "sh1sum: $sh1sum"
+
+          sed -i "s/1ffd626ce2e2473196e55a473b7b5ba056326eeabf8fd5622cea6b123d8b6370/$hashcode/" package/all-patches/live555/live555.hash
+          sed -i 's/2026.04.22/${{ inputs.live555_version }}/' package/all-patches/live555/live555.hash
+          sed -i 's/2026.04.22/${{ inputs.live555_version }}/' package/thingino-live555/live555-override.mk
+
+          # Verify the changes
+          echo "Updated live555 configuration:"
+          cat package/all-patches/live555/live555.hash
+          echo "------------------------------------------"
+          cat package/thingino-live555/live555-override.mk | head -12
+
+          # package/thingino-uboot/thingino-uboot.mk 移除host-libyaml
+          cat package/thingino-uboot/thingino-uboot.mk | head -10
+          echo "------------------------------------------"
+          sed -i 's/host-libyaml //' package/thingino-uboot/thingino-uboot.mk
+          cat package/thingino-uboot/thingino-uboot.mk | head -10
+
+      - name: Update buildroot
+        if: ${{ github.event.inputs.update_buildroot != 'false' }}
+        run: |
+          # 修改buildroot配置
+          sed -i '12i\HOST_MKPASSWD_DEPENDENCIES = host-libxcrypt' buildroot/package/mkpasswd/mkpasswd.mk
+          cat buildroot/package/mkpasswd/mkpasswd.mk | head -15
+
+          chmod +x scripts/*.sh
+          chmod +x scripts/menu/*.sh
+
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}
         run: |
+          ls -ltr /tmp/webdir/
+          cd /tmp/webdir/
+          python3 -m http.server 8000 &
+          sleep 5
+          ps -ef | grep python
+          cd $GITHUB_WORKSPACE
+          ls -ltr
           BOARD=${{ matrix.thingino-version }} make fast WORKFLOW=1
           TIME=$(date -d @${SECONDS} +%M:%S)
           echo "TIME=${TIME}" >> ${GITHUB_ENV}
@@ -412,15 +680,13 @@ jobs:
         if: ${{ github.event.inputs.debug_enabled == 'true' }}
         run: |
           DYNAMIC_PART="${{ matrix.thingino-version }}"
-          mkdir -p ${HOME}/output/stable/${DYNAMIC_PART}/images/
-          echo "debug" > ${HOME}/output/stable/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}.bin
-          echo "debug uboot" > ${HOME}/output/stable/${DYNAMIC_PART}/images/u-boot-lzo-with-spl.bin
-          echo "debug kernel" > ${HOME}/output/stable/${DYNAMIC_PART}/images/uImage
-          echo "debug rootfs" > ${HOME}/output/stable/${DYNAMIC_PART}/images/rootfs.squashfs
-          echo "debug rootfs" > ${HOME}/output/stable/${DYNAMIC_PART}/images/rootfs.tar
-          echo "debug sha" > ${HOME}/output/stable/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}.bin.sha256sum
-          echo "debug" > ${HOME}/output/stable/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}-update.bin
-          echo "debug sha" > ${HOME}/output/stable/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}-update.bin.sha256sum
+          mkdir -p ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/
+          echo "debug" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}.bin
+          echo "debug uboot" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/u-boot-lzo-with-spl.bin
+          echo "debug kernel" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/uImage
+          echo "debug rootfs" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/rootfs.squashfs
+          echo "debug rootfs" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/rootfs.tar
+          echo "debug sha" > ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/thingino-${DYNAMIC_PART}.bin.sha256sum
           echo "TIME=7:77" >> ${GITHUB_ENV}
 
       - name: Generate build time graphs
@@ -432,13 +698,13 @@ jobs:
       - name: Validate compiled firmware artifacts
         run: |
           DYNAMIC_PART="${{ matrix.thingino-version }}"
-          FW_PATH=${HOME}/output/stable/${DYNAMIC_PART}/images/
-          FULL_FW=$(find ${HOME}/output/stable/${DYNAMIC_PART}*/images/ -name "thingino-${DYNAMIC_PART}.bin" ! -name "*update.bin" | head -n 1)
-          FULL_FW_UBOOT=$(find ${HOME}/output/stable/${DYNAMIC_PART}*/images/ -name "u-boot-lzo-with-spl.bin" | head -n 1)
-          FULL_FW_KERNEL=$(find ${HOME}/output/stable/${DYNAMIC_PART}*/images/ -name "uImage" | head -n 1)
-          FULL_FW_ROOTFS=$(find ${HOME}/output/stable/${DYNAMIC_PART}*/images/ -name "rootfs.squashfs" | head -n 1)
-          FULL_FW_ROOTFS_TAR=$(find ${HOME}/output/stable/${DYNAMIC_PART}*/images/ -name "rootfs.tar" | head -n 1)
-          UPDATE_FW=$(find ${HOME}/output/stable/${DYNAMIC_PART}*/images/ -name "thingino-${DYNAMIC_PART}-update.bin" | head -n 1)
+          OUT_BASE="${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}"
+          FW_PATH=${OUT_BASE}/${DYNAMIC_PART}/images/
+          FULL_FW=$(find ${OUT_BASE}/${DYNAMIC_PART}*/images/ -name "thingino-${DYNAMIC_PART}.bin" ! -name "*update.bin" | head -n 1)
+          FULL_FW_UBOOT=$(find ${OUT_BASE}/${DYNAMIC_PART}*/images/ -name "u-boot-lzo-with-spl.bin" | head -n 1)
+          FULL_FW_KERNEL=$(find ${OUT_BASE}/${DYNAMIC_PART}*/images/ -name "uImage" | head -n 1)
+          FULL_FW_ROOTFS=$(find ${OUT_BASE}/${DYNAMIC_PART}*/images/ -name "rootfs.squashfs" | head -n 1)
+          FULL_FW_ROOTFS_TAR=$(find ${OUT_BASE}/${DYNAMIC_PART}*/images/ -name "rootfs.tar" | head -n 1)
           echo "FULL_FW: $FULL_FW"
           if [[ -n "$FULL_FW" ]]; then
             echo "FW_PATH=${FW_PATH}" >> ${GITHUB_ENV}
@@ -448,8 +714,9 @@ jobs:
             echo "FULL_FW_ROOTFS=${FULL_FW_ROOTFS}" >> ${GITHUB_ENV}
             echo "FULL_FW_ROOTFS_TAR=${FULL_FW_ROOTFS_TAR}" >> ${GITHUB_ENV}
             echo "FULL_FW_SHA=${FULL_FW}.sha256sum" >> ${GITHUB_ENV}
-            echo "UPDATE_FW=${UPDATE_FW}" >> ${GITHUB_ENV}
-            echo "UPDATE_FW_SHA=${UPDATE_FW}.sha256sum" >> ${GITHUB_ENV}
+
+            UPDATE_FW_DATETIME=$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')
+            echo "UPDATE_FW_DATETIME=${UPDATE_FW_DATETIME}" >> ${GITHUB_ENV}
           else
             echo "Matching .bin files not found."
             exit 1
@@ -461,61 +728,53 @@ jobs:
         with:
           name: ${{ matrix.thingino-version }}-build.hist-duration
           path: |
-            ~/output/stable/${{ matrix.thingino-version }}/graphs/build.hist-duration.pdf
+            ~/output/${{ github.event.inputs.branch }}/${{ matrix.thingino-version }}/graphs/build.hist-duration.pdf
 
-      - name: Upload compiled firmware artifacts
+      - name: Encrypt firmware artifacts with 7z
+        run: |
+          echo "FULL_FW: ${{ env.FULL_FW }}"
+          ls -ltr ${{ env.FULL_FW }}
+          echo "-----------------------1"
+          echo "${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/"
+          ls -ltra ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/
+          echo "-----------------------2"
+          mkdir -p encrypted-artifacts
+          # 只收集实际存在的文件，避免向 7z 传空路径
+          FILES=()
+          for f in "${{ env.FULL_FW }}" "${{ env.FULL_FW_UBOOT }}" \
+                   "${{ env.FULL_FW_KERNEL }}" "${{ env.FULL_FW_ROOTFS }}" \
+                   "${{ env.FULL_FW_ROOTFS_TAR }}" "${{ env.FULL_FW_SHA }}" \
+                   "${{ env.UPDATE_FW }}" "${{ env.UPDATE_FW_SHA }}"; do
+            if [[ -n "$f" && -f "$f" ]]; then
+              FILES+=("$f")
+            else
+              echo "WARNING: skipping missing/empty file: '$f'"
+            fi
+          done
+          7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z "${FILES[@]}"
+
+      - name: Upload encrypted firmware artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: thingino-${{ matrix.thingino-version }}-firmware
-          path: |
-            ${{ env.FULL_FW }}
-            ${{ env.FULL_FW_UBOOT }}
-            ${{ env.FULL_FW_KERNEL }}
-            ${{ env.FULL_FW_ROOTFS }}
-            ${{ env.FULL_FW_ROOTFS_TAR }}
-            ${{ env.FULL_FW_SHA }}
-            ${{ env.UPDATE_FW }}
-            ${{ env.UPDATE_FW_SHA }}
+          name: thingino-${{ matrix.thingino-version }}-firmware-encrypted-${{ env.UPDATE_FW_DATETIME }}
+          path: encrypted-artifacts/firmware.7z
 
       - name: Post compiled firmware artifacts to release
+        if: github.event.inputs.create_release == 'true'
         uses: softprops/action-gh-release@v2.1.0
         with:
           tag_name: ${{ env.TAG_NAME }}
           make_latest: false
           prerelease: true
           files: |
-            ${{ env.FULL_FW }}
-            ${{ env.FULL_FW_SHA }}
-            ${{ env.UPDATE_FW_SHA }}
+            encrypted-artifacts/firmware.7z
 
-      - name: Package binaries for notification
-        run: |
-          7z a -t7z -mx=9 -mmt=on /tmp/thingino-${{ matrix.thingino-version }}.7z ${{ env.FULL_FW }} ${{ env.FULL_FW_SHA }}
 
-      - name: Send firmware completion notifications with attachment
-        if: ${{ env.TG_DISABLED == 'false' && (env.FULL_FW) }}
-        run: |
-          if [[ "${{ github.event.inputs.tg_scratch }}" == 'true' ]]; then
-            TG_CHANNEL=${{ env.TG_CHANNEL_SCRATCH }}
-            export TG_TOPIC=""
-          fi
-          if [ -n "${{ env.FULL_FW }}" ]; then
-          .github/scripts/tg-notify.sh -s $TG_TOKEN $TG_CHANNEL $TG_TOPIC completed $TAG_NAME ${{ github.run_id }} ${{ github.repository }} ${GIT_HASH} ${GIT_BRANCH} ${TAG_NAME} ${TIME} ${{ matrix.thingino-version }} /tmp/thingino-${{ matrix.thingino-version }}.7z
-          fi
-
-      - name: Send error notification
-        if: ${{ env.TG_DISABLED == 'false' && failure() }}
-        run: |
-          if [[ "${{ github.event.inputs.tg_scratch }}" == 'true' ]]; then
-            TG_CHANNEL=${{ env.TG_CHANNEL_SCRATCH }}
-            export TG_TOPIC=""
-          fi
-          .github/scripts/tg-notify.sh -s $TG_TOKEN $TG_CHANNEL $TG_TOPIC error $TAG_NAME "Github CI build failed!" ${{ github.run_id }} ${{ matrix.thingino-version }} ${{ github.repository }}
 
   finalize-release:
     needs: [buildroot, prepare-release, check-updates]
     runs-on: ubuntu-24.04
-    if: always() && needs.check-updates.outputs.should_build == 'true'
+    if: always() && needs.check-updates.outputs.should_build == 'true' && github.event.inputs.create_release == 'true'
     steps:
       - name: Set timezone
         run: |
@@ -527,7 +786,7 @@ jobs:
           echo "TAG_NAME=${{ needs.prepare-release.outputs.tag_name }}" >> $GITHUB_ENV
 
       - name: Checkout repository source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: 'false'
           ref: ${{ github.event.inputs.branch || 'stable' }}
@@ -593,35 +852,3 @@ jobs:
             echo "Release not found, skipping latest release update"
           fi
 
-  notify-completion:
-    needs: [finalize-release, notify-begin]
-    runs-on: ubuntu-24.04
-    if: always() && needs.check-updates.outputs.should_build == 'true'
-    steps:
-      - name: Set timezone
-        run: |
-          sudo timedatectl set-timezone ${{ env.TZ }}
-
-      - name: Configure Environment
-        run: |
-          echo "TG_DISABLED=${{ github.event.inputs.tg_disabled || 'false' }}" >> $GITHUB_ENV
-
-      - name: Checkout repository source
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.branch || 'stable' }}
-          fetch-depth: "1"
-
-      - name: Send notify completion summary
-        if: ${{ env.TG_DISABLED == 'false' }}
-        run: |
-          if [[ "${{ github.event.inputs.tg_scratch }}" == 'true' ]]; then
-            TG_CHANNEL=${{ env.TG_CHANNEL_SCRATCH }}
-            export TG_TOPIC=""
-          fi
-          START_TIME=${{ needs.notify-begin.outputs.start_time }}
-          END_TIME=$(date -u +%s)
-          ELAPSED=$((END_TIME - START_TIME))
-          ELAPSED_MIN=$((ELAPSED / 60))
-          ELAPSED_SEC=$((ELAPSED % 60))
-          .github/scripts/tg-notify.sh -s $TG_TOKEN $TG_CHANNEL $TG_TOPIC finish ${{ github.workflow }} "${ELAPSED_MIN}m ${ELAPSED_SEC}s" ${{ github.run_id }} ${{ github.repository }}
