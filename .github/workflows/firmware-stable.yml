@@ -665,20 +665,16 @@ jobs:
           chmod +x scripts/*.sh
           chmod +x scripts/menu/*.sh
 
-          # sed -i '15i\HOST_LIBUNISTRING_CONF_ENV = CFLAGS="$(HOST_CFLAGS) -std=gnu17"' buildroot/package/libunistring/libunistring.mk
-          # cat buildroot/package/libunistring/libunistring.mk | head -15
-
-          # cp custom/patch/0001-fix-gcc15-glibc-const-generic-macros.patch buildroot/package/libunistring/
-          # ls -ltr buildroot/package/libunistring/
-
-          echo "--------------------------------------------"
-          echo "TARGET_CFLAGS += -std=gnu17" >> local.mk
-          echo "TARGET_CXXFLAGS = $( filter -out -std=gnu17, $(TARGET_CFLAGS) )" >> local.mk
-          echo "HOST_CFLAGS += -std=gnu17" >> local.mk
-          echo "HOST_CXXFLAGS = $(filter-out -std=gnu17,$(HOST_CFLAGS))" >> local.mk
-          pwd
-          ls -ltr
-          cat local.mk
+          # GCC 15 默认开启限定符通用宏 (qualifier-generic macros),
+          # 与旧版 Gnulib 重新声明 bsearch 等函数冲突。全局开关
+          # -fno-qualifier-generic-macros 已在项目级覆盖文件
+          # package/thingino-overrides.mk 中统一注入到
+          # HOST_CFLAGS / TARGET_CFLAGS (含 C++ 及 *_FOR_BUILD),
+          # 该文件由 system.fragment 的 BR2_PACKAGE_OVERRIDE_FILE 指定,
+          # 对所有包及 configure 探测阶段自动生效, 无需再逐包处理,
+          # 也不再生成仅含 -std=gnu17 的 local.mk。
+          echo "Global -fno-qualifier-generic-macros is set in package/thingino-overrides.mk"
+          grep -n "qualifier-generic-macros" package/thingino-overrides.mk
 
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}
