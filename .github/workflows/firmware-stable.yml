@@ -668,17 +668,13 @@ jobs:
           # sed -i '15i\HOST_LIBUNISTRING_CONF_ENV = CFLAGS="$(HOST_CFLAGS) -std=gnu17"' buildroot/package/libunistring/libunistring.mk
           # cat buildroot/package/libunistring/libunistring.mk | head -15
 
-          # cp custom/patch/0001-fix-gcc15-glibc-const-generic-macros.patch buildroot/package/libunistring/
-          # ls -ltr buildroot/package/libunistring/
+          cp custom/patch/0001-fix-gcc15-glibc-const-generic-macros.patch buildroot/package/libunistring/
+          ls -ltr buildroot/package/libunistring/
 
-          echo "--------------------------------------------"
-          echo "TARGET_CFLAGS += -std=gnu17" >> local.mk
-          echo "TARGET_CXXFLAGS = $( filter -out -std=gnu17, $(TARGET_CFLAGS) )" >> local.mk
-          echo "HOST_CFLAGS += -std=gnu17" >> local.mk
-          echo "HOST_CXXFLAGS = $(filter-out -std=gnu17,$(HOST_CFLAGS))" >> local.mk
-          pwd
-          ls -ltr
-          cat local.mk
+          # echo "BR2_JLEVEL=1" >> configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
+          # cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
+
+          sed -i 's/BR2_PER_PACKAGE_DIRECTORIES/# BR2_PER_PACKAGE_DIRECTORIES/' configs/github/toolchain_*_defconfig
 
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}
