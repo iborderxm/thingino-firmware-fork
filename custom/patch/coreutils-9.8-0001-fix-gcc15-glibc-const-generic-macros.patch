@@ -1,0 +1,36 @@
+diff --git a/lib/stdlib.in.h b/lib/stdlib.in.h
+index bef0aaa..855a2a4 100644
+--- a/lib/stdlib.in.h
++++ b/lib/stdlib.in.h
+@@ -224,9 +224,13 @@ _GL_INLINE_HEADER_BEGIN
+ 
+ /* Declarations for ISO C N3322.  */
+ #if defined __GNUC__ && __GNUC__ >= 15 && !defined __clang__
+-_GL_EXTERN_C void *bsearch (const void *__key,
+-                            const void *__base, size_t __nmemb, size_t __size,
+-                            int (*__compare) (const void *, const void *))
++/* glibc >= 2.43 将 bsearch 定义为 _Generic 函数式宏(C23 常量保持),
++   裸函数名在此处会被宏展开成 _Generic(...) 导致语法错误;
++   写成 (bsearch) 可抑制宏展开, 等价于 gnulib 上游的
++   _GL_FUNCDECL_SYS_NAME (bsearch) 写法。 */
++_GL_EXTERN_C void *(bsearch) (const void *__key,
++                              const void *__base, size_t __nmemb, size_t __size,
++                              int (*__compare) (const void *, const void *))
+   _GL_ATTRIBUTE_NONNULL_IF_NONZERO (2, 3) _GL_ARG_NONNULL ((5));
+ _GL_EXTERN_C void qsort (void *__base, size_t __nmemb, size_t __size,
+                          int (*__compare) (const void *, const void *))
+diff --git a/lib/wchar.in.h b/lib/wchar.in.h
+index ab602a2..aac464c 100644
+--- a/lib/wchar.in.h
++++ b/lib/wchar.in.h
+@@ -301,7 +301,9 @@ _GL_EXTERN_C int wcsncmp (const wchar_t *__s1, const wchar_t *__s2, size_t __n)
+   _GL_ATTRIBUTE_NONNULL_IF_NONZERO (1, 3)
+   _GL_ATTRIBUTE_NONNULL_IF_NONZERO (2, 3);
+ # ifndef __cplusplus
+-_GL_EXTERN_C wchar_t *wmemchr (const wchar_t *__s, wchar_t __wc, size_t __n)
++/* glibc >= 2.43 将 wmemchr 定义为 _Generic 函数式宏,
++   写成 (wmemchr) 抑制宏展开(对齐 gnulib 上游)。 */
++_GL_EXTERN_C wchar_t *(wmemchr) (const wchar_t *__s, wchar_t __wc, size_t __n)
+   _GL_ATTRIBUTE_NONNULL_IF_NONZERO (1, 3);
+ # endif
+ _GL_EXTERN_C wchar_t *wmemset (wchar_t *__s, wchar_t __wc, size_t __n)

@@ -319,7 +319,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 python3-dev python3-setuptools lzop rsync tzdata u-boot-tools unzip wget libncurses-dev swig
+          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 python3-dev python3-setuptools lzop rsync tzdata u-boot-tools unzip wget libncurses-dev swig help2man
 
       - name: Checkout prudynt-t
         uses: actions/checkout@v4
@@ -497,11 +497,6 @@ jobs:
           find ~/dl -type f | wc -l
           echo "DL cache restored successfully"
 
-          echo "libunistring files:"
-          ls -ltr ~/dl/libunistring/*
-          echo "m4 files:"
-          ls -ltr ~/dl/m4/*
-
       - name: Download buildroot sources if cache missing
         if: steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true'
         run: |
@@ -563,7 +558,7 @@ jobs:
           echo "libunistring 1.4.1 files:"
           # ls -la /tmp/libunistring-1.4.1/
           echo "prepare executed patch"
-          patch -d /tmp/libunistring-1.4.1 -p1 < custom/patch/0001-fix-gcc15-glibc-const-generic-macros.patch
+          patch -d /tmp/libunistring-1.4.1 -p1 < custom/patch/libunistring-1.4.1-0001-fix-gcc15-glibc-const-generic-macros.patch
           echo "libunistring 1.4.1 patch successfully"
 
           cd /tmp
@@ -581,9 +576,68 @@ jobs:
           # 更新buildroot/package/libunistring/libunistring.hash
           sed -i "s/67d88430892527861903788868c77802a217b0959990f7449f2976126a307763/$hashcode/" buildroot/package/libunistring/libunistring.hash
           echo "libunistring 1.4.1 hash updated successfully"
-          cat buildroot/package/libunistring/libunistring.hash
 
-          
+      - name: download m4
+        if: ${{ github.event.inputs.update_buildroot != 'false' && steps.cache-m4.outputs.cache-hit != 'true' }}
+        run: |
+          # 下载到/tmp/m4
+          wget -nv https://github.com/iborderxm/m4/archive/refs/tags/1.4.20.tar.gz -O /tmp/m4-1.4.20.tar.gz
+          echo "m4 1.4.20 downloaded successfully"
+          tar -xzf /tmp/m4-1.4.20.tar.gz -C /tmp/
+          echo "m4 1.4.20 extracted successfully"
+          echo "m4 1.4.20 files:"
+          # ls -la /tmp/m4-1.4.20/
+          echo "prepare executed patch"
+          patch -d /tmp/m4-1.4.20 -p1 < custom/patch/m4-1.4.20-0001-fix-gcc15-glibc-const-generic-macros.patch
+          echo "m4 1.4.20 patch successfully"
+
+          cd /tmp
+          rm -rf m4-1.4.20.tar.gz
+          tar -cJf m4-1.4.20.tar.xz m4-1.4.20
+          echo "m4 1.4.20 compressed successfully"
+          ls -ltr /tmp/m4-1.4.20.tar.xz
+          # sha256sum
+          hashcode=$(sha256sum m4-1.4.20.tar.xz | awk '{print $1}')
+          echo "hashcode: $hashcode"
+          rm -rf ~/dl/m4/*
+          mv m4-1.4.20.tar.xz ~/dl/m4/
+
+          cd $GITHUB_WORKSPACE
+          # 更新buildroot/package/m4/m4.hash
+          sed -i "s/e236ea3a1ccf5f6c270b1c4bb60726f371fa49459a8eaaebc90b216b328daf2b/$hashcode/" buildroot/package/m4/m4.hash
+          echo "m4 1.4.20 hash updated successfully"
+
+      - name: download coreutils
+        if: ${{ github.event.inputs.update_buildroot != 'false' && steps.cache-coreutils.outputs.cache-hit != 'true' }}
+        run: |
+          # 下载到/tmp/coreutils
+          wget -nv https://github.com/iborderxm/coreutils/archive/refs/tags/9.8.tar.gz -O /tmp/coreutils-9.8.tar.gz
+          echo "coreutils 9.8 downloaded successfully"
+          tar -xzf /tmp/coreutils-9.8.tar.gz -C /tmp/
+          echo "coreutils 9.8 extracted successfully"
+          echo "coreutils 9.8 files:"
+          # ls -la /tmp/coreutils-9.8/
+          echo "prepare executed patch"
+          patch -d /tmp/coreutils-9.8 -p1 < custom/patch/coreutils-9.8-0001-fix-gcc15-glibc-const-generic-macros.patch
+          echo "coreutils 9.8 patch successfully"
+
+          cd /tmp
+          rm -rf coreutils-9.8.tar.gz
+          tar -cJf coreutils-9.8.tar.xz coreutils-9.8
+          echo "coreutils compressed successfully"
+          ls -ltr /tmp/coreutils-9.8.tar.xz
+          # sha256sum
+          hashcode=$(sha256sum coreutils-9.8.tar.xz | awk '{print $1}')
+          echo "hashcode: $hashcode"
+          rm -rf ~/dl/coreutils/*
+          mkdir -p ~/dl/coreutils/
+          mv coreutils-9.8.tar.xz ~/dl/coreutils/
+
+          cd $GITHUB_WORKSPACE
+          # 更新buildroot/package/coreutils/coreutils.hash
+          sed -i "s/sha1/# sha1/" buildroot/package/coreutils/coreutils.hash
+          sed -i "s/e6d4fd2d852c9141a1c2a18a13d146a0cd7e45195f72293a4e4c044ec6ccca15/$hashcode/" buildroot/package/coreutils/coreutils.hash
+          echo "coreutils 9.8 hash updated successfully"
 
       - name: Update webui files
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
