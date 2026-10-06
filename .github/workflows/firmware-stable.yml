@@ -555,18 +555,35 @@ jobs:
       - name: download libunistring
         if: ${{ github.event.inputs.update_buildroot != 'false' && steps.cache-libunistring.outputs.cache-hit != 'true' }}
         run: |
-          echo "$GITHUB_WORKSPACE"
-          echo `pwd`
           # 下载到/tmp/libunistring
-          wget https://github.com/iborderxm/libunistring/archive/refs/tags/1.4.1.tar.gz -P /tmp
+          wget -nv https://github.com/iborderxm/libunistring/archive/refs/tags/1.4.1.tar.gz -O /tmp/libunistring-1.4.1.tar.gz
           echo "libunistring 1.4.1 downloaded successfully"
-          tar -xvzf /tmp/libunistring-1.4.1.tar.gz -C /tmp/
+          tar -xzf /tmp/libunistring-1.4.1.tar.gz -C /tmp/
           echo "libunistring 1.4.1 extracted successfully"
           echo "libunistring 1.4.1 files:"
-          ls -la /tmp/libunistring-1.4.1/
+          # ls -la /tmp/libunistring-1.4.1/
           echo "prepare executed patch"
           patch -d /tmp/libunistring-1.4.1 -p1 < custom/patch/0001-fix-gcc15-glibc-const-generic-macros.patch
           echo "libunistring 1.4.1 patch successfully"
+
+          cd /tmp
+          rm -rf libunistring-1.4.1.tar.gz
+          tar -cJf libunistring-1.4.1.tar.xz libunistring-1.4.1
+          echo "libunistring 1.4.1 compressed successfully"
+          ls -ltr /tmp/libunistring-1.4.1.tar.xz
+          # sha256sum
+          hashcode=$(sha256sum libunistring-1.4.1.tar.xz | awk '{print $1}')
+          echo "hashcode: $hashcode"
+          rm -rf ~/dl/libunistring/*
+          mv libunistring-1.4.1.tar.xz ~/dl/libunistring/
+
+          cd $GITHUB_WORKSPACE
+          # 更新buildroot/package/libunistring/libunistring.hash
+          sed -i "s/67d88430892527861903788868c77802a217b0959990f7449f2976126a307763/$hashcode/" buildroot/package/libunistring/libunistring.hash
+          echo "libunistring 1.4.1 hash updated successfully"
+          cat buildroot/package/libunistring/libunistring.hash
+
+          
 
       - name: Update webui files
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
