@@ -497,6 +497,18 @@ jobs:
           find ~/dl -type f | wc -l
           echo "DL cache restored successfully"
 
+          echo "libunistring files:"
+          ls -ltr ~/dl/libunistring/*
+          echo "m4 files:"
+          ls -ltr ~/dl/m4/*
+
+      - name: Download buildroot sources if cache missing
+        if: steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true'
+        run: |
+          echo "Buildroot DL cache not available, downloading sources..."
+          BOARD=${{ matrix.thingino-version }} make source WORKFLOW=1
+          echo "Source download completed"
+
       - name: Restore libimp-samples-musl cache
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         id: cache-libimp
@@ -540,12 +552,21 @@ jobs:
           echo "$targzFileName compressed successfully"
           cd $currPath
 
-      - name: Download buildroot sources if cache missing
-        if: steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true'
+      - name: download libunistring
+        if: ${{ github.event.inputs.update_buildroot != 'false' && steps.cache-libunistring.outputs.cache-hit != 'true' }}
         run: |
-          echo "Buildroot DL cache not available, downloading sources..."
-          BOARD=${{ matrix.thingino-version }} make source WORKFLOW=1
-          echo "Source download completed"
+          echo "$GITHUB_WORKSPACE"
+          echo `pwd`
+          # 下载到/tmp/libunistring
+          wget https://github.com/iborderxm/libunistring/archive/refs/tags/1.4.1.tar.gz -P /tmp
+          echo "libunistring 1.4.1 downloaded successfully"
+          tar -xvzf /tmp/libunistring-1.4.1.tar.gz -C /tmp/
+          echo "libunistring 1.4.1 extracted successfully"
+          echo "libunistring 1.4.1 files:"
+          ls -la /tmp/libunistring-1.4.1/
+          echo "prepare executed patch"
+          patch -d /tmp/libunistring-1.4.1 -p1 < custom/patch/0001-fix-gcc15-glibc-const-generic-macros.patch
+          echo "libunistring 1.4.1 patch successfully"
 
       - name: Update webui files
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
@@ -671,9 +692,11 @@ jobs:
           # cp custom/patch/0001-fix-gcc15-glibc-const-generic-macros.patch buildroot/package/libunistring/
           # ls -ltr buildroot/package/libunistring/
 
-          # echo "BR2_JLEVEL=1" >> configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
+          # echo "BR2_JLEVEL=1" >> config          # cp custom/patch/0001-fix-gcc15-glibc-const-generic-macros.patch buildroot/package/libunistring/
+          # ls -ltr buildroot/package/libunistrins/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
           # cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
 
+          # 关闭包并行编译
           sed -i 's/BR2_PER_PACKAGE_DIRECTORIES/# BR2_PER_PACKAGE_DIRECTORIES/' configs/github/toolchain_*_defconfig
 
       - name: Build firmware
