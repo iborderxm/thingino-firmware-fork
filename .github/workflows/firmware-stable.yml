@@ -806,13 +806,13 @@ jobs:
       - name: Validate compiled firmware artifacts
         run: |
           DYNAMIC_PART="${{ matrix.thingino-version }}"
-          OUT_BASE="${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}"
-          FW_PATH=${OUT_BASE}/${DYNAMIC_PART}/images/
-          FULL_FW=$(find ${OUT_BASE}/${DYNAMIC_PART}*/images/ -name "thingino-${DYNAMIC_PART}.bin" ! -name "*update.bin" | head -n 1)
-          FULL_FW_UBOOT=$(find ${OUT_BASE}/${DYNAMIC_PART}*/images/ -name "u-boot-lzo-with-spl.bin" | head -n 1)
-          FULL_FW_KERNEL=$(find ${OUT_BASE}/${DYNAMIC_PART}*/images/ -name "uImage" | head -n 1)
-          FULL_FW_ROOTFS=$(find ${OUT_BASE}/${DYNAMIC_PART}*/images/ -name "rootfs.squashfs" | head -n 1)
-          FULL_FW_ROOTFS_TAR=$(find ${OUT_BASE}/${DYNAMIC_PART}*/images/ -name "rootfs.tar" | head -n 1)
+          FW_PATH=${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/images/
+          FULL_FW=$(find ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/ -name "thingino-${DYNAMIC_PART}.bin" ! -name "*update.bin" | head -n 1)
+          FULL_FW_UBOOT=$(find ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/ -name "u-boot-lzo-with-spl.bin" | head -n 1)
+          FULL_FW_KERNEL=$(find ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/ -name "uImage" | head -n 1)
+          FULL_FW_ROOTFS=$(find ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/ -name "rootfs.squashfs" | head -n 1)
+          FULL_FW_ROOTFS_TAR=$(find ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/ -name "rootfs.tar" | head -n 1)
+          UPDATE_FW=$(find ${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/ -name "thingino-${DYNAMIC_PART}-update.bin" | head -n 1)
           echo "FULL_FW: $FULL_FW"
           if [[ -n "$FULL_FW" ]]; then
             echo "FW_PATH=${FW_PATH}" >> ${GITHUB_ENV}
@@ -822,6 +822,8 @@ jobs:
             echo "FULL_FW_ROOTFS=${FULL_FW_ROOTFS}" >> ${GITHUB_ENV}
             echo "FULL_FW_ROOTFS_TAR=${FULL_FW_ROOTFS_TAR}" >> ${GITHUB_ENV}
             echo "FULL_FW_SHA=${FULL_FW}.sha256sum" >> ${GITHUB_ENV}
+            echo "UPDATE_FW=${UPDATE_FW}" >> ${GITHUB_ENV}
+            echo "UPDATE_FW_SHA=${UPDATE_FW}.sha256sum" >> ${GITHUB_ENV}
 
             UPDATE_FW_DATETIME=$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')
             echo "UPDATE_FW_DATETIME=${UPDATE_FW_DATETIME}" >> ${GITHUB_ENV}
@@ -840,26 +842,16 @@ jobs:
 
       - name: Encrypt firmware artifacts with 7z
         run: |
-          echo "FULL_FW: ${{ env.FULL_FW }}"
-          ls -ltr ${{ env.FULL_FW }}
-          echo "-----------------------1"
-          echo "${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/"
-          ls -ltra ${GITHUB_WORKSPACE}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}*/images/
-          echo "-----------------------2"
           mkdir -p encrypted-artifacts
-          # 只收集实际存在的文件，避免向 7z 传空路径
-          FILES=()
-          for f in "${{ env.FULL_FW }}" "${{ env.FULL_FW_UBOOT }}" \
-                   "${{ env.FULL_FW_KERNEL }}" "${{ env.FULL_FW_ROOTFS }}" \
-                   "${{ env.FULL_FW_ROOTFS_TAR }}" "${{ env.FULL_FW_SHA }}" \
-                   "${{ env.UPDATE_FW }}" "${{ env.UPDATE_FW_SHA }}"; do
-            if [[ -n "$f" && -f "$f" ]]; then
-              FILES+=("$f")
-            else
-              echo "WARNING: skipping missing/empty file: '$f'"
-            fi
-          done
-          7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z "${FILES[@]}"
+          7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z \
+            "${{ env.FULL_FW }}" \
+            "${{ env.FULL_FW_UBOOT }}" \
+            "${{ env.FULL_FW_KERNEL }}" \
+            "${{ env.FULL_FW_ROOTFS }}" \
+            "${{ env.FULL_FW_ROOTFS_TAR }}" \
+            "${{ env.FULL_FW_SHA }}" \
+            "${{ env.UPDATE_FW }}" \
+            "${{ env.UPDATE_FW_SHA }}"
 
       - name: Upload encrypted firmware artifacts
         uses: actions/upload-artifact@v4
@@ -876,8 +868,6 @@ jobs:
           prerelease: true
           files: |
             encrypted-artifacts/firmware.7z
-
-
 
   finalize-release:
     needs: [buildroot, prepare-release, check-updates]
