@@ -668,8 +668,8 @@ jobs:
           # sed -i '15i\HOST_LIBUNISTRING_CONF_ENV = CFLAGS="$(HOST_CFLAGS) -std=gnu17"' buildroot/package/libunistring/libunistring.mk
           # cat buildroot/package/libunistring/libunistring.mk | head -15
 
-          cp custom/patch/0001-fix-gcc15-glibc-const-generic-macros.patch buildroot/package/libunistring/
-          ls -ltr buildroot/package/libunistring/
+          # cp custom/patch/0001-fix-gcc15-glibc-const-generic-macros.patch buildroot/package/libunistring/
+          # ls -ltr buildroot/package/libunistring/
 
           # echo "BR2_JLEVEL=1" >> configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
           # cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
