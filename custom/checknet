@@ -15,13 +15,13 @@ playip() {
     # 检查是不是192.168开头
     if echo "$ip" | grep -q "^192.168"; then
         # 是192.168开头
-        play /usr/share/sounds/other/192.168.opus append=1
+        play -A /usr/share/sounds/other/192.168.opus append=1
         # ip值删除192.168.
         ip=${ip#192.168.}
     fi
     # 播报ip的每个字符
     echo "$ip" | while IFS= read -r -n1 char; do
-        [ -n "$char" ] && play /usr/share/sounds/other/${char}.opus append=1
+        [ -n "$char" ] && play -A /usr/share/sounds/other/${char}.opus append=1
     done
 }
 
@@ -49,15 +49,15 @@ target1_ret_code=$(get_status "$target1")
 
 if [ "x$target1_ret_code" = "x200" ]; then
     # 网络正常
-    play /usr/share/sounds/other/networknormal.opus
+    play -A /usr/share/sounds/other/networknormal.opus
 else
     target2_ret_code=$(get_status "$target2")
     if [ "x$target2_ret_code" = "x200" ]; then
         # 网络正常
-        play /usr/share/sounds/other/networknormal.opus
+        play -A /usr/share/sounds/other/networknormal.opus
     else
         # 没有网络连接
-        play /usr/share/sounds/other/nonetwork.opus
+        play -A /usr/share/sounds/other/nonetwork.opus
     fi
 fi
 

@@ -37,8 +37,8 @@ chmod 755 overlay/etc/init.d/*
 chmod 755 overlay/usr/sbin/*
 
 mkdir -p overlay/usr/share/sounds/other
-cp -r custom/sounds/* overlay/usr/share/sounds/other/
-chmod 0644 overlay/usr/share/sounds/other/*
+cp -r custom/sounds/. overlay/usr/share/sounds/other/
+find overlay/usr/share/sounds/other/ -maxdepth 1 -type f -exec chmod 0644 {} +
 
 cp -r custom/prudynt.json package/prudynt-t/files/prudynt.json
 cp -r custom/send2email package/prudynt-t/files/send2email
@@ -47,6 +47,10 @@ cp -r custom/send2email package/prudynt-t/files/send2email
 cp -r custom/package/imapautoclean package/imapautoclean
 sed -i '/source "$BR2_EXTERNAL_THINGINO_PATH\/package\/lightnvr\/Config.in"/a source "$BR2_EXTERNAL_THINGINO_PATH\/package\/imapautoclean\/Config.in"' Config.in
 cat Config.in | grep imapautoclean
+
+# 配置thingino-button
+rm -rf package/thingino-button
+cp -r custom/package/thingino-button package/thingino-button
 
 sed -i '$a BR2_PACKAGE_IMAPAUTOCLEAN=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig 
 cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig

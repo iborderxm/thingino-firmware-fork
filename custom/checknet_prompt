@@ -9,8 +9,10 @@ fi
 echo $$ > /tmp/network_check_prompt.lock
 trap 'rm -f /tmp/network_check_prompt.lock' EXIT
 
-play /usr/share/sounds/other/networkcheck.opus
-play /usr/share/sounds/other/taskprompt.opus
+# 第一个音频正常入队（清空当前队列），第二个用 append 模式追加到同一队列，
+# 由 prudynt 内部衔接播放，避免两次独立 play 进程调用间的停顿
+play -A /usr/share/sounds/other/networkcheck.opus
+play -A /usr/share/sounds/other/taskprompt.opus
 
 sleep 2
 
