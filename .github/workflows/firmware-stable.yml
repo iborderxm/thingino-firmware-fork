@@ -23,11 +23,6 @@ on:
         description: 'Debug: Generate dummy image files'
         required: false
         default: false
-      update_prudynt_config:
-        type: boolean
-        description: 'Update prudynt-t.mk configuration'
-        required: false
-        default: true
       board_list:
         type: string
         description: 'Comma-separated list of boards to build (e.g. board1,board2)'
@@ -38,10 +33,20 @@ on:
         description: 'Create GitHub release'
         required: false
         default: false
+      update_prudynt_config:
+        type: boolean
+        description: 'Update prudynt-t.mk configuration'
+        required: false
+        default: true
       prudynt-t-checkout:
         type: string
         description: 'Tag or branch name to checkout for prudynt-t. If not provided, uses latest tag.'
         required: false
+      prudynt-t_json_number_with_integer:
+        type: boolean
+        description: 'JSON number with integer'
+        required: false
+        default: false
       prudynt-t-signature:
         type: boolean
         description: 'Enable prudynt-t signature verification'
@@ -366,6 +371,19 @@ jobs:
           
           cd /tmp
           ls -ltr prudynt-t/include/
+
+          # JSON库升级导编译失败
+          if [[ "${{ github.event.inputs.prudynt-t_json_number_with_integer }}" == 'false' ]]; then
+            echo "prudynt-t JSON library is not new version, update JsonAPI.cpp and Config.cpp"
+            # 遍历全部文件，替换 number.integer 为 number
+            find . -type f -name "*.cpp" -exec sed -i 's/number.integer/number/g' {} \;
+            # 遍历全部文件，替换 number.kind 为 number
+            find . -type f -name "*.cpp" -exec sed -i 's/number.kind/number/g' {} \;
+            # 遍历全部文件，替换 number.real 为 number
+            find . -type f -name "*.cpp" -exec sed -i 's/number.real/number/g' {} \;
+            # 遍历全部文件，替换 JSON_NUMBER_INT 为 JSON_NUMBER
+            find . -type f -name "*.cpp" -exec sed -i 's/JSON_NUMBER_INT/JSON_NUMBER/g' {} \;
+          fi
 
           mv prudynt-t prudynt-t-${TAG}
 
