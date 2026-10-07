@@ -658,29 +658,15 @@ jobs:
       - name: Update webui files
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
-          # 复制当前项目目录到/tmp
-          REPO_FULL="${{ github.repository }}"
-          REPO_NAME="${REPO_FULL#*/}"
-          echo "Repository name: $REPO_NAME"
-          echo "copied repository to /tmp/$REPO_NAME"
-          cd ../
-          cp -r $REPO_NAME /tmp/$REPO_NAME
-          ls -ltr /tmp/$REPO_NAME
-          cd /tmp/$REPO_NAME
-          echo "current branch: $(git branch), prepare to checkout iborder branch"
-          git fetch --all --no-recurse-submodules
-          echo "fetched all branches"
-          if git show-ref --verify --quiet refs/remotes/origin/iborder; then
-            echo "iborder branch found"
-            git checkout iborder 
-            echo "iborder branch checked out successfully"
-          else
-            echo "iborder branch not found"
-            exit 1
-          fi
-
           cd $GITHUB_WORKSPACE
-          cat buildroot/package/libunistring/libunistring.mk | head -15
+
+          # 修复电机配置问题
+          echo "BR2_PACKAGE_ZEROTIER_ONE=y" >> configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
+          # configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv.uenv.txt 删除gpio_default开头的行
+          sed -i '/^gpio_default/d' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv.uenv.txt
+          echo "gpio_default=11O 25ID 26IDU 54o 52o 53o 64o 61o 62o 63o 51o" >> configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv.uenv.txt
+          # configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/motors.json 替换"homing": true, "homing": false,
+          sed -i 's/homing\": true/homing\": false/' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/motors.json
 
           # git更新
           git pull --no-recurse-submodules
