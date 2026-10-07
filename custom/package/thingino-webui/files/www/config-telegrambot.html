@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>thingino · Telegram 机器人服务</title>
+  <script src="/a/theme-init.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/a/main.css">
+</head>
+
+<body id="page-service-telegrambot">
+<nav data-app-nav></nav>
+
+<main class="pb-4">
+  <div class="container" style="min-height:80vh">
+    <div data-app-controls></div>
+
+    <section>
+      <form id="telegrambotForm" class="needs-validation" novalidate autocomplete="off">
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title">Telegram 机器人服务</h2>
+            <small>配置 Telegram 机器人来控制您的相机</small>
+            <button type="button" class="btn btn-outline-secondary" id="telegrambot-reload" title="从相机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="row g-4 mb-4">
+              <div class="col-12 col-lg-6">
+                <h4>机器人设置</h4>
+                <p class="form-switch">
+                  <input type="checkbox" class="form-check-input" id="enabled" name="enabled">
+                  <label class="form-check-label" for="enabled">启动时启动 Telegram 机器人</label>
+                </p>
+                <p>
+                  <label for="token">机器人令牌</label>
+                  <input type="text" id="token" name="token" class="form-control" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
+                  <span class="hint text-secondary">点击 <a href="#" data-bs-toggle="modal" data-bs-target="#helpModal">这里</a> 获取帮助</span>
+                </p>
+                <p>
+                  <label for="users">仅响应这些用户</label>
+                  <input type="text" id="users" name="users" class="form-control" placeholder="user1 user2 user3">
+                  <span class="hint text-secondary">以空格分隔的 Telegram 用户名列表</span>
+                </p>
+              </div>
+              <div class="col-12 col-lg-6">
+                <h4>帮助</h4>
+                <p>创建 Telegram 机器人：</p>
+                <ol>
+                  <li>与 <a href="https://t.me/BotFather" target="_blank">@BotFather</a> 开始聊天</li>
+                  <li>输入 <code>/start</code> 开始会话</li>
+                  <li>输入 <code>/newbot</code> 创建新机器人</li>
+                  <li>给机器人起个名字，例如 <i>cool_cam_bot</i></li>
+                  <li>给机器人起个用户名，例如 <i>CoolCamBot</i></li>
+                  <li>复制 BotFather 分配的令牌并粘贴到上方</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="bot-commands">
+              <h4>机器人命令</h4>
+              <p class="hint mb-3">使用 $chat_id 变量表示活动聊天 ID。</p>
+              <button type="button" class="btn btn-secondary btn-sm mb-2" id="add-command">添加命令</button>
+              <table class="table table-sm table-striped">
+                <thead>
+                  <tr>
+                    <th>命令</th>
+                    <th>描述</th>
+                    <th>操作</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="commands-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <button type="submit" id="telegrambot_submit" class="btn btn-primary">保存更改</button>
+        <button type="button" id="telegrambot-restart" class="btn btn-outline-warning ms-2">
+          <i class="bi bi-arrow-repeat"></i> 重启服务
+        </button>
+      </form>
+
+      <div class="alert alert-dark ui-debug d-none mt-3">
+        <h4 class="mb-3">调试信息</h4>
+        <pre id="debug-output"></pre>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="helpModalLabel">创建 Telegram 机器人</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>为您的相机创建 Telegram 机器人：</p>
+        <ol>
+          <li>在 Telegram 上与 <a href="https://t.me/BotFather" target="_blank">@BotFather</a> 开始聊天</li>
+          <li>发送命令 <code>/start</code> 开始</li>
+          <li>发送命令 <code>/newbot</code> 创建新机器人</li>
+          <li>按照提示给机器人起一个显示名称（例如"我的相机机器人"）</li>
+          <li>给机器人起一个以"bot"结尾的唯一用户名（例如"MyCameraBot"）</li>
+          <li>BotFather 会提供一个令牌 - 复制这个令牌</li>
+          <li>将令牌粘贴到上方的"机器人令牌"字段中</li>
+          <li>对于"仅响应这些用户"，输入您的 Telegram 用户名以限制机器人访问权限</li>
+        </ol>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer data-app-footer></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script src="/a/main.js"></script>
+<script src="/a/runtime-config.js"></script>
+<script src="/a/control-bar.js"></script>
+<script src="/a/navigation.js"></script>
+<script src="/a/footer.js"></script>
+<script src="/a/config-telegrambot.js"></script>
+</body>
+</html>

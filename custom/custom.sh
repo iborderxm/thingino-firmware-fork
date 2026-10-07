@@ -19,10 +19,6 @@ cd $target_dir
 mkdir -p overlay/etc/init.d
 mkdir -p overlay/usr/sbin
 
-# 修复thingino-jct编译错误
-# cp -r custom/patch/0001-strtok_2_strtok_r.patch package/thingino-jct/
-# cp -r custom/patch/jct_logs.patch package/thingino-jct/
-
 # 配置时区
 echo "CST-8" > overlay/etc/TZ
 echo "Asia/Shanghai" > overlay/etc/timezone
@@ -54,6 +50,10 @@ cat Config.in | grep imapautoclean
 
 sed -i '$a BR2_PACKAGE_IMAPAUTOCLEAN=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig 
 cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
+
+# 更新覆盖thingino-webui和wifi
+\cp -r custom/package/thingino-webui package/thingino-webui
+\cp -r custom/package/wifi package/wifi
 
 # 替换bootstrap国内cdn
 cd package/thingino-webui/files/www

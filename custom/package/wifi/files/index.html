@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh" data-bs-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width,initial-scale=1" name="viewport">
+<title>Thingino 初始配置</title>
+<link rel="stylesheet" href="portal.min.css">
+<script src="portal.min.js"></script>
+</head>
+<body>
+<header class="my-4 text-center">
+<div class="container">
+<h1><img src="logo.svg" alt="Thingino Logo" class="img-fluid" id="logo"></h1>
+<h2>初始配置</h2>
+</div>
+</header>
+<main>
+<div class="container">
+<div id="loading" class="hidden">
+<div class="spinner"></div>
+<p class="text-center">正在保存...</p>
+</div>
+<div id="error-message" class="alert alert-danger hidden"></div>
+<div id="success-wlan" class="hidden">
+<div class="alert alert-success text-center">
+<h3>配置完成</h3>
+<p class="lead">摄像机正在重新启动以连接到无线网络</p>
+<p class="alert alert-warning mb-0">MAC 地址是<br><span class="lead" id="wlan-mac"></span></p>
+</div>
+<p>要开始使用，只需点击摄像机上的重置按钮。如果它已连接到互联网，它会告诉您其 IP 地址。如果您没有听到，别担心！在 DHCP 服务器租约中查找 IP 地址（通常在您的无线路由器中）</p>
+<p>有关配置信息和故障排除步骤，请参考<a href="https://github.com/themactep/thingino-firmware/wiki/">项目 Wiki</a></p>
+</div>
+
+<div id="success-wlanap" class="hidden">
+<div class="alert alert-success text-center">
+<h3>配置完成</h3>
+<p class="lead mb-0">您的摄像机正在重新启动以创建无线接入点</p>
+</div>
+<p>要开始，请在您的设备上找到 <b id="wlan-ssid-display"></b> 无线网络，使用您的密码连接，然后使用登录名 <b>root</b> 和您刚刚为该用户设置的密码在 <b>http://thingino.local/</b> 打开 Web 界面.</p>
+</div>
+
+<form id="config-form" class="my-3 needs-validation" novalidate>
+<div class="mb-2">
+<label class="form-label">主机名</label>
+<input class="form-control bg-light text-dark" type="text" name="hostname" id="hostname" required autocapitalize="none">
+<div class="invalid-feedback">请输入主机名</div>
+</div>
+<div class="mb-2">
+<label class="form-label">为用户 <b>root</b> 创建密码</label>
+<input class="form-control bg-light text-dark" type="text" name="rootpass" id="rootpass" required autocapitalize="none">
+<div class="invalid-feedback">请输入密码</div>
+</div>
+<div class="mb-2">
+<label class="form-label"><a data-bs-toggle="collapse" href="#collapse-rootpkey" role="button" aria-expanded="false" aria-controls="collapse-rootpkey">用户 <b>root</b> 的公钥</a> <span class="small">（可选）</span></label>
+<div class="collapse" id="collapse-rootpkey">
+<textarea class="form-control bg-light text-dark text-break" name="rootpkey" id="rootpkey" rows="3"></textarea>
+</div>
+</div>
+<div class="mb-2">
+<label class="form-label">Wi-Fi 网络名称/SSID <span class="small text-white">（区分大小写）</span></label>
+<div style="position: relative;">
+<input class="form-control bg-light text-dark" type="text" id="wlan_ssid" name="wlan_ssid" autocapitalize="none" placeholder="输入网络名称或扫描网络" required>
+<datalist id="networks-list"></datalist>
+<button class="btn btn-link" type="button" id="scan-btn" title="扫描网络">
+<span id="scan-spinner" class="hidden"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#495057" class="bi bi-arrow-clockwise" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg></span>
+<span id="scan-text"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#495057" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg></span>
+</button>
+</div>
+<div class="invalid-feedback">请输入网络名称</div>
+</div>
+<div class="mb-2">
+<label class="form-label">Wi-Fi 网络密码 <span class="small text-white">（区分大小写）</span></label>
+<input class="form-control bg-light text-dark" type="text" id="wlan_pass" name="wlan_pass" autocapitalize="none" minlength="8" pattern=".{8,64}" required>
+<div class="invalid-feedback">请输入 8 - 64 个字符的密码</div>
+</div>
+<div class="mb-2 boolean" id="wlan_ap_wrap">
+<span class="form-check form-switch">
+<input type="hidden" id="wlan_ap-false" name="wlan_ap" value="false">
+<input type="checkbox" id="wlan_ap" name="wlan_ap" value="true" role="switch" class="form-check-input">
+<label for="wlan_ap" class="form-check-label">启用Wi-Fi接入点</label>
+</span>
+</div>
+<input type="hidden" name="timezone" id="timezone" value="">
+<input type="submit" value="检查并保存" class="btn btn-primary my-4">
+</form>
+<div id="review-section" class="hidden">
+<div class="alert alert-secondary my-3">
+<h3>准备连接</h3>
+<p>请仔细检查输入的数据，如果发现错误请更正！</p>
+<dl class="row" id="verify">
+<dt>摄像机主机名</dt>
+<dd id="review-hostname"></dd>
+<dt><b>root</b>用户密码</dt>
+<dd id="review-rootpass"></dd>
+<dt id="review-network-label">Wi-Fi SSID</dt>
+<dd id="review-network-ssid"></dd>
+<dt id="review-password-label">Wi-Fi 密码</dt>
+<dd class="text-break" id="review-network-pass"></dd>
+<dt>时区</dt>
+<dd id="review-timezone"></dd>
+<dt id="review-rootpkey-label" class="hidden"><b>root</b> 用户SSH公钥 </dt>
+<dd class="small text-break" id="review-rootpkey"></dd>
+</dl>
+
+<div class="row text-center">
+<div class="col my-2">
+<button type="button" class="btn btn-danger" id="btn-edit">编辑数据</button>
+</div>
+<div class="col my-2">
+<button type="button" class="btn btn-success" id="btn-proceed">继续</button>
+</div>
+</div>
+</div>
+</div>
+
+<p class="small text-muted text-center" id="build-info"></p>
+</div>
+</main>
+
+<div class="hidden" id="timeout-warning">
+<div class="alert alert-warning text-center">
+<h5>超时警告</h5>
+<p class="mb-0">出于安全考虑,portal 将在 10 分钟后自动关闭,请重新启动摄像机以重新激活 portal</p>
+</div>
+</div>
+
+<script>
+const API_URL = '/x/api.cgi';
+const TIMEOUT_WARNING_MS = 540000;
+let formData = {};
+let systemInfo = {};
+let timeoutWarningTimer;
+
+function showElement(id) {
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function hideElement(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+
+function showError(message) {
+  const errorEl = document.getElementById('error-message');
+  errorEl.textContent = message;
+  showElement('error-message');
+}
+
+function hideError() {
+  hideElement('error-message');
+}
+
+function scheduleTimeoutWarning() {
+  clearTimeout(timeoutWarningTimer);
+  hideElement('timeout-warning');
+  timeoutWarningTimer = setTimeout(() => {
+    showElement('timeout-warning');
+  }, TIMEOUT_WARNING_MS);
+}
+
+function cancelTimeoutWarning() {
+  clearTimeout(timeoutWarningTimer);
+  hideElement('timeout-warning');
+}
+
+async function apiCall(action, data = {}) {
+  let response;
+  if (action === 'save') {
+    const params = new URLSearchParams(data);
+    response = await fetch(`${API_URL}?action=save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+  } else {
+    const params = new URLSearchParams({ action, ...data });
+    response = await fetch(`${API_URL}?${params}`);
+  }
+  if (!response.ok) throw new Error('Network error');
+  return response.json();
+}
+
+async function loadSystemInfo() {
+  try {
+    const data = await apiCall('get_info');
+    systemInfo = data;
+    document.getElementById('hostname').value = data.hostname || '';
+    document.getElementById('build-info').innerHTML = `Built for ${data.image_id || 'Unknown'}<br>${data.build_id || ''}`;
+    if (data.wlan_mac) {
+      document.getElementById('wlan-mac').textContent = data.wlan_mac;
+    }
+  } catch (e) {
+    showError('加载系统信息失败');
+  }
+}
+
+function validateHostname(hostname) {
+  const badChars = hostname.replace(/[0-9A-Z\.-]/ig, '');
+  return badChars.length === 0 ? null : `主机名不能包含 ${badChars}`;
+}
+
+function collectFormData() {
+  const data = {
+    hostname: document.getElementById('hostname').value,
+    rootpass: document.getElementById('rootpass').value,
+    rootpkey: document.getElementById('rootpkey').value,
+    timezone: document.getElementById('timezone').value,
+    wlan_ssid: document.getElementById('wlan_ssid').value,
+    wlan_pass: document.getElementById('wlan_pass').value,
+    wlan_ap: document.getElementById('wlan_ap').checked ? 'true' : 'false'
+  };
+  return data;
+}
+
+function showReview(data) {
+  hideError();
+  hideElement('config-form');
+  scheduleTimeoutWarning();
+
+  document.getElementById('review-hostname').textContent = data.hostname;
+  document.getElementById('review-rootpass').textContent = data.rootpass;
+  document.getElementById('review-timezone').textContent = data.timezone || '';
+  document.getElementById('review-network-ssid').textContent = data.wlan_ssid;
+  document.getElementById('review-network-pass').textContent = data.wlan_pass;
+
+  if (data.rootpkey) {
+    document.getElementById('review-rootpkey').textContent = data.rootpkey;
+    document.getElementById('review-rootpkey-label').classList.remove('hidden');
+  } else {
+    document.getElementById('review-rootpkey-label').classList.add('hidden');
+  }
+
+  showElement('review-section');
+}
+
+function showForm() {
+  hideElement('review-section');
+  showElement('config-form');
+  scheduleTimeoutWarning();
+}
+
+async function saveConfiguration(data) {
+  showElement('loading');
+  try {
+    const result = await apiCall('save', data);
+    hideElement('loading');
+
+    if (result.success) {
+      hideElement('config-form');
+      hideElement('review-section');
+
+      if (data.wlan_ap === 'true') {
+        document.getElementById('wlan-ssid-display').textContent = data.wlan_ssid;
+        showElement('success-wlan-ap');
+      } else {
+        showElement('success-wlan');
+      }
+      cancelTimeoutWarning();
+    } else {
+      showError(result.error || '保存配置失败');
+      showForm();
+    }
+  } catch (e) {
+    hideElement('loading');
+    showError('保存配置失败：' + e.message);
+    showForm();
+  }
+}
+
+document.getElementById('config-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const form = e.target;
+  if (!form.checkValidity()) {
+    form.classList.add('was-validated');
+    return;
+  }
+
+  const data = collectFormData();
+  const hostnameError = validateHostname(data.hostname);
+
+  if (hostnameError) {
+    showError(hostnameError);
+    return;
+  }
+
+  formData = data;
+  showReview(data);
+});
+
+document.getElementById('btn-edit').addEventListener('click', () => {
+  showForm();
+});
+
+document.getElementById('btn-proceed').addEventListener('click', () => {
+  saveConfiguration(formData);
+});
+
+document.getElementById('timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone.replaceAll('_', ' ');
+
+document.getElementById('wlan_pass').required;
+document.getElementById('wlan_ssid').required;
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// WiFi network scanning
+const scanBtn = document.getElementById('scan-btn');
+const scanSpinner = document.getElementById('scan-spinner');
+const scanText = document.getElementById('scan-text');
+const networksList = document.getElementById('networks-list');
+const ssidInput = document.getElementById('wlan_ssid');
+let scanInProgress = false;
+let networksScanned = false;
+
+// Only show datalist when user types at least 1 character
+ssidInput.addEventListener('input', () => {
+  if (networksScanned && ssidInput.value.length >= 1) {
+    ssidInput.setAttribute('list', 'networks-list');
+  } else {
+    ssidInput.removeAttribute('list');
+  }
+});
+
+scanBtn.addEventListener('click', async () => {
+  if (scanInProgress) return;
+
+  const originalPlaceholder = ssidInput.placeholder;
+  scanInProgress = true;
+  scanBtn.disabled = true;
+  ssidInput.disabled = true;
+  ssidInput.style.opacity = '0.6';
+  ssidInput.placeholder = '正在扫描网络...';
+  scanSpinner.classList.remove('hidden');
+  scanText.classList.add('hidden');
+
+  try {
+    const response = await fetch(`${API_URL}?action=scan_networks`);
+    const data = await response.json();
+
+    if (data.error) {
+      console.warn('Scan error:', data.error);
+      return; // Silently skip if scan already in progress
+    }
+
+    // Clear existing options
+    networksList.innerHTML = '';
+
+    if (data.networks) {
+      // Filter out the trailing null and duplicates
+      const networks = data.networks.filter(n => n && n.ssid);
+      const seen = new Set();
+
+      networks.forEach(network => {
+        if (!seen.has(network.ssid)) {
+          seen.add(network.ssid);
+          const option = document.createElement('option');
+          const signalBars = network.signal > -50 ? '▂▄▆█' : network.signal > -60 ? '▂▄▆' : network.signal > -70 ? '▂▄' : '▂';
+          option.value = network.ssid;
+          option.textContent = `${network.ssid} ${signalBars} (${network.security})`;
+          networksList.appendChild(option);
+        }
+      });
+
+      // Mark that networks have been scanned and update placeholder
+      networksScanned = true;
+      ssidInput.placeholder = '开始输入以选择网络';
+    }
+  } catch (error) {
+    // Don't show alert for aborted fetches (page refresh/navigation)
+    if (error.name !== 'AbortError' && error.message !== 'Failed to fetch') {
+      console.error('Scan failed:', error);
+      alert('扫描网络失败,请重试');
+    }
+  } finally {
+    scanInProgress = false;
+    scanBtn.disabled = false;
+    ssidInput.disabled = false;
+    ssidInput.style.opacity = '1';
+    if (!networksScanned) {
+      ssidInput.placeholder = originalPlaceholder;
+    }
+    scanSpinner.classList.add('hidden');
+    scanText.classList.remove('hidden');
+  }
+});
+
+scheduleTimeoutWarning();
+
+loadSystemInfo();
+</script>
+
+</body>
+</html>

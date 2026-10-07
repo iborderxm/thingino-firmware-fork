@@ -240,8 +240,6 @@ jobs:
           ref: ${{ github.event.inputs.branch || 'stable' }}
           fetch-depth: "1"
 
-
-
   generate-matrix:
     runs-on: ubuntu-26.04
     needs: check-updates
@@ -666,7 +664,6 @@ jobs:
           cd $GITHUB_WORKSPACE
           cat buildroot/package/libunistring/libunistring.mk | head -15
 
-          
           # git更新
           git pull --no-recurse-submodules
 

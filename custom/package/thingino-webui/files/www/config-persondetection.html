@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>thingino · 人形检测</title>
+  <script src="/a/theme-init.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/a/main.css">
+  <style>
+    #persondetection-editor-container {
+      cursor: default;
+    }
+    #preview {
+      cursor: default;
+    }
+    #persondetection-editor {
+      cursor: default;
+    }
+  </style>
+</head>
+
+<body id="page-config-persondetection">
+<nav data-app-nav></nav>
+
+<main class="pb-4">
+  <div class="container" style="min-height:80vh">
+    <div data-app-controls></div>
+    <div id="persondetection-alerts"></div>
+
+    <section>
+      <form id="persondetection-form" class="needs-validation" novalidate  autocomplete="off">
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title">人形检测</h2>
+            <small>配置人形检测参数和录制设置。</small>
+            <button type="button" class="btn btn-outline-secondary" id="persondetection-reload" title="从相机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <div class="col-12 col-lg-12">
+                <h4>通用设置</h4>
+                <small>基本检测配置</small>
+                <div class="d-flex gap-3 flex-wrap">
+                  <p class="form-switch mb-0">
+                    <input type="hidden" id="persondetection_enabled-false" name="persondetection_enabled" value="false">
+                    <input type="checkbox" id="persondetection_enabled" name="persondetection_enabled" value="true" role="switch" class="form-check-input">
+                    <label for="persondetection_enabled" class="form-check-label">启用人形检测</label>
+                  </p>
+                </div>
+              </div>
+              <div class="col-12 col-lg-6">
+                <h4>检测参数</h4>
+                <small>灵敏度和时间设置</small>
+                <p class="number-range">
+                  <label for="persondetection_sensitivity">检测灵敏度(0最不灵敏,5最灵敏)</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_sensitivity" name="persondetection_sensitivity" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="5" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
+                  </span>
+                </p>
+                <p class="number-range">
+                  <label for="persondetection_skip_frame_count">跳帧计数(检测跳过的帧数,每秒15帧,可以减小CPU负载)</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_skip_frame_count" name="persondetection_skip_frame_count" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="15" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
+                  </span>
+                </p>
+                <p class="number-range">
+                  <label for="persondetection_detect_distance">检测距离阈值(0:6米,1:8米,2:10米,3:11米,4:13米)</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_detect_distance" name="persondetection_detect_distance" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="4" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
+                  </span>
+                </p>
+              </div>
+              <div class="col-12 col-lg-6">
+                <h4>时间设置</h4>
+                <small>防抖和冷却时间</small>
+                <p class="number-range">
+                  <label for="persondetection_debounce_time">防抖:触发前所需的连续检测次数(防止误报)</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_debounce_time" name="persondetection_debounce_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="5" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
+                  </span>
+                </p>
+                <p class="number-range">
+                  <label for="persondetection_post_time">人员离开后继续录制的最短时间,没有sdcard不能大于180,单位秒</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_post_time" name="persondetection_post_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="300" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
+                  </span>
+                </p>
+                <p class="number-range">
+                  <label for="persondetection_cooldown_time">冷却时间(检测结束后过了冷却期才可以触发新检测,单位秒)</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_cooldown_time" name="persondetection_cooldown_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="30" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
+                  </span>
+                </p>
+                <p class="number-range">
+                  <label for="persondetection_init_time">初始化时间(初始启动延迟开启检测,以在系统启动期间忽略检测,单位秒)</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_init_time" name="persondetection_init_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="300" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
+                  </span>
+                </p>
+                <p class="number-range">
+                  <label for="persondetection_min_time">最小时间(检测开始后必须持续的最短时间,没有sdcard不能大于180)</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_min_time" name="persondetection_min_time" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="300" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title">录制设置</h2>
+            <small>配置检测到人形时的录制</small>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <div class="col-12 col-lg-6">
+                <h4>通道配置</h4>
+                <p class="form-select">
+                  <label for="persondetection_monitor_stream">检测通道</label>
+                  <select id="persondetection_monitor_stream" name="persondetection_monitor_stream" class="form-select" disabled>
+                    <option value="1">通道 1</option>
+                  </select>
+                </p>
+                <p class="form-select">
+                  <label for="persondetection_recording_stream">录制通道</label>
+                  <select id="persondetection_recording_stream" name="persondetection_recording_stream" class="form-select">
+                    <option value="0">通道 0(高清)</option>
+                    <option value="1">通道 1(标请)</option>
+                  </select>
+                </p>
+              </div>
+              <div class="col-12 col-lg-6">
+                <h4>录制时长</h4>
+                <p class="number-range">
+                  <label for="persondetection_recording_duration">录制时长（最大录制持续时间,0为无限制,没有sdcard不能大于180,单位秒）</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_recording_duration" name="persondetection_recording_duration" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="0" data-max="1800" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
+                  </span>
+                </p>
+                <p class="number-range">
+                  <label for="persondetection_recording_detection_interval">录制检测间隔（检测到人员后间隔多少秒再次检测,单位秒）</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_recording_detection_interval" name="persondetection_recording_detection_interval" class="form-control text-end" value="" pattern="[0-9]{1,}" title="numeric value" data-min="1" data-max="5" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="Open slider"></button>
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title">高级设置</h2>
+            <small>帧大小和轮询超时</small>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <div class="col-12 col-lg-4">
+                <p class="number-range">
+                  <label for="persondetection_frame_width">帧宽度（0为自动）</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_frame_width" name="persondetection_frame_width" class="form-control text-end" value="" pattern="[0-9]{1,}" title="数值" data-min="0" data-max="4096" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="打开滑块"></button>
+                  </span>
+                </p>
+              </div>
+              <div class="col-12 col-lg-4">
+                <p class="number-range">
+                  <label for="persondetection_frame_height">帧高度（0为自动）</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_frame_height" name="persondetection_frame_height" class="form-control text-end" value="" pattern="[0-9]{1,}" title="数值" data-min="0" data-max="4096" data-step="1">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="打开滑块"></button>
+                  </span>
+                </p>
+              </div>
+              <div class="col-12 col-lg-4">
+                <p class="number-range">
+                  <label for="persondetection_ivs_polling_timeout">IVS轮询超时（毫秒）</label>
+                  <span class="input-group">
+                    <input type="text" id="persondetection_ivs_polling_timeout" name="persondetection_ivs_polling_timeout" class="form-control text-end" value="" pattern="[0-9]{1,}" title="数值" data-min="1" data-max="5000" data-step="100">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" aria-label="打开滑块"></button>
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title">权限区域</h2>
+            <small>配置检测区域多边形</small>
+          </div>
+          <div class="card-body">
+            <div class="row mb-4">
+              <div class="col-auto">
+                <p class="form-switch mb-0">
+                  <input type="hidden" id="persondetection_enable_perm-false" name="persondetection_enable_perm" value="false">
+                  <input type="checkbox" id="persondetection_enable_perm" name="persondetection_enable_perm" value="true" role="switch" class="form-check-input">
+                  <label for="persondetection_enable_perm" class="form-check-label">启用权限区域</label>
+                </p>
+              </div>
+              <div class="col-auto">
+                <p class="form-switch mb-0">
+                  <input type="hidden" id="persondetection_enable_move-false" name="persondetection_enable_move" value="false">
+                  <input type="checkbox" id="persondetection_enable_move" name="persondetection_enable_move" value="true" role="switch" class="form-check-input">
+                  <label for="persondetection_enable_move" class="form-check-label">启用移动检测</label>
+                </p>
+              </div>
+            </div>
+            
+            <div id="persondetection-perm-config" class="d-none">
+              <div class="mb-4">
+                <h4>可视化编辑器</h4>
+                <div id="persondetection-editor-container" class="border rounded p-2 position-relative">
+                  <img id="preview" src="/a/nostream.svg" class="img-fluid" alt="图像：预览" tabindex="-1" data-stream="ch0">
+                  <canvas id="persondetection-editor" width="640" height="360" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                  <div class="mt-2 d-flex gap-2">
+                    <button type="button" id="persondetection-reset-area" class="btn btn-sm btn-outline-secondary">重置区域</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div id="persondetection-perms-container">
+              <div class="alert alert-info" role="alert">
+                权限区域配置需要在启用权限区域后设置
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title">保存路径</h2>
+            <small>保存检测录制的目录路径</small>
+          </div>
+          <div class="card-body">
+            <p class="form-text">
+              <label for="persondetection_save_path">保存路径</label>
+              <input type="text" id="persondetection_save_path" name="persondetection_save_path" class="form-control" value="" placeholder="/mnt/mmc/persondetection">
+            </p>
+          </div>
+        </div>
+
+        <div class="text-end">
+          <button type="button" id="save-prudynt-config" class="btn btn-primary">
+            <i class="bi bi-floppy me-1"></i> 保存配置到文件
+          </button>
+        </div>
+      </form>
+
+      <form id="persondetection-notification-form" class="needs-validation" novalidate autocomplete="off" style="margin-top: 20px;">
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title">通知设置</h2>
+            <small>配置人形检测的邮件通知和视频文件处理方式</small>
+            <button type="button" class="btn btn-outline-secondary" id="notification-reload">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <!-- 通用设置 -->
+              <div class="col-12 col-lg-12">
+                <div class="card h-100">
+                  <div class="card-header">通用设置</div>
+                  <div class="card-body">
+                    <p class="form-switch">
+                      <input type="checkbox" class="form-check-input" id="email_enable" name="email_enable">
+                      <label class="form-check-label" for="email_enable">启用邮件通知</label>
+                    </p>
+                    <p class="form-select">
+                      <label for="video_file_type">视频文件处理方式</label>
+                      <select id="video_file_type" name="video_file_type" class="form-select">
+                        <option value="rename">重命名</option>
+                        <option value="delete">删除</option>
+                      </select>
+                      <small class="form-text text-secondary">视频文件发送后的处理方式,如果是重命名,那么会等到存储空间达到阈值后才会自动清理</small>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 发件人邮箱列表 -->
+              <div class="col-12 col-lg-4">
+                <div class="card h-100">
+                  <div class="card-header">发件邮箱SMTP/IMAP 服务器</div>
+                  <div class="card-body">
+                    <p>
+                      <label for="email_smtp_host">发件邮箱SMTP服务器地址</label>
+                      <input type="text" class="form-control" id="email_smtp_host" name="email_smtp_host" placeholder="smtp.gmail.com" required>
+                    </p>
+                    <p>
+                      <label for="email_smtp_port">发件邮箱SMTP端口</label>
+                      <input type="number" class="form-control" id="email_smtp_port" name="email_smtp_port" placeholder="587" required>
+                    </p>
+                    <p>
+                      <label for="email_imap_host">发件邮箱IMAP服务器地址</label>
+                      <input type="text" class="form-control" id="email_imap_host" name="email_imap_host" placeholder="imap.gmail.com" required>
+                    </p>
+                    <p>
+                      <label for="email_imap_port">发件邮箱IMAP端口</label>
+                      <input type="number" class="form-control" id="email_imap_port" name="email_imap_port" placeholder="993" required>
+                    </p>
+                    <p class="form-switch">
+                      <input type="checkbox" class="form-check-input" id="email_use_ssl" name="email_use_ssl">
+                      <label class="form-check-label" for="email_use_ssl">使用 TLS/SSL</label>
+                    </p>
+                    <p class="form-switch">
+                      <input type="checkbox" class="form-check-input" id="email_trust_cert" name="email_trust_cert">
+                      <label class="form-check-label" for="email_trust_cert">忽略 SSL 证书有效性</label>
+                    </p>
+                  </div>
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>发件邮箱</span>
+                    
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="add-from-email">
+                      <i class="bi bi-plus"></i> 添加
+                    </button>
+                  </div>
+                  <div class="card-body">
+                    <div id="from_email_list">
+                      <!-- 发件人邮箱项将在这里动态添加 -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 邮件地址 -->
+              <div class="col-12 col-lg-4">
+                <div class="card h-100">
+                  <div class="card-header">收件邮箱</div>
+                  <div class="card-body">
+                    <p>
+                      <label for="email_to_address">收件邮箱地址</label>
+                      <input type="email" class="form-control" id="email_to_address" name="email_to_address" placeholder="admin@example.com" required>
+                    </p>
+                    <p>
+                      <label for="email_to_password">收件邮箱授权码</label>
+                      <input type="password" class="form-control form-control-sm" id="email_to_password" name="email_to_password" placeholder="邮箱授权码">
+                    </p>
+                    <p>
+                      <label for="email_to_imap_host">收件邮箱IMAP服务器地址</label>
+                      <input type="text" class="form-control form-control-sm" id="email_to_imap_host" name="email_to_imap_host" placeholder="imap.163.com">
+                    </p>
+                    <p> 
+                      <label for="email_to_imap_port">收件邮箱IIMAP端口</label>
+                      <input type="number" class="form-control form-control-sm" id="email_to_imap_port" name="email_to_imap_port" placeholder="993">
+                    </p>
+                    <p class="form-switch">
+                      <input type="checkbox" class="form-check-input" id="email_auto_clean" name="email_auto_clean">
+                      <label class="form-check-label" for="email_auto_clean">自动清理旧邮件</label>
+                    </p>
+                    <p>
+                      <label for="email_clean_days">清理N天前邮件(天)</label>
+                      <input type="number" class="form-control" id="email_clean_days" name="email_clean_days" placeholder="7" required>
+                    </p>
+                    <p>
+                      <label for="email_clean_folder">邮箱清理文件夹(默认收件箱)</label>
+                      <input type="text" class="form-control" id="email_clean_folder" name="email_clean_folder" placeholder="收件箱">
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 邮件内容 -->
+              <div class="col-12 col-lg-4">
+                <div class="card h-100">
+                  <div class="card-header">邮件内容</div>
+                  <div class="card-body">
+                    <p>
+                      <label for="email_from_name">发件人名称</label>
+                      <input type="text" class="form-control" id="email_from_name" name="email_from_name" placeholder="from_name">
+                    </p>
+                    <p>
+                      <label for="email_subject">邮件主题</label>
+                      <input type="text" class="form-control" id="email_subject" name="email_subject" placeholder="检测到动作">
+                    </p>
+                    <p>
+                      <label for="email_body">邮件正文</label>
+                      <textarea class="form-control" id="email_body" name="email_body" rows="4" placeholder="在 %datetime% 检测到动作"></textarea>
+                      <small class="form-text text-secondary">换行将被替换为空格</small>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-end">
+          <button type="submit" class="btn btn-primary" id="save-notification-config">
+            <i class="bi bi-check-circle"></i> 保存通知设置
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer data-app-footer></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+<script src="/a/main.js"></script>
+<script src="/a/runtime-config.js"></script>
+<script src="/a/control-bar.js"></script>
+<script src="/a/navigation.js"></script>
+<script src="/a/footer.js"></script>
+<script src="/a/config-persondetection.js"></script>
+<script src="/a/streamer-config.js"></script>
+<script src="/a/preview.js"></script>
+<script>
+  // Disable fullscreen preview functionality for this page
+  document.addEventListener('DOMContentLoaded', function() {
+    const preview = document.getElementById('preview');
+    if (preview) {
+      // Remove any existing click event listeners that might open fullscreen
+      preview.addEventListener('click', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }, true);
+      
+      // Override the createPreviewModal function to prevent modal creation
+      window.createPreviewModal = function() { return; };
+    }
+  });
+</script>
+</body>
+</html>
