@@ -59,10 +59,11 @@ echo "iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig 配置完成:"
 cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
 
 # 更新覆盖thingino-webui和wifi
-\cp -r custom/package/thingino-webui package/thingino-webui
-\cp -r custom/package/wifi/files package/wifi/files
+cp -rf custom/package/thingino-webui package
+cp -rf custom/package/wifi package
+cat custom/package/wifi/files/index.html | grep "<title>"
 echo "更新覆盖thingino-webui和wifi 配置完成:"
-cat package/wifi/files/index.html | grep "初始化系统配置"
+cat package/wifi/files/index.html | grep "<title>"
 
 # 替换bootstrap国内cdn
 echo "替换bootstrap国内cdn 配置:"

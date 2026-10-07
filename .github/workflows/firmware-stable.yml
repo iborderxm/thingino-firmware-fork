@@ -33,6 +33,11 @@ on:
         description: 'Create GitHub release'
         required: false
         default: false
+      create_buildroot-dl-cache:
+        type: boolean
+        description: 'Create buildroot-dl-cache GitHub release'
+        required: false
+        default: false
       update_prudynt_config:
         type: boolean
         description: 'Update prudynt-t.mk configuration'
@@ -198,6 +203,7 @@ jobs:
 
       - name: Create release tag
         continue-on-error: true
+        if: ${{ github.event.inputs.create_release == 'true' }}
         run: |
           TAG_NAME="${{ env.TAG_NAME }}"
           if ! gh api repos/${{ github.repository }}/git/ref/tags/$TAG_NAME &>/dev/null; then
@@ -425,6 +431,8 @@ jobs:
         run: |
           echo "WEEK_NUMBER=$(date +%U)" >> $GITHUB_ENV
           echo "CURRENT_YEAR=$(date +%Y)" >> $GITHUB_ENV
+          DATE_TAG=$(date +'%Y-%m-%d')
+          echo "DATE_TAG=$DATE_TAG" >> $GITHUB_ENV
           echo "GIT_HASH=$(git rev-parse --short ${GITHUB_SHA})" >> $GITHUB_ENV
           echo "GIT_BRANCH=$(git branch --show-current)" >> $GITHUB_ENV
           echo "TAG_NAME=${{ needs.prepare-release.outputs.tag_name }}" >> $GITHUB_ENV
@@ -449,12 +457,18 @@ jobs:
 
       - name: Fetch buildroot-dl-cache release
         id: find_release
+        if: ${{ github.event.inputs.create_buildroot-dl-cache == 'false' }}
         run: |
-          REPO="themactep/thingino-firmware"
-          RELEASE_TAG=$(gh release list --repo "$REPO" --json name,tagName | jq -r '.[] | select(.name=="buildroot-dl-cache") | .tagName' | sort -r | head -1 || echo "")
+          REPO="${{ github.repository }}"
+          echo "打印所有release:"
+          gh release list --repo "$REPO" --json name,tagName | jq -r '.[] | {name:.name, tagName:.tagName}'
+          echo "打印所有release的tagName:"
+          gh release list --repo "$REPO" --json tagName | jq -r '.[] | .tagName'
+
+          RELEASE_TAG=$(gh release list --repo "$REPO" --json name,tagName | jq -r '.[] | select(.name | startswith("buildroot-dl-cache-${{ github.event.inputs.branch }}")) | .tagName' | sort -r | head -1 || echo "")
           if [ -z "$RELEASE_TAG" ]; then
-            echo "Could not find release with name 'buildroot-dl-cache', trying tags starting with 'update_cache'"
-            RELEASE_TAG=$(gh release list --repo "$REPO" --json tagName | jq -r '.[] | select(.tagName | startswith("update_cache")) | .tagName' | head -n 1 || echo "")
+            echo "Could not find release with name starting 'buildroot-dl-cache-${{ github.event.inputs.branch }}', trying tags starting with 'update_cache'"
+            RELEASE_TAG=$(gh release list --repo "$REPO" --json tagName | jq -r '.[] | select(.tagName | startswith("update_cache")) | .tagName' | sort -r | head -n 1 || echo "")
           fi
           if [ -n "$RELEASE_TAG" ]; then
             echo "Found release with tag: $RELEASE_TAG"
@@ -469,7 +483,7 @@ jobs:
         id: download_cache
         if: steps.find_release.outputs.release_found == 'true'
         run: |
-          REPO="themactep/thingino-firmware"
+          REPO="${{ github.repository }}"
           RELEASE_TAG="${{ steps.find_release.outputs.release_tag }}"
           mkdir -p /tmp/dl-cache
           echo "Downloading files from release with tag: $RELEASE_TAG"
@@ -514,11 +528,43 @@ jobs:
           echo "DL cache restored successfully"
 
       - name: Download buildroot sources if cache missing
-        if: steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true'
+        if: ${{ steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true' || github.event.inputs.create_buildroot-dl-cache == 'true' }}
         run: |
           echo "Buildroot DL cache not available, downloading sources..."
           BOARD=${{ matrix.thingino-version }} make source WORKFLOW=1
           echo "Source download completed"
+
+      - name: Prune Buildroot DL cache
+        if: ${{ github.event.inputs.create_buildroot-dl-cache == 'true' }}
+        run: |
+          find ~/dl/ -type d -name git -exec rm -rf {} +
+
+      - name: Compress DL directory with ZIP (store mode)
+        if: ${{ github.event.inputs.create_buildroot-dl-cache == 'true' }}
+        run: |
+          mkdir -p /tmp/dl-archive
+          cd ~/
+          # Using ZIP format with store method (no compression) for maximum speed
+          7z a -tzip -mx=0 -v1536m /tmp/dl-archive/buildroot-dl-cache.zip dl/
+
+      - name: Check archive files
+        if: ${{ github.event.inputs.create_buildroot-dl-cache == 'true' }}
+        run: |
+          ls -la /tmp/dl-archive/
+          echo "Archive created with the following parts:"
+          ls -lh /tmp/dl-archive/buildroot-dl-cache*.zip*
+
+      - name: Create buildroot-dl-cache GitHub Release
+        if: ${{ github.event.inputs.create_buildroot-dl-cache == 'true' }}
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2.1.0
+        with:
+          name: "buildroot-dl-cache-${{ github.event.inputs.branch }}-${{ env.DATE_TAG }}"
+          tag_name: "update_cache_${{ github.event.inputs.branch }}-${{ env.DATE_TAG }}"
+          files: /tmp/dl-archive/buildroot-dl-cache*.zip*
+          draft: false
+          prerelease: false
+          make_latest: false
 
       - name: Restore libimp-samples-musl cache
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
