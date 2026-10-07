@@ -728,21 +728,17 @@ jobs:
           sh1sum=$(sha1sum /tmp/live.${{ inputs.live555_version }}.tar.gz | awk '{print $1}')
           echo "sh1sum: $sh1sum"
 
-          sed -i "s/1ffd626ce2e2473196e55a473b7b5ba056326eeabf8fd5622cea6b123d8b6370/$hashcode/" package/all-patches/live555/live555.hash
-          sed -i 's/2026.04.22/${{ inputs.live555_version }}/' package/all-patches/live555/live555.hash
-          sed -i 's/2026.04.22/${{ inputs.live555_version }}/' package/thingino-live555/live555-override.mk
+          # buildroot/package/live555/live555.hash
+          sed -i "s/44eb6ae4ae02ef68a5028d9fc8b70c45b9ba45c058f846b68bc4d32c74355f49/$hashcode/" buildroot/package/live555/live555.hash
+          sed -i 's/2025.10.13/${{ inputs.live555_version }}/' buildroot/package/live555/live555.hash
+          sed -i 's/sha1/# sha1/' buildroot/package/live555/live555.hash
+          sed -i 's/2025.10.13/${{ inputs.live555_version }}/' package/thingino-live555/live555-override.mk
 
           # Verify the changes
           echo "Updated live555 configuration:"
-          cat package/all-patches/live555/live555.hash
+          cat buildroot/package/live555/live555.hash
           echo "------------------------------------------"
           cat package/thingino-live555/live555-override.mk | head -12
-
-          # package/thingino-uboot/thingino-uboot.mk 移除host-libyaml
-          cat package/thingino-uboot/thingino-uboot.mk | head -10
-          echo "------------------------------------------"
-          sed -i 's/host-libyaml //' package/thingino-uboot/thingino-uboot.mk
-          cat package/thingino-uboot/thingino-uboot.mk | head -10
 
       - name: Update buildroot
         if: ${{ github.event.inputs.update_buildroot != 'false' }}
