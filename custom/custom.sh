@@ -19,7 +19,8 @@ cd $target_dir
 mkdir -p overlay/etc/init.d
 mkdir -p overlay/usr/sbin
 
-# 配置时区
+# 配置系统时区
+echo "配置系统时区"
 echo "CST-8" > overlay/etc/TZ
 echo "Asia/Shanghai" > overlay/etc/timezone
 sed -i "s|GMT0|CST-8|g" overlay/etc/init.d/S01timezone
@@ -46,6 +47,7 @@ cp -r custom/send2email package/prudynt-t/files/send2email
 # 配置imapautoclean
 cp -r custom/package/imapautoclean package/imapautoclean
 sed -i '/source "$BR2_EXTERNAL_THINGINO_PATH\/package\/lightnvr\/Config.in"/a source "$BR2_EXTERNAL_THINGINO_PATH\/package\/imapautoclean\/Config.in"' Config.in
+echo "imapautoclean 配置完成:"
 cat Config.in | grep imapautoclean
 
 # 配置thingino-button
@@ -53,13 +55,17 @@ rm -rf package/thingino-button
 cp -r custom/package/thingino-button package/thingino-button
 
 sed -i '$a BR2_PACKAGE_IMAPAUTOCLEAN=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig 
+echo "iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig 配置完成:"
 cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
 
 # 更新覆盖thingino-webui和wifi
 \cp -r custom/package/thingino-webui package/thingino-webui
-\cp -r custom/package/wifi package/wifi
+\cp -r custom/package/wifi/files package/wifi/files
+echo "更新覆盖thingino-webui和wifi 配置完成:"
+cat package/wifi/files/index.html | grep "初始化系统配置"
 
 # 替换bootstrap国内cdn
+echo "替换bootstrap国内cdn 配置:"
 cd package/thingino-webui/files/www
 sed -i "s|integrity=|integrity1=|g" *.html
 target_key="bootstrap.min.css"
@@ -96,5 +102,6 @@ do
 done
 
 # 替换时区
+echo "替换时区 配置:"
 sed -i "s|GMT0|CST-8|g" x/*.cgi
 sed -i "s|GMT0|CST-8|g" x/*.raw
