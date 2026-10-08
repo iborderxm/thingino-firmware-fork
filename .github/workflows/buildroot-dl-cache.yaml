@@ -9,16 +9,15 @@ on:
         type: choice
         description: 'Branch to build cache from'
         required: false
-        default: 'stable20260419'
+        default: 'master'
         options:
           - master
           - stable
-          - stable20260419
       tg_disabled:
         type: boolean
         description: 'Disable Telegram notifications'
         required: false
-        default: true
+        default: false
       tg_scratch:
         type: boolean
         description: 'Use TG scratch channel'
@@ -28,7 +27,7 @@ on:
 env:
   BR2_DL_DIR: ~/dl
   FORCE_UNSAFE_CONFIGURE: 1
-  TAG_NAME: update_cache_${{ github.event.inputs.branch }}
+  TAG_NAME: update_cache
   TERM: linux
   TG_TOKEN: ${{secrets.TELEGRAM_TOKEN_BOT_THINGINO}}
   TG_CHANNEL: ${{secrets.TELEGRAM_CHANNEL_THINGINO_MULTI}}
@@ -124,7 +123,7 @@ jobs:
           echo "DATE_TAG=$DATE_TAG" >> $GITHUB_ENV
           TAG_NAME="$TAG_NAME-$DATE_TAG"
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-          # echo "RELEASE_NAME=buildroot-dl-cache-$DATE_TAG" >> $GITHUB_ENV
+          echo "RELEASE_NAME=buildroot-dl-cache-$DATE_TAG" >> $GITHUB_ENV
 
           echo "GIT_HASH=$(git rev-parse --short ${GITHUB_SHA})" >> $GITHUB_OUTPUT
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
@@ -136,7 +135,7 @@ jobs:
 
       - name: Download buildroot sources
         run: |
-          BOARD=${{ matrix.caches-version }} make source WORKFLOW=1
+          BOARD=${{ matrix.caches-version }} GROUP=github make source WORKFLOW=1
           TIME=$(date -d @${SECONDS} +%M:%S)
           echo "TIME=${TIME}" >> ${GITHUB_ENV}
 
@@ -160,7 +159,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.1.0
         with:
-          name: "buildroot-dl-cache-${{ github.event.inputs.branch }}"
+          name: "buildroot-dl-cache"
           tag_name: "${{ env.TAG_NAME }}"
           files: /tmp/dl-archive/buildroot-dl-cache*.zip*
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -196,7 +195,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'false'
-          ref: ${{ github.event.inputs.branch || 'stable20260419' }}
+          ref: ${{ github.event.inputs.branch || 'master' }}
 
       - name: Send notify completion summary
         if: ${{ env.TG_DISABLED == 'false' }}
