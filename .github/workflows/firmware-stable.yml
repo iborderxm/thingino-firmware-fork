@@ -3,42 +3,40 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        type: choice
-        description: 'Branch to build from'
-        required: false
-        default: 'stable'
-        options:
-          - stable
-          - master
-          - iborder
+        type: string
+        description: 'Branch, tag, or commit SHA to build from'
+        required: true
+        default: 'stable20260419'
 
       board_list:
         type: string
         description: 'Comma-separated list of boards to build (e.g. board1,board2)'
-        required: false
-
+        required: true
+        default: 'iflytek_xfp301m_t31x_jxq03_rtl8188ftv'
       debug_enabled:
         type: boolean
         description: 'Enable debug build with sanitizers'
         required: false
         default: false
-
       update_prudynt_config:
         type: boolean
         description: 'Update prudynt-t.mk configuration'
         required: false
         default: true
-
       prudynt-t-checkout:
         type: string
         description: 'Tag or branch name to checkout for prudynt-t. If not provided, uses latest tag.'
         required: false
-        
+      prudynt-t_json_number_with_integer:
+        type: boolean
+        description: 'JSON number with integer'
+        required: false
+        default: false
       prudynt-t-signature:
         type: boolean
         description: 'Enable prudynt-t signature verification'
         required: false
-        default: false
+        default: true
       prudynt-t-device-id:
         type: string
         description: 'Device ID for the prudynt-t build'
@@ -47,28 +45,48 @@ on:
         type: string
         description: 'MAC address for the prudynt-t build'
         required: false
-
+      update_live555_download_path:
+        type: boolean
+        description: 'Update live555 download path'
+        required: false
+        default: true
+      update_live555_config:
+        type: boolean
+        description: 'Update live555 configuration'
+        required: false
+        default: false
       live555_version:
         type: string
         description: 'live555 version (e.g. 2026.05.28)'
         required: false
         default: '2026.05.28'
+      update_buildroot:
+        type: boolean
+        description: 'Update buildroot'
+        required: false
+        default: true
 
 env:
   BR2_DL_DIR: ~/dl
   FORCE_UNSAFE_CONFIGURE: 1
-  TERM: linux
-  TZ: Asia/Shanghai
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  TERM: linux
+
+  TZ: Asia/Shanghai
 
 jobs:
   generate-matrix:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: check inputs
         run: |
+          # inputs.branch is required
+          if [[ -z "${{ github.event.inputs.branch }}" ]]; then
+            echo "inputs.branch is required"
+            exit 1
+          fi
           # prudynt-t-signature required device-id and MAC address
           if [[ "${{ github.event.inputs.prudynt-t-signature }}" == "true" ]]; then
             if [[ -z "${{ github.event.inputs.prudynt-t-device-id }}" || -z "${{ github.event.inputs.prudynt-t-mac }}" ]]; then
@@ -117,13 +135,13 @@ jobs:
   build-prudynt-t:
     name: ${{ matrix.thingino-version }}
     needs: generate-matrix
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 120
     defaults:
       run:
         shell: bash
     container:
-      image: debian:trixie
+      image: debian:forky
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.generate-matrix.outputs.matrix)}}
@@ -141,7 +159,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc ca-certificates cmake cpio curl file gawk gh git jq lzop m4 make p7zip-full perl procps python3 python3-dev python3-setuptools rsync tzdata u-boot-tools unzip wget libncurses-dev swig
+          apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 python3-dev python3-setuptools lzop rsync tzdata u-boot-tools unzip wget libncurses-dev swig help2man
 
       - name: Checkout prudynt-t
         uses: actions/checkout@v4
@@ -190,7 +208,22 @@ jobs:
           
           cd /tmp
           ls -ltr prudynt-t/include/
+
+          # JSON库升级导编译失败
+          if [[ "${{ github.event.inputs.prudynt-t_json_number_with_integer }}" == 'false' ]]; then
+            echo "prudynt-t JSON library is not new version, update JsonAPI.cpp and Config.cpp"
+            # 遍历全部文件，替换 number.integer 为 number
+            find . -type f -name "*.cpp" -exec sed -i 's/number.integer/number/g' {} \;
+            # 遍历全部文件，替换 number.kind 为 number
+            find . -type f -name "*.cpp" -exec sed -i 's/number.kind/number/g' {} \;
+            # 遍历全部文件，替换 number.real 为 number
+            find . -type f -name "*.cpp" -exec sed -i 's/number.real/number/g' {} \;
+            # 遍历全部文件，替换 JSON_NUMBER_INT 为 JSON_NUMBER
+            find . -type f -name "*.cpp" -exec sed -i 's/JSON_NUMBER_INT/JSON_NUMBER/g' {} \;
+          fi
+
           mv prudynt-t prudynt-t-${TAG}
+
           tar -czf ./prudynt-t-${TAG}.tar.gz prudynt-t-${TAG}
           ls -ltr
           mkdir webdir
@@ -211,25 +244,9 @@ jobs:
       - name: Checkout repository source
         uses: actions/checkout@v5
         with:
-          submodules: 'recursive'
-          ref: ${{ github.event.inputs.branch || 'stable' }}
-          fetch-depth: "0"
-
-      - name: Sync submodules to correct commit
-        run: |
-          echo "check .gitmodules"
-          cat .gitmodules
-
-          git submodule sync
-          git submodule update --init --recursive --remote
-
-          # buildroot/package/libwebsockets/libwebsockets.mk
-          if [ -d buildroot/package/libwebsockets ]; then
-            echo "libwebsockets directory exists"
-            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
-          else
-            echo "libwebsockets directory does not exist"
-          fi
+          submodules: 'true'
+          ref: ${{ github.event.inputs.branch }}
+          fetch-depth: "1"
 
       - name: Debug checked out branch and commit
         run: |
@@ -241,6 +258,7 @@ jobs:
           git log --oneline -1
 
       - name: Configure environment variables
+        id: env
         run: |
           echo "WEEK_NUMBER=$(date +%U)" >> $GITHUB_ENV
           echo "CURRENT_YEAR=$(date +%Y)" >> $GITHUB_ENV
@@ -265,11 +283,16 @@ jobs:
       - name: Fetch buildroot-dl-cache release
         id: find_release
         run: |
-          REPO="themactep/thingino-firmware"
-          RELEASE_TAG=$(gh release list --repo "$REPO" --json name,tagName | jq -r '.[] | select(.name=="buildroot-dl-cache") | .tagName' | sort -r | head -1 || echo "")
+          REPO="${{ github.repository }}"
+          echo "打印所有release:"
+          gh release list --repo "$REPO" --json name,tagName | jq -r '.[] | {name:.name, tagName:.tagName}'
+          echo "打印所有release的tagName:"
+          gh release list --repo "$REPO" --json tagName | jq -r '.[] | .tagName'
+
+          RELEASE_TAG=$(gh release list --repo "$REPO" --json name,tagName | jq -r '.[] | select(.name | startswith("buildroot-dl-cache-${{ github.event.inputs.branch }}")) | .tagName' | sort -r | head -1 || echo "")
           if [ -z "$RELEASE_TAG" ]; then
-            echo "Could not find release with name 'buildroot-dl-cache', trying tags starting with 'update_cache'"
-            RELEASE_TAG=$(gh release list --repo "$REPO" --json tagName | jq -r '.[] | select(.tagName | startswith("update_cache")) | .tagName' | head -n 1 || echo "")
+            echo "Could not find release with name starting 'buildroot-dl-cache-${{ github.event.inputs.branch }}', trying tags starting with 'update_cache'"
+            RELEASE_TAG=$(gh release list --repo "$REPO" --json tagName | jq -r '.[] | select(.tagName | startswith("update_cache")) | .tagName' | sort -r | head -n 1 || echo "")
           fi
           if [ -n "$RELEASE_TAG" ]; then
             echo "Found release with tag: $RELEASE_TAG"
@@ -284,7 +307,7 @@ jobs:
         id: download_cache
         if: steps.find_release.outputs.release_found == 'true'
         run: |
-          REPO="themactep/thingino-firmware"
+          REPO="${{ github.repository }}"
           RELEASE_TAG="${{ steps.find_release.outputs.release_tag }}"
           mkdir -p /tmp/dl-cache
           echo "Downloading files from release with tag: $RELEASE_TAG"
@@ -328,10 +351,17 @@ jobs:
           find ~/dl -type f | wc -l
           echo "DL cache restored successfully"
 
+      - name: Download buildroot sources if cache missing
+        if: steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true'
+        run: |
+          echo "Buildroot DL cache not available, downloading sources..."
+          BOARD=${{ matrix.thingino-version }} make source WORKFLOW=1
+          echo "Source download completed"
+
       - name: Restore libimp-samples-musl cache
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         id: cache-libimp
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz
           key: libimp-samples-musl-${{ runner.os }}-${{ hashFiles('~/dl/ingenic-lib/ingenic-lib-*-git4.tar.gz') }}
@@ -371,31 +401,98 @@ jobs:
           echo "$targzFileName compressed successfully"
           cd $currPath
 
-      - name: Download buildroot sources if cache missing
-        if: steps.find_release.outputs.release_found != 'true' || steps.download_cache.outputs.download_succeeded != 'true'
+      - name: download libunistring
+        if: ${{ github.event.inputs.update_buildroot != 'false' && steps.cache-libunistring.outputs.cache-hit != 'true' }}
         run: |
-          echo "Buildroot DL cache not available, downloading sources..."
-          BOARD=${{ matrix.thingino-version }} make source WORKFLOW=1
-          echo "Source download completed"
+          # 下载到/tmp/libunistring
+          wget -nv https://github.com/iborderxm/libunistring/archive/refs/tags/1.4.1.tar.gz -O /tmp/libunistring-1.4.1.tar.gz
+          echo "libunistring 1.4.1 downloaded successfully"
+          tar -xzf /tmp/libunistring-1.4.1.tar.gz -C /tmp/
+          echo "libunistring 1.4.1 extracted successfully"
+          echo "libunistring 1.4.1 files:"
+          # ls -la /tmp/libunistring-1.4.1/
+          echo "prepare executed patch"
+          patch -d /tmp/libunistring-1.4.1 -p1 < custom/patch/libunistring-1.4.1-0001-fix-gcc15-glibc-const-generic-macros.patch
+          echo "libunistring 1.4.1 patch successfully"
 
-      - name: Update webui files
-        if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
-        run: |
-          # 复制当前项目目录到/tmp
-          REPO_FULL="${{ github.repository }}"
-          REPO_NAME="${REPO_FULL#*/}"
-          echo "Repository name: $REPO_NAME"
-          echo "copied repository to /tmp/$REPO_NAME"
-          cd ../
-          cp -r $REPO_NAME /tmp/$REPO_NAME
-          ls -ltr /tmp/$REPO_NAME
-          cd /tmp/$REPO_NAME
-          git checkout iborder
+          cd /tmp
+          rm -rf libunistring-1.4.1.tar.gz
+          tar -cJf libunistring-1.4.1.tar.xz libunistring-1.4.1
+          echo "libunistring 1.4.1 compressed successfully"
+          ls -ltr /tmp/libunistring-1.4.1.tar.xz
+          # sha256sum
+          hashcode=$(sha256sum libunistring-1.4.1.tar.xz | awk '{print $1}')
+          echo "hashcode: $hashcode"
+          rm -rf ~/dl/libunistring/*
+          mv libunistring-1.4.1.tar.xz ~/dl/libunistring/
 
           cd $GITHUB_WORKSPACE
-          # fix jct
-          cp -r /tmp/$REPO_NAME/package/thingino-jct/0001-strtok_2_strtok_r.patch package/thingino-jct/
-          
+          # 更新buildroot/package/libunistring/libunistring.hash
+          sed -i "s/67d88430892527861903788868c77802a217b0959990f7449f2976126a307763/$hashcode/" buildroot/package/libunistring/libunistring.hash
+          echo "libunistring 1.4.1 hash updated successfully"
+
+      - name: download m4
+        if: ${{ github.event.inputs.update_buildroot != 'false' && steps.cache-m4.outputs.cache-hit != 'true' }}
+        run: |
+          # 下载到/tmp/m4
+          wget -nv https://github.com/iborderxm/m4/archive/refs/tags/1.4.20.tar.gz -O /tmp/m4-1.4.20.tar.gz
+          echo "m4 1.4.20 downloaded successfully"
+          tar -xzf /tmp/m4-1.4.20.tar.gz -C /tmp/
+          echo "m4 1.4.20 extracted successfully"
+          echo "m4 1.4.20 files:"
+          # ls -la /tmp/m4-1.4.20/
+          echo "prepare executed patch"
+          patch -d /tmp/m4-1.4.20 -p1 < custom/patch/m4-1.4.20-0001-fix-gcc15-glibc-const-generic-macros.patch
+          echo "m4 1.4.20 patch successfully"
+
+          cd /tmp
+          rm -rf m4-1.4.20.tar.gz
+          tar -cJf m4-1.4.20.tar.xz m4-1.4.20
+          echo "m4 1.4.20 compressed successfully"
+          ls -ltr /tmp/m4-1.4.20.tar.xz
+          # sha256sum
+          hashcode=$(sha256sum m4-1.4.20.tar.xz | awk '{print $1}')
+          echo "hashcode: $hashcode"
+          rm -rf ~/dl/m4/*
+          mv m4-1.4.20.tar.xz ~/dl/m4/
+
+          cd $GITHUB_WORKSPACE
+          # 更新buildroot/package/m4/m4.hash
+          sed -i "s/e236ea3a1ccf5f6c270b1c4bb60726f371fa49459a8eaaebc90b216b328daf2b/$hashcode/" buildroot/package/m4/m4.hash
+          echo "m4 1.4.20 hash updated successfully"
+
+      - name: download coreutils
+        if: ${{ github.event.inputs.update_buildroot != 'false' && steps.cache-coreutils.outputs.cache-hit != 'true' }}
+        run: |
+          # 下载到/tmp/coreutils
+          wget -nv https://github.com/iborderxm/coreutils/archive/refs/tags/9.8.tar.gz -O /tmp/coreutils-9.8.tar.gz
+          echo "coreutils 9.8 downloaded successfully"
+          tar -xzf /tmp/coreutils-9.8.tar.gz -C /tmp/
+          echo "coreutils 9.8 extracted successfully"
+          echo "coreutils 9.8 files:"
+          # ls -la /tmp/coreutils-9.8/
+          echo "prepare executed patch"
+          patch -d /tmp/coreutils-9.8 -p1 < custom/patch/coreutils-9.8-0001-fix-gcc15-glibc-const-generic-macros.patch
+          echo "coreutils 9.8 patch successfully"
+
+          cd /tmp
+          rm -rf coreutils-9.8.tar.gz
+          tar -cJf coreutils-9.8.tar.xz coreutils-9.8
+          echo "coreutils compressed successfully"
+          ls -ltr /tmp/coreutils-9.8.tar.xz
+          # sha256sum
+          hashcode=$(sha256sum coreutils-9.8.tar.xz | awk '{print $1}')
+          echo "hashcode: $hashcode"
+          rm -rf ~/dl/coreutils/*
+          mkdir -p ~/dl/coreutils/
+          mv coreutils-9.8.tar.xz ~/dl/coreutils/
+
+          cd $GITHUB_WORKSPACE
+          # 更新buildroot/package/coreutils/coreutils.hash
+          sed -i "s/sha1/# sha1/" buildroot/package/coreutils/coreutils.hash
+          sed -i "s/e6d4fd2d852c9141a1c2a18a13d146a0cd7e45195f72293a4e4c044ec6ccca15/$hashcode/" buildroot/package/coreutils/coreutils.hash
+          echo "coreutils 9.8 hash updated successfully"
+
       - name: Update ingenic-lib.mk configuration
         if: ${{ github.event.inputs.update_prudynt_config != 'false' }}
         run: |
@@ -419,18 +516,26 @@ jobs:
           sed -i '2i\PRUDYNT_T_SOURCE = prudynt-t-$(PRUDYNT_T_VERSION).tar.gz' package/prudynt-t/prudynt-t.mk
           sed -i '3i\PRUDYNT_T_SITE = http://127.0.0.1:8000' package/prudynt-t/prudynt-t.mk
           sed -i 's/\$(shell git show -s --format=%h)/${{ env.PRUDYNT_T_TAG }}/' package/prudynt-t/prudynt-t.mk
-          # 注入device-id和MAC地址
           if [[ "${{ github.event.inputs.prudynt-t-signature }}" == "true" ]]; then
-            sed -i 's|SDK_VERSION=\"$(SDK_VERSION)\"|SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" MAC_ADDRESS=\"${{ github.event.inputs.prudynt-t-mac }}\" WEBSOCKET_ENABLED=\"1\" SDK_VERSION=\"$(SDK_VERSION)\"|' package/prudynt-t/prudynt-t.mk
+            sed -i 's|SDK_VERSION=\"$(SDK_VERSION)\"|SIGNATURE_DEVICE_ID=\"${{ github.event.inputs.prudynt-t-device-id }}\" MAC_ADDRESS=\"${{ github.event.inputs.prudynt-t-mac }}\" SDK_VERSION=\"$(SDK_VERSION)\"|' package/prudynt-t/prudynt-t.mk
             sed -i 's/$(TARGET_CROSS)strip/# $(TARGET_CROSS)strip/' package/prudynt-t/prudynt-t.mk
             sed -i $'/\$(TARGET_CROSS)strip \$(@D)\/bin\/prudynt -o \$(TARGET_DIR)\/usr\/bin\/prudynt/a\\\n\tcp \$(@D)\/bin\/prudynt \$(TARGET_DIR)\/usr\/bin\/prudynt' package/prudynt-t/prudynt-t.mk
           fi
-          
+
           # Verify the changes
           echo "Updated prudynt-t.mk file:"
           pwd
           cat package/prudynt-t/prudynt-t.mk | head -250
 
+      - name: Update live555 download path
+        if: ${{ github.event.inputs.update_live555_download_path != 'false' }}
+        run: |
+          sed -i 's|https://download.videolan.org/contrib/live555|https://github.com/gtxaspec/live555-release-mirror/releases/download/v\$(LIVE555_VERSION)|' package/thingino-live555/live555-override.mk
+          cat package/thingino-live555/live555-override.mk | head -12
+
+      - name: Update live555 configuration
+        if: ${{ github.event.inputs.update_live555_config != 'false' }}
+        run: |
           # 临时修改live555配置
           # 下载 https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz 到/tmp
           wget https://github.com/gtxaspec/live555-release-mirror/releases/download/v${{ inputs.live555_version }}/live.${{ inputs.live555_version }}.tar.gz -P /tmp/
@@ -440,53 +545,29 @@ jobs:
           # 计算sh1sum
           sh1sum=$(sha1sum /tmp/live.${{ inputs.live555_version }}.tar.gz | awk '{print $1}')
           echo "sh1sum: $sh1sum"
-          # 替换live555.hash
+
+          # buildroot/package/live555/live555.hash
           sed -i "s/44eb6ae4ae02ef68a5028d9fc8b70c45b9ba45c058f846b68bc4d32c74355f49/$hashcode/" buildroot/package/live555/live555.hash
-          sed -i "s/483146b15c5fdb973b88fc318f2772f022253563/$sh1sum/" buildroot/package/live555/live555.hash
-          # buildroot/package/live555/live555.hash 替换 live.2025.10.13.tar.gz 为 live.${{ inputs.live555_version }}.tar.gz
           sed -i 's/2025.10.13/${{ inputs.live555_version }}/' buildroot/package/live555/live555.hash
-          # buildroot/package/live555/live555.mk文件 2025.10.13 替换为 ${{ inputs.live555_version }}
-          sed -i 's/2025.10.13/${{ inputs.live555_version }}/' buildroot/package/live555/live555.mk
-          # buildroot/package/live555/live555.mk文件 替换LIVE555_SOURCE live替换为v$(LIVE555_VERSION)/live
-          # sed -i 's/live/v\$(LIVE555_VERSION)\/live/' buildroot/package/live555/live555.mk
-          # buildroot/package/live555/live555.mk文件 替换下载地址
-          sed -i 's|https://download.videolan.org/contrib/live555|https://github.com/gtxaspec/live555-release-mirror/releases/download/v\$(LIVE555_VERSION)|' buildroot/package/live555/live555.mk
+          sed -i 's/sha1/# sha1/' buildroot/package/live555/live555.hash
+          sed -i 's/2025.10.13/${{ inputs.live555_version }}/' package/thingino-live555/live555-override.mk
 
           # Verify the changes
           echo "Updated live555 configuration:"
           cat buildroot/package/live555/live555.hash
-          cat buildroot/package/live555/live555.mk | head -12
+          echo "------------------------------------------"
+          cat package/thingino-live555/live555-override.mk | head -12
 
-          # package/thingino-uboot/thingino-uboot.mk 移除host-libyaml
-          sed -i 's/host-libyaml //' package/thingino-uboot/thingino-uboot.mk
-          cat package/thingino-uboot/thingino-uboot.mk | head -10
+      - name: Update buildroot
+        if: ${{ github.event.inputs.update_buildroot != 'false' }}
+        run: |
+          # 修改buildroot配置
+          sed -i '12i\HOST_MKPASSWD_DEPENDENCIES = host-libxcrypt' buildroot/package/mkpasswd/mkpasswd.mk
+          cat buildroot/package/mkpasswd/mkpasswd.mk | head -15
 
-          # configs/fragments/core.fragment 新增 BR2_TARGET_UBOOT_NEEDS_OPENSSL=y
-          # BR2_TARGET_UBOOT_NEEDS_LZOP=y的下一行新增BR2_TARGET_UBOOT_NEEDS_OPENSSL=y
-          sed -i '/BR2_TARGET_UBOOT_NEEDS_LZOP=y/a\BR2_TARGET_UBOOT_NEEDS_OPENSSL=y' configs/fragments/core.fragment
-          cat configs/fragments/core.fragment | head -10
+          chmod +x scripts/*.sh
+          chmod +x scripts/menu/*.sh
 
-          # 文件configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig末尾插入BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y
-          sed -i '$a\BR2_PACKAGE_PRUDYNT_T_WEBSOCKETS=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
-          # Verify the changes
-          echo "Updated configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig file:"
-          cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig | head -20
-
-          # buildroot/package/libwebsockets/libwebsockets.mk
-          if [ -d buildroot/package/libwebsockets ]; then
-            echo "libwebsockets directory exists"
-            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
-            # 版本4.5.8替换成4.5.7
-            echo "Replace libwebsockets version to 4.5.7"
-            sed -i 's/4.5.8/4.5.7/' buildroot/package/libwebsockets/libwebsockets.mk
-            cat buildroot/package/libwebsockets/libwebsockets.mk | head -10
-          else
-            echo "libwebsockets directory does not exist"
-          fi
-
-          echo "check .gitmodules"
-          cat .gitmodules
-          
       - name: Build prudynt-t only
         run: |
           ls -ltr /tmp/webdir/
@@ -507,11 +588,7 @@ jobs:
       - name: Verify prudynt-t binary
         run: |
           echo "Verifying prudynt-t binary..."
-          pwd
-          ls -ltr
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          ls -ltr $GITHUB_WORKSPACE/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/prudynt-t/target/usr/bin/
-          PRUDYNT_BIN=$(find $GITHUB_WORKSPACE/output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}-*/per-package/prudynt-t/target/usr/bin/ -name "prudynt" 2>/dev/null | head -n 1)
+          PRUDYNT_BIN=$(find ${HOME}/output/${{ github.event.inputs.branch }}/${{ matrix.thingino-version }}-*/per-package/prudynt-t/target/usr/bin/ -name "prudynt" 2>/dev/null | head -n 1)
           if [ -z "$PRUDYNT_BIN" ]; then
             echo "ERROR: prudynt binary not found"
             exit 1
@@ -519,21 +596,19 @@ jobs:
           echo "Found prudynt binary: $PRUDYNT_BIN"
           ls -lh "$PRUDYNT_BIN"
           file "$PRUDYNT_BIN"
-          mkdir -p output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin
-          cp -a "$(dirname "$PRUDYNT_BIN")/"* output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/
-          ls -ltr output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/
-          
+          mkdir -p output/${{ github.event.inputs.branch }}/${{ matrix.thingino-version }}/target/usr/bin
+          cp -a "$(dirname "$PRUDYNT_BIN")/"* output/${{ github.event.inputs.branch }}/${{ matrix.thingino-version }}/target/usr/bin/
+          ls -ltr output/${{ github.event.inputs.branch }}/${{ matrix.thingino-version }}/target/usr/bin/
+
           UPDATE_FW_DATETIME=$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')
           echo "UPDATE_FW_DATETIME=${UPDATE_FW_DATETIME}" >> ${GITHUB_ENV}
 
       - name: Encrypt prudynt-t binary with 7z
         run: |
           mkdir -p encrypted-artifacts
-          cp output/${{ github.event.inputs.branch || 'stable' }}/${{ matrix.thingino-version }}/target/usr/bin/prudynt* ./
-          7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z \
-            prudynt \
-            prudyntctl
-            
+          cp output/${{ github.event.inputs.branch }}/${{ matrix.thingino-version }}/target/usr/bin/prudynt* ./
+          7z a -p"${{ secrets.ARTIFACT_PASSWORD }}" -mhe=on encrypted-artifacts/firmware.7z prudynt*
+
       - name: Upload prudynt-t binary as artifact
         uses: actions/upload-artifact@v4
         with:
@@ -547,7 +622,7 @@ jobs:
           echo "=========================================="
           echo "prudynt-t Build Summary for ${{ matrix.thingino-version }}"
           echo "=========================================="
-          echo "Branch: ${{ github.event.inputs.branch || 'stable' }}"
+          echo "Branch: ${{ github.event.inputs.branch }}"
           echo "Git Hash: ${{ env.GIT_HASH }}"
           echo "Debug Build: ${{ github.event.inputs.debug_enabled }}"
           echo "=========================================="
