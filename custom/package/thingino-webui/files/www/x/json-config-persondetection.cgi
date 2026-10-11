@@ -68,15 +68,17 @@ load_persondetection_config() {
 apply_persondetection_payload() {
   local payload="$1"
   ensure_persondetection_file
-  
-  # Write payload to temp file for jct to read (handles multi-line JSON)
+
+  # 将 payload 写入临时文件供 jct 读取（支持多行 JSON）
   local payload_file
-  payload_file=$(mktemp /tmp/payload.XXXXXX)
+  payload_file=$(mktemp /tmp/persondetection-payload.XXXXXX)
   printf '%s' "$payload" >"$payload_file"
-  
-  # Extract values from payload and update config file using jct set
-  local enable type from_name body subject from_email_num smtp_host smtp_port imap_host imap_port trust_cert use_ssl to_address to_password to_imap_host to_imap_port auto_clean clean_days clean_folder
-  
+
+  # 提取各字段值
+  local enable type from_name body subject from_email_num
+  local smtp_host smtp_port imap_host imap_port trust_cert use_ssl
+  local to_address to_password to_imap_host to_imap_port auto_clean clean_days clean_folder
+
   enable=$(jct "$payload_file" get enable 2>/dev/null)
   type=$(jct "$payload_file" get type 2>/dev/null)
   from_name=$(jct "$payload_file" get from_name 2>/dev/null)
@@ -96,8 +98,8 @@ apply_persondetection_payload() {
   auto_clean=$(jct "$payload_file" get to_email.auto_clean 2>/dev/null)
   clean_days=$(jct "$payload_file" get to_email.clean_days 2>/dev/null)
   clean_folder=$(jct "$payload_file" get to_email.clean_folder 2>/dev/null)
-  
-  # Update simple fields - check if value is not null
+
+  # 更新简单字段：仅当值非空且非 null 时才写入
   [ -n "$enable" ] && [ "$enable" != "null" ] && jct "$PERSONDETECTION_CONFIG" set enable "$enable" >/dev/null 2>&1
   [ -n "$type" ] && [ "$type" != "null" ] && jct "$PERSONDETECTION_CONFIG" set type "$type" >/dev/null 2>&1
   [ -n "$from_name" ] && [ "$from_name" != "null" ] && jct "$PERSONDETECTION_CONFIG" set from_name "$from_name" >/dev/null 2>&1
@@ -110,26 +112,28 @@ apply_persondetection_payload() {
   [ -n "$imap_port" ] && [ "$imap_port" != "null" ] && jct "$PERSONDETECTION_CONFIG" set imap_port "$imap_port" >/dev/null 2>&1
   [ -n "$trust_cert" ] && [ "$trust_cert" != "null" ] && jct "$PERSONDETECTION_CONFIG" set trust_cert "$trust_cert" >/dev/null 2>&1
   [ -n "$use_ssl" ] && [ "$use_ssl" != "null" ] && jct "$PERSONDETECTION_CONFIG" set use_ssl "$use_ssl" >/dev/null 2>&1
-  [ -n "$to_address" ] && [ "$to_address" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_address" "$to_address" >/dev/null 2>&1\
-  [ -n "$to_password" ] && [ "$to_password" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_password" "$to_password" >/dev/null 2>&1\
-  [ -n "$to_imap_host" ] && [ "$to_imap_host" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_imap_host" "$to_imap_host" >/dev/null 2>&1\
-  [ -n "$to_imap_port" ] && [ "$to_imap_port" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_imap_port" "$to_imap_port" >/dev/null 2>&1\
-  [ -n "$auto_clean" ] && [ "$auto_clean" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.auto_clean" "$auto_clean" >/dev/null 2>&1\
-  [ -n "$clean_days" ] && [ "$clean_days" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.clean_days" "$clean_days" >/dev/null 2>&1\
-  [ -n "$clean_folder" ] && [ "$clean_folder" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.clean_folder" "$clean_folder" >/dev/null 2>&1\
-  
-  # Handle from_email array - build complete array JSON and set it
+
+  # 更新 to_email 嵌套字段（注意：每行必须以换行结束，不能用反斜杠续行，
+  # 否则下一行的 [ 会被拼接到上一行命令末尾导致语法错误）
+  [ -n "$to_address" ] && [ "$to_address" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_address" "$to_address" >/dev/null 2>&1
+  [ -n "$to_password" ] && [ "$to_password" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_password" "$to_password" >/dev/null 2>&1
+  [ -n "$to_imap_host" ] && [ "$to_imap_host" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_imap_host" "$to_imap_host" >/dev/null 2>&1
+  [ -n "$to_imap_port" ] && [ "$to_imap_port" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.to_imap_port" "$to_imap_port" >/dev/null 2>&1
+  [ -n "$auto_clean" ] && [ "$auto_clean" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.auto_clean" "$auto_clean" >/dev/null 2>&1
+  [ -n "$clean_days" ] && [ "$clean_days" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.clean_days" "$clean_days" >/dev/null 2>&1
+  [ -n "$clean_folder" ] && [ "$clean_folder" != "null" ] && jct "$PERSONDETECTION_CONFIG" set "to_email.clean_folder" "$clean_folder" >/dev/null 2>&1
+
+  # 处理 from_email 数组：仅当 from_email_num > 0 时才更新
   local from_email_count i
-  
-  # Get the array count from from_email_num
   from_email_count=$(jct "$payload_file" get from_email_num 2>/dev/null)
-  
+
   if [ -n "$from_email_count" ] && [ "$from_email_count" != "null" ] && [ "$from_email_count" -gt 0 ] 2>/dev/null; then
-    # Build the from_email array JSON manually
     local from_email_json="["
     i=0
     while [ "$i" -lt "$from_email_count" ]; do
-      local enabled_val from_username_val from_password_val from_address_val send_date_val fail_num_val auto_clean_val clean_days_val clean_folder_val
+      local enabled_val from_username_val from_password_val from_address_val
+      local send_date_val fail_num_val auto_clean_val clean_days_val clean_folder_val
+
       enabled_val=$(jct "$payload_file" get "from_email.$i.enabled" 2>/dev/null)
       from_username_val=$(jct "$payload_file" get "from_email.$i.from_username" 2>/dev/null)
       from_password_val=$(jct "$payload_file" get "from_email.$i.from_password" 2>/dev/null)
@@ -139,47 +143,60 @@ apply_persondetection_payload() {
       auto_clean_val=$(jct "$payload_file" get "from_email.$i.auto_clean" 2>/dev/null)
       clean_days_val=$(jct "$payload_file" get "from_email.$i.clean_days" 2>/dev/null)
       clean_folder_val=$(jct "$payload_file" get "from_email.$i.clean_folder" 2>/dev/null)
-      
-      # Handle null values
+
+      # null 值归一化
       [ "$enabled_val" = "null" ] && enabled_val="true"
       [ "$send_date_val" = "null" ] && send_date_val=""
       [ "$fail_num_val" = "null" ] && fail_num_val="0"
       [ "$auto_clean_val" = "null" ] && auto_clean_val="false"
       [ "$clean_days_val" = "null" ] && clean_days_val="1"
       [ "$clean_folder_val" = "null" ] && clean_folder_val=""
-      
-      # Build JSON object for this array element
-      if [ "$i" -gt 0 ]; then
-        from_email_json="${from_email_json},"
-      fi
-      
-      # Convert boolean to JSON boolean
+
+      # 布尔值归一化为 JSON 布尔
       local enabled_json
       if [ "$enabled_val" = "true" ] || [ "$enabled_val" = "1" ]; then
         enabled_json="true"
       else
         enabled_json="false"
       fi
-      
-      # Build the object
-      from_email_json="${from_email_json}{\"enabled\":$enabled_json,\"from_username\":\"$from_username_val\",\"from_password\":\"$from_password_val\",\"from_address\":\"$from_address_val\",\"send_date\":\"$send_date_val\",\"554_fail_num\":$fail_num_val,\"auto_clean\":$auto_clean_val,\"clean_days\":$clean_days_val,\"clean_folder\":\"$clean_folder_val\"}"
-      
+      local auto_clean_json
+      if [ "$auto_clean_val" = "true" ] || [ "$auto_clean_val" = "1" ]; then
+        auto_clean_json="true"
+      else
+        auto_clean_json="false"
+      fi
+
+      # 字符串字段必须经过 JSON 转义，防止引号/反斜杠破坏 JSON 结构
+      local from_username_esc from_password_esc from_address_esc send_date_esc clean_folder_esc
+      from_username_esc=$(json_escape "$from_username_val")
+      from_password_esc=$(json_escape "$from_password_val")
+      from_address_esc=$(json_escape "$from_address_val")
+      send_date_esc=$(json_escape "$send_date_val")
+      clean_folder_esc=$(json_escape "$clean_folder_val")
+
+      # 数字字段校验：非数字时回退到 0
+      case "$fail_num_val" in
+        ''|*[!0-9]*) fail_num_val="0" ;;
+      esac
+      case "$clean_days_val" in
+        ''|*[!0-9]*) clean_days_val="1" ;;
+      esac
+
+      [ "$i" -gt 0 ] && from_email_json="${from_email_json},"
+      from_email_json="${from_email_json}{\"enabled\":${enabled_json},\"from_username\":\"${from_username_esc}\",\"from_password\":\"${from_password_esc}\",\"from_address\":\"${from_address_esc}\",\"send_date\":\"${send_date_esc}\",\"554_fail_num\":${fail_num_val},\"auto_clean\":${auto_clean_json},\"clean_days\":${clean_days_val},\"clean_folder\":\"${clean_folder_esc}\"}"
+
       i=$((i + 1))
     done
     from_email_json="${from_email_json}]"
-    
-    # Create a temp file with only the from_email array
+
+    # 将 from_email 数组导入配置文件
     local from_email_only_file
-    from_email_only_file=$(mktemp /tmp/from_email_only.XXXXXX)
-    echo "{\"from_email\":$from_email_json}" > "$from_email_only_file"
-    
-    # Use jct import to merge the from_email array into the config
+    from_email_only_file=$(mktemp /tmp/persondetection-fromemail.XXXXXX)
+    printf '{"from_email":%s}' "$from_email_json" > "$from_email_only_file"
     jct "$PERSONDETECTION_CONFIG" import "$from_email_only_file" >/dev/null 2>&1
-    
     rm -f "$from_email_only_file"
   fi
-  
-  # Clean up payload temp file
+
   rm -f "$payload_file"
 }
 

@@ -35,13 +35,10 @@
   let frameWidth = 640;
   let frameHeight = 360;
 
-  function getDefaultPolygonPoints(width, height) {
-    // 0<width<frameWidth, 0<height<frameHeight
-    if (width <= 0 || width >= frameWidth || height <= 0 || height >= frameHeight) {
-      throw new Error('Invalid width or height');
-    }
-    const w = (width !== undefined && width !== null) ? width : frameWidth-1;
-    const h = (height !== undefined && height !== null) ? height : frameHeight-1;
+  // 生成默认八边形检测区域（覆盖整帧）
+  function getDefaultPolygonPoints() {
+    const w = frameWidth - 1;
+    const h = frameHeight - 1;
     return {
       pcnt: 8,
       points_x: [0, w / 2, w, w, w, w / 2, 0, 0],
@@ -265,11 +262,6 @@
   }
 
   async function savePersonDetectionParam(param) {
-    if (param === 'perms') {
-      await savePermsConfig();
-      return;
-    }
-
     const el = $('#persondetection_' + param);
     if (!el) return;
 
@@ -521,15 +513,18 @@
       loadPolygonsFromForm();
     }
     
-    previewImg.addEventListener('load', resizeCanvas);
+    // 图片加载完成后调整画布；若已加载则立即执行
+    if (previewImg.complete && previewImg.naturalWidth > 0) {
+      requestAnimationFrame(initFabricCanvas);
+    } else {
+      previewImg.addEventListener('load', () => requestAnimationFrame(initFabricCanvas), { once: true });
+    }
     window.addEventListener('resize', resizeCanvas);
-
-    setTimeout(initFabricCanvas, 100);
 
     const resetAreaBtn = document.getElementById('persondetection-reset-area');
     if (resetAreaBtn) {
       resetAreaBtn.addEventListener('click', async () => {
-        if (!(await confirm('确定要重置区域吗？这将恢复默认的检测区域设置。'))) return;
+        if (!window.confirm('确定要重置区域吗？这将恢复默认的检测区域设置。')) return;
         const defaults = getDefaultPolygonPoints();
         const polygonPoints = defaults.points_x.map((x, i) => ({ x, y: defaults.points_y[i] }));
         clearCanvas();
@@ -538,8 +533,6 @@
         savePermsConfig();
       });
     }
-
-    setTimeout(loadPolygonsFromForm, 1000);
   }
 
   disablePersonDetectionInputs();
@@ -576,91 +569,86 @@
   function renderFromEmailList() {
     if (!fromEmailList) return;
     fromEmailList.innerHTML = '';
-    
+
     fromEmailData.forEach((item, index) => {
       const div = document.createElement('div');
       div.className = 'border rounded p-2 mb-2 from_email_item';
+      div.dataset.index = String(index);
+
+      // 使用 textContent / setAttribute 设置值，避免 XSS
       div.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-2">
           <span class="fw-bold">发件邮箱 #${index + 1}</span>
-          <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFromEmail(${index})">
+          <button type="button" class="btn btn-sm btn-outline-danger from-email-remove" data-index="${index}" title="删除该发件邮箱">
             <i class="bi bi-trash"></i>
           </button>
         </div>
         <p>
-          <label class="form-label small">发件邮箱用户名</label>
-          <input type="text" class="form-control form-control-sm from_email_username" data-index="${index}" value="${item.from_username || ''}" placeholder="邮箱用户名">
+          <label class="form-label small" for="from_email_username_${index}">发件邮箱用户名</label>
+          <input type="text" class="form-control form-control-sm from_email_username" id="from_email_username_${index}" data-index="${index}" placeholder="邮箱用户名">
         </p>
         <p>
-          <label class="form-label small">发件邮箱授权码</label>
-          <input type="password" class="form-control form-control-sm from_email_password" data-index="${index}" value="${item.from_password || ''}" placeholder="邮箱密码">
+          <label class="form-label small" for="from_email_password_${index}">发件邮箱授权码</label>
+          <input type="password" class="form-control form-control-sm from_email_password" id="from_email_password_${index}" data-index="${index}" placeholder="邮箱密码" autocomplete="new-password">
         </p>
         <p>
-          <label class="form-label small">发件邮箱地址</label>
-          <input type="email" class="form-control form-control-sm from_email_address" data-index="${index}" value="${item.from_address || ''}" placeholder="发件人邮箱地址">
+          <label class="form-label small" for="from_email_address_${index}">发件邮箱地址</label>
+          <input type="email" class="form-control form-control-sm from_email_address" id="from_email_address_${index}" data-index="${index}" placeholder="发件人邮箱地址">
         </p>
         <p class="form-switch">
-          <input type="checkbox" class="form-check-input" id="from_email_auto_clean" name="from_email_auto_clean" data-index="${index}" checked="${item.auto_clean || false}">
-          <label class="form-check-label" for="from_email_auto_clean">自动清理旧邮件</label>
+          <input type="checkbox" class="form-check-input from_email_auto_clean" id="from_email_auto_clean_${index}" data-index="${index}">
+          <label class="form-check-label" for="from_email_auto_clean_${index}">自动清理旧邮件</label>
         </p>
         <p>
-          <label class="form-label small">清理N天前邮件(天)</label>
-          <input type="number" class="form-control form-control-sm from_email_clean_days" data-index="${index}" value="${item.clean_days || 1}" placeholder="清理N天前邮件">
+          <label class="form-label small" for="from_email_clean_days_${index}">清理N天前邮件(天)</label>
+          <input type="number" class="form-control form-control-sm from_email_clean_days" id="from_email_clean_days_${index}" data-index="${index}" min="1" placeholder="清理N天前邮件">
         </p>
         <p>
-          <label class="form-label small">邮箱清理文件夹(默认已发送)</label>
-          <input type="text" class="form-control form-control-sm from_email_clean_folder" data-index="${index}" value="${item.clean_folder || '已发送'}" placeholder="已发送">
+          <label class="form-label small" for="from_email_clean_folder_${index}">邮箱清理文件夹(默认已发送)</label>
+          <input type="text" class="form-control form-control-sm from_email_clean_folder" id="from_email_clean_folder_${index}" data-index="${index}" placeholder="已发送">
         </p>
       `;
-      fromEmailList.appendChild(div);
-    });
 
-    // 绑定输入事件
-    fromEmailList.querySelectorAll('.from_email_username').forEach(input => {
-      input.addEventListener('change', updateFromEmailData);
-    });
-    fromEmailList.querySelectorAll('.from_email_password').forEach(input => {
-      input.addEventListener('change', updateFromEmailData);
-    });
-    fromEmailList.querySelectorAll('.from_email_address').forEach(input => {
-      input.addEventListener('change', updateFromEmailData);
-    });
-    fromEmailList.querySelectorAll('#from_email_auto_clean').forEach(input => {
-      input.addEventListener('change', updateFromEmailData);
-    });
-    fromEmailList.querySelectorAll('.from_email_clean_days').forEach(input => {
-      input.addEventListener('change', updateFromEmailData);
-    });
-    fromEmailList.querySelectorAll('.from_email_clean_folder').forEach(input => {
-      input.addEventListener('change', updateFromEmailData);
+      // 用 textContent/value 设置值，杜绝 HTML 注入
+      div.querySelector('.from_email_username').value = item.from_username || '';
+      div.querySelector('.from_email_password').value = item.from_password || '';
+      div.querySelector('.from_email_address').value = item.from_address || '';
+      div.querySelector('.from_email_auto_clean').checked = !!item.auto_clean;
+      div.querySelector('.from_email_clean_days').value = item.clean_days != null ? item.clean_days : 7;
+      div.querySelector('.from_email_clean_folder').value = item.clean_folder || '已发送';
+
+      fromEmailList.appendChild(div);
     });
   }
 
+  // 从 DOM 同步 from_email 数据，返回 true 表示全部合法，false 表示有错误
   function updateFromEmailData() {
     const emailItems = fromEmailList.querySelectorAll('.from_email_item');
-    
-    fromEmailData = [];
-    emailItems.forEach((item, index) => {
-      const username = item.querySelector('.from_email_username')?.value || '';
+    const newData = [];
+
+    for (let index = 0; index < emailItems.length; index++) {
+      const item = emailItems[index];
+      const username = item.querySelector('.from_email_username')?.value.trim() || '';
       const password = item.querySelector('.from_email_password')?.value || '';
-      const address = item.querySelector('.from_email_address')?.value || '';
-      const autoClean = item.querySelector('#from_email_auto_clean')?.checked || false;
-      const cleanDays = parseInt(item.querySelector('.from_email_clean_days')?.value || '7', 10);
+      const address = item.querySelector('.from_email_address')?.value.trim() || '';
+      const autoClean = !!item.querySelector('.from_email_auto_clean')?.checked;
+      const cleanDaysInput = item.querySelector('.from_email_clean_days')?.value;
+      const cleanDays = parseInt(cleanDaysInput, 10);
       const cleanFolder = item.querySelector('.from_email_clean_folder')?.value || '已发送';
-      
-      // 在 push 数据前添加验证 确保必填字段不为空
+
+      // 必填字段校验
       if (!username || !password || !address) {
         showAlert('danger', `无法保存通知设置：发件邮箱 #${index + 1} 缺少必填字段`);
-        throw new Error(`发件邮箱 #${index + 1} 缺少必填字段`);
+        return false;
       }
 
-      // 校验邮箱格式
+      // 邮箱格式校验
       if (!validateEmail(address)) {
         showAlert('danger', `无法保存通知设置：发件邮箱 #${index + 1} 邮箱格式无效`);
-        throw new Error(`发件邮箱 #${index + 1} 邮箱格式无效`);
+        return false;
       }
 
-      fromEmailData.push({
+      newData.push({
         enabled: true,
         from_username: username,
         from_password: password,
@@ -668,10 +656,13 @@
         send_date: "",
         "554_fail_num": 0,
         auto_clean: autoClean,
-        clean_days: cleanDays,
+        clean_days: Number.isNaN(cleanDays) ? 7 : cleanDays,
         clean_folder: cleanFolder
       });
-    });
+    }
+
+    fromEmailData = newData;
+    return true;
   }
 
   function validateEmail(email) {
@@ -679,10 +670,10 @@
     return re.test(email);
   }
 
-  window.removeFromEmail = function(index) {
+  function removeFromEmail(index) {
     fromEmailData.splice(index, 1);
     renderFromEmailList();
-  };
+  }
 
   function addFromEmail() {
     fromEmailData.push({
@@ -697,6 +688,24 @@
       clean_folder: '已发送'
     });
     renderFromEmailList();
+  }
+
+  // 事件委托：统一处理 from_email 列表中的点击和变更事件
+  if (fromEmailList) {
+    fromEmailList.addEventListener('click', (e) => {
+      const removeBtn = e.target.closest('.from-email-remove');
+      if (removeBtn) {
+        const idx = parseInt(removeBtn.dataset.index, 10);
+        if (!Number.isNaN(idx)) removeFromEmail(idx);
+      }
+    });
+
+    fromEmailList.addEventListener('change', (e) => {
+      const input = e.target.closest('input');
+      if (!input) return;
+      // 仅同步数据，不抛异常；保存时再做完整校验
+      updateFromEmailData();
+    });
   }
 
   function applyNotificationConfig(config = {}) {
@@ -763,10 +772,12 @@
 
   async function saveNotificationConfig() {
     const formData = new FormData(notificationForm);
-    
-    // 确保fromEmailData是最新的
-    updateFromEmailData();
-    
+
+    // 同步 from_email 数据，校验失败则中止保存
+    if (!updateFromEmailData()) {
+      return;
+    }
+
     const config = {
       enable: formData.get('email_enable') === 'on',
       type: formData.get('video_file_type') || 'rename',
