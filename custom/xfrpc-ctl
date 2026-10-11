@@ -1,0 +1,138 @@
+#!/bin/sh
+# xfrpc-ctl - 读写 xfrpc.toml 配置参数
+#
+# 用法：
+#   xfrpc-ctl get <顶层键>                  例：xfrpc-ctl get serverAddr
+#   xfrpc-ctl get <代理名> <键>             例：xfrpc-ctl get webui localPort
+#   xfrpc-ctl set <顶层键> <值>             例：xfrpc-ctl set enabled true
+#   xfrpc-ctl set <代理名> <键> <值>        例：xfrpc-ctl set rtsp enabled true
+#   xfrpc-ctl list                        列出所有代理名
+#
+# 说明：
+# - 代理固定为 [[proxies]] 数组表，按 name 寻址（当前为 webui / rtsp）。
+# - set 时自动识别值类型：true/false 与纯数字不加引号，其余按字符串加双引号。
+# - 成功输出值（get）或无输出（set）；失败打印错误到 stderr 并返回非零。
+
+CONF="${XFRPC_CONF:-/etc/xfrpc.toml}"
+
+usage() {
+    sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//' >&2
+    exit 2
+}
+
+# 两遍扫描：第一遍定位 name==section 的 proxies 段序号（段内 name 可能出现在目标键之后），
+# 第二遍在该段内查找/替换目标键。
+# 参数：模式(get/set) 区段(""表示顶层, 否则为代理名) 键 [值]
+awk_prog='
+NR==FNR {
+    # 第一遍：只记录目标 proxies 段的序号
+    if ($0 ~ /^[[:space:]]*\[\[proxies\]\]/) { pidx++; named = 0; next }
+    if ($0 ~ /^[[:space:]]*\[/) { next }
+    if (!named && $0 ~ /^[[:space:]]*name[[:space:]]*=/) {
+        v = $0; sub(/^[^=]*=[[:space:]]*/, "", v)
+        gsub(/^[ \t"]+|[ \t"]+$/, "", v)
+        if (pidx > 0 && v == section) target = pidx
+        named = 1
+    }
+    next
+}
+/^[[:space:]]*\[\[proxies\]\]/ {
+    p2++; in_target = (p2 == target)
+    if (mode == "set") print
+    next
+}
+/^[[:space:]]*\[/ {
+    in_target = 0
+    if (mode == "set") print
+    next
+}
+{
+    line = $0
+    # 去掉行尾注释与空白后提取键名
+    s = line; sub(/[[:space:]]*#.*/, "", s)
+    if (!found && s ~ /^[[:space:]]*[A-Za-z0-9_]+[[:space:]]*=/) {
+        k = s; sub(/^[[:space:]]*/, "", k); sub(/[[:space:]]*=.*/, "", k)
+        # 区段匹配：顶层要求在第一个 [[proxies]] 之前；否则要求在目标段内
+        if (section == "") { sec_ok = (p2 == 0) }
+        else               { sec_ok = in_target }
+        if (sec_ok && k == key) {
+            found = 1
+            if (mode == "get") {
+                v = s; sub(/^[^=]*=[[:space:]]*/, "", v)
+                gsub(/^[ \t"]+|[ \t"]+$/, "", v)
+                print v
+                exit 0
+            } else {
+                # 保留原缩进与键名，仅替换值
+                match(line, /^[[:space:]]*/); indent = substr(line, 1, RLENGTH)
+                print indent k " = " value
+                next
+            }
+        }
+    }
+    if (mode == "set") print line   # 非目标行原样透传；get 模式不输出
+}
+END {
+    # 未找到时以退出码 1 通知外壳；错误消息由外壳打印
+    # （awk 内写 /dev/stderr 在 MSYS 等环境不可用，且外壳本来就知道区段与键名）
+    if (!found) exit 1
+}
+'
+
+err_not_found() { # $1=区段(""为顶层) $2=键
+    echo "错误：未找到键 [${1:-顶层}] $2" >&2
+}
+
+do_get() { # $1=区段(""为顶层) $2=键
+    awk -v mode=get -v section="$1" -v key="$2" "$awk_prog" "$CONF" "$CONF" || {
+        err_not_found "$1" "$2"; return 1
+    }
+}
+
+do_set() { # $1=区段(""为顶层) $2=键 $3=值
+    local val="$3"
+    # 值类型识别：布尔 / 数字不加引号，其余加双引号
+    case "$val" in
+        true|false) ;;
+        *[!0-9]*|"") val="\"$val\"" ;;
+    esac
+    local tmp="$CONF.tmp.$$"
+    if awk -v mode=set -v section="$1" -v key="$2" -v value="$val" \
+           "$awk_prog" "$CONF" "$CONF" > "$tmp"; then
+        cat "$tmp" > "$CONF" && rm -f "$tmp"
+    else
+        rm -f "$tmp"
+        err_not_found "$1" "$2"
+        return 1
+    fi
+}
+
+[ $# -ge 1 ] || usage
+[ -f "$CONF" ] || { echo "错误：配置文件不存在 $CONF" >&2; exit 1; }
+
+case "$1" in
+    get)
+        case $# in
+            2) do_get "" "$2" ;;
+            3) do_get "$2" "$3" ;;
+            *) usage ;;
+        esac
+        ;;
+    set)
+        case $# in
+            3) do_set "" "$2" "$3" ;;
+            4) do_set "$2" "$3" "$4" ;;
+            *) usage ;;
+        esac
+        ;;
+    list)
+        awk '
+            /^[[:space:]]*\[\[proxies\]\]/ { inp = 1; next }
+            /^[[:space:]]*\[/ && !/^[[:space:]]*\[\[proxies\]\]/ { inp = 0; next }
+            inp && /^[[:space:]]*name[[:space:]]*=/ {
+                v=$0; sub(/^[^=]*=[[:space:]]*/,"",v)
+                gsub(/^[ \t"]+|[ \t"]+$/,"",v); print v
+            }' "$CONF"
+        ;;
+    *) usage ;;
+esac

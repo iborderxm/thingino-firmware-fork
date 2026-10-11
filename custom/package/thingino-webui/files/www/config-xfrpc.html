@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>thingino · xfrp 内网穿透</title>
+  <script src="/a/theme-init.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/a/main.css">
+</head>
+
+<body id="page-config-xfrpc">
+<nav data-app-nav></nav>
+
+<main class="pb-4">
+  <div class="container" style="min-height:80vh">
+    <div data-app-controls></div>
+
+    <div id="xfrpc-not-supported" class="alert alert-danger d-none">
+      <p><strong>此相机不支持 xfrp 内网穿透。</strong></p>
+      <p>您的系统上未找到 xfrpc-ctl 命令。</p>
+    </div>
+
+    <section>
+      <form id="xfrpcForm" class="needs-validation" novalidate>
+        <!-- 服务器设置 -->
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title"><i class="bi bi-hdd-network me-2"></i> xfrp 内网穿透客户端</h2>
+            <small>通过 frp 服务器把相机服务映射到公网。仅可修改以下白名单参数，不会增删配置项。</small>
+            <button type="button" class="btn btn-outline-secondary" id="xfrpc-reload" title="从相机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
+            </button>
+          </div><!-- .card-header -->
+          <div class="card-body">
+            <!-- 运行状态与服务控制 -->
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3 pb-3 border-bottom" id="xfrpc-status-row">
+              <span class="badge text-bg-secondary" id="xfrpc-status-badge"><i class="bi bi-question-circle"></i> 状态未知</span>
+              <small class="text-muted" id="xfrpc-status-detail"></small>
+              <div class="ms-auto d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-success" id="btn-start" title="启动 xfrpc 服务">
+                  <i class="bi bi-play-fill"></i> 启动
+                </button>
+                <button type="button" class="btn btn-sm btn-danger" id="btn-stop" title="停止 xfrpc 服务">
+                  <i class="bi bi-stop-fill"></i> 停止
+                </button>
+                <button type="button" class="btn btn-sm btn-warning" id="btn-restart" title="重启 xfrpc 服务">
+                  <i class="bi bi-arrow-repeat"></i> 重启
+                </button>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="server-addr">服务器地址 (serverAddr)</label>
+                <input type="text" class="form-control" id="server-addr" maxlength="253"
+                  placeholder="frp 服务器 IP 或域名" autocomplete="off">
+                <small class="form-text text-muted">frp 服务端的 IP 地址或域名。</small>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="server-port">服务器端口 (serverPort)</label>
+                <input type="number" class="form-control" id="server-port" min="1" max="65535"
+                  placeholder="7000" autocomplete="off">
+                <small class="form-text text-muted">frp 服务端监听端口（1-65535）。</small>
+              </div>
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="server-enabled">
+                  <label class="form-check-label" for="server-enabled">启用 xfrp 内网穿透 (enabled)</label>
+                </div>
+              </div>
+            </div>
+          </div><!-- .card-body -->
+        </div><!-- .card -->
+
+        <!-- 代理列表 -->
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title"><i class="bi bi-diagram-3 me-2"></i> 代理列表 (proxies)</h2>
+            <small>每个代理仅可修改启用状态与远程端口，名称、类型、本地端口为只读。</small>
+          </div><!-- .card-header -->
+          <div class="card-body">
+            <div id="proxies-list"></div>
+          </div><!-- .card-body -->
+        </div><!-- .card -->
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+          <button type="button" class="btn btn-primary" id="btn-save">
+            <i class="bi bi-check-circle"></i> 保存配置
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+</main>
+
+<footer data-app-footer></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script src="/a/main.js"></script>
+<script src="/a/runtime-config.js"></script>
+<script src="/a/control-bar.js"></script>
+<script src="/a/navigation.js"></script>
+<script src="/a/footer.js"></script>
+<script src="/a/config-xfrpc.js"></script>
+</body>
+</html>

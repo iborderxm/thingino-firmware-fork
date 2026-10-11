@@ -33,6 +33,11 @@ cp -r custom/process_monitor overlay/usr/sbin/process_monitor
 cp -r custom/checknet overlay/usr/sbin/checknet
 cp -r custom/checknet_prompt overlay/usr/sbin/checknet_prompt
 cp -r custom/imapautoclean overlay/usr/sbin/imapautoclean
+# 配置xfrpc
+cp -r custom/xfrpc-mipsel-linux-musl overlay/usr/sbin/xfrpc
+cp -r custom/xfrpc-ctl overlay/usr/sbin/xfrpc-ctl
+cp -r custom/xfrpc.toml overlay/etc/xfrpc.toml
+cp -r custom/S99xfrpc overlay/etc/init.d/S99xfrpc
 
 chmod 755 overlay/etc/init.d/*
 chmod 755 overlay/usr/sbin/*

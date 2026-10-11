@@ -1,0 +1,88 @@
+#!/bin/sh
+# S99xfrpc - xfrp 内网穿透客户端服务
+#
+# 开机自启策略：仅当 /etc/xfrpc.toml 顶层 enabled=true 时才启动，
+# 与 /etc/init.d 下其他 thingino 服务的 PIDFILE/DAEMON 惯例保持一致。
+
+. /usr/share/common
+
+DAEMON_SHORT="xfrpc"
+DAEMON_FULL="/usr/sbin/xfrpc"
+CONFIG="/etc/xfrpc.toml"
+DAEMON_ARGS="-c $CONFIG"
+PIDFILE="/var/run/xfrpc.pid"
+CTL="/usr/sbin/xfrpc-ctl"
+
+# 配置中顶层 enabled 是否为 true（经 xfrpc-ctl 读取）
+is_enabled() {
+	[ -x "$CTL" ] && [ "$($CTL get enabled 2>/dev/null)" = "true" ]
+}
+
+# 服务是否在运行：先查 PIDFILE 中的 PID，再按进程名兜底
+is_running() {
+	if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
+		return 0
+	fi
+	pidof "$DAEMON_SHORT" >/dev/null 2>&1
+}
+
+start() {
+	if [ ! -x "$DAEMON_FULL" ]; then
+		echo_error "$DAEMON_FULL not found or not executable"
+		return 1
+	fi
+
+	if [ ! -f "$CONFIG" ]; then
+		echo_error "Config file $CONFIG not found"
+		return 1
+	fi
+
+	if is_running; then
+		echo_info "xfrpc is already running"
+		return 0
+	fi
+
+	if ! is_enabled; then
+		echo_warning "xfrpc disabled in $CONFIG (enabled != true), not starting"
+		return 1
+	fi
+
+	echo_title "Starting xfrpc"
+	start_daemon
+}
+
+stop() {
+	echo_title "Stopping xfrpc"
+	stop_daemon
+}
+
+status() {
+	if is_running; then
+		echo_info "xfrpc is running (PID: $(pidof "$DAEMON_SHORT"))"
+		return 0
+	fi
+	echo_info "xfrpc is not running"
+	return 1
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		sleep 1
+		start
+		;;
+	status)
+		status
+		;;
+	*)
+		usage "{start|stop|restart|status}"
+		;;
+esac
+
+exit 0

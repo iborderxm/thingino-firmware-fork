@@ -42,6 +42,7 @@
       { label: 'Web 界面', href: '/config-webui.html' },
       { label: 'WireGuard VPN', href: '/config-wireguard.html' },
       { label: 'ZeroTier VPN', href: '/config-zerotier.html' },
+      { label: 'xfrp 内网穿透', href: '/config-xfrpc.html' },
       { type: 'divider' },
       { label: '重置...', href: '/reset.html' }
     );
