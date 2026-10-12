@@ -222,6 +222,9 @@ jobs:
             find . -type f -name "*.cpp" -exec sed -i 's/JSON_NUMBER_INT/JSON_NUMBER/g' {} \;
           fi
 
+          echo "check prudynt-t SIGNATURE_GENERATE:"
+          cat prudynt-t/Makefile | grep "SIGNATURE_GENERATE"
+
           mv prudynt-t prudynt-t-${TAG}
 
           tar -czf ./prudynt-t-${TAG}.tar.gz prudynt-t-${TAG}
