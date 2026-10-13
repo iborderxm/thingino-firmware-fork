@@ -1,4 +1,11 @@
 #!/bin/sh
+# json-config-persondetection.cgi - 人形检测配置
+#
+# GET  ：返回 /etc/persondetection.json 邮件通知配置，并附加 status 字段
+#        （prudynt 主进程的运行状态、PID、init 脚本是否存在）。
+# POST ：action=get|set 读写通知配置；
+#        action=start|stop|restart 经 /etc/init.d/S31prudynt 控制 prudynt
+#        主进程（人形检测所属的相机核心服务）。
 
 # Check authentication
 . /var/www/x/auth.sh
@@ -7,6 +14,10 @@ require_auth
 . /usr/share/common
 
 PERSONDETECTION_CONFIG="/etc/persondetection.json"
+# prudynt 主进程、其 init 脚本与 PID 文件（/usr/share/common 约定 /run/<name>.pid）
+SERVICE_NAME="prudynt"
+SERVICE_INIT="/etc/init.d/S31prudynt"
+SERVICE_PIDFILE="/run/prudynt.pid"
 REQ_FILE=""
 
 emit_json() {
@@ -63,6 +74,72 @@ ensure_persondetection_file() {
 load_persondetection_config() {
   ensure_persondetection_file
   cat "$PERSONDETECTION_CONFIG"
+}
+
+# prudynt 运行状态：优先检查 PID 文件（/run 与 /var/run 兼容），
+# 再回退到 pidof；输出 "true PID" 或 "false"
+get_running() {
+  local pid="" pf
+  for pf in "$SERVICE_PIDFILE" "/var/run/${SERVICE_NAME}.pid"; do
+    if [ -f "$pf" ]; then
+      pid=$(cat "$pf" 2>/dev/null)
+      if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        printf 'true %s' "$pid"
+        return
+      fi
+    fi
+  done
+  pid=$(pidof "$SERVICE_NAME" 2>/dev/null)
+  if [ -n "$pid" ]; then
+    printf 'true %s' "$(echo "$pid" | cut -d' ' -f1)"
+  else
+    printf 'false'
+  fi
+}
+
+# 轮询等待进程到达期望状态：$1=true 等待运行 / false 等待停止，$2=最多尝试次数
+# （每次间隔 0.5 秒）。prudynt 重启涉及传感器/ISP 初始化，需要数秒。
+wait_for_state() {
+  local expect="$1" tries="$2" i running
+  i=0
+  while [ "$i" -lt "$tries" ]; do
+    running="false"
+    case "$(get_running)" in
+      true*) running="true" ;;
+    esac
+    [ "$running" = "$expect" ] && return 0
+    i=$((i + 1))
+    sleep 0.5
+  done
+  return 1
+}
+
+# 服务控制：action = start|stop|restart，经 init 脚本执行
+handle_service_action() {
+  local action="$1"
+
+  if [ ! -x "$SERVICE_INIT" ]; then
+    json_error "501 Not Implemented" "prudynt 服务脚本未安装" "service_not_installed"
+  fi
+
+  local msg expect tries
+  case "$action" in
+    start)   msg="人形检测服务启动"; expect="true";  tries=12 ;;
+    stop)    msg="人形检测服务停止"; expect="false"; tries=10 ;;
+    restart) msg="人形检测服务重启"; expect="true";  tries=16 ;;
+  esac
+
+  # 后台执行 init 脚本（restart 内含停止等待 + 重新拉起，耗时较长），
+  # 与 restart-prudynt.cgi 同模式；输出送系统日志，不占用 CGI 输出
+  ("$SERVICE_INIT" "$action" 2>&1 | logger -t prudynt-webui -p daemon.info) &
+
+  # init 脚本无论成败都会 exit 0，故以动作后进程的实际存活状态判定成败
+  if wait_for_state "$expect" "$tries"; then
+    emit_json "" "{\"success\":true,\"message\":\"${msg}成功\"}"
+  else
+    emit_json "500 Internal Server Error" \
+      "{\"success\":false,\"message\":\"${msg}失败，请查看系统日志确认 prudynt 配置是否正确\"}"
+  fi
 }
 
 apply_persondetection_payload() {
@@ -201,9 +278,36 @@ apply_persondetection_payload() {
 }
 
 handle_get() {
-  local config
-  config=$(load_persondetection_config)
-  emit_json "" "$config"
+  ensure_persondetection_file
+
+  # 运行状态与 init 脚本可用性
+  local running run_raw pid svc_raw
+  running=$(get_running)
+  case "$running" in
+    true*) run_raw=true;  pid="${running#true }" ;;
+    *)     run_raw=false; pid="" ;;
+  esac
+  if [ -x "$SERVICE_INIT" ]; then
+    svc_raw=true
+  else
+    svc_raw=false
+  fi
+
+  # 将 status 合并进配置“副本”后输出，避免把易变的状态写回真实配置文件
+  local status_file resp_file
+  status_file=$(mktemp /tmp/persondetection-status.XXXXXX)
+  resp_file=$(mktemp /tmp/persondetection-get.XXXXXX)
+  printf '{"status":{"running":%s,"pid":"%s","service":%s}}' \
+    "$run_raw" "$pid" "$svc_raw" > "$status_file"
+  cp "$PERSONDETECTION_CONFIG" "$resp_file"
+  jct "$resp_file" import "$status_file" >/dev/null 2>&1
+  rm -f "$status_file"
+
+  # emit_json 内部会 exit，故先读出内容并清理临时文件再发送
+  local resp_json
+  resp_json=$(cat "$resp_file")
+  rm -f "$resp_file"
+  emit_json "" "$resp_json"
 }
 
 handle_post() {
@@ -227,6 +331,9 @@ handle_post() {
       fi
       apply_persondetection_payload "$config_payload"
       emit_json "" '{"ok":true}'
+      ;;
+    start|stop|restart)
+      handle_service_action "$action"
       ;;
     *)
       json_error "400 Bad Request" "Invalid action." "invalid_action"

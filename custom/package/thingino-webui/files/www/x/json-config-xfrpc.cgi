@@ -177,18 +177,24 @@ if [ "$REQUEST_METHOD" = "POST" ]; then
     fi
     case "$action" in
       start|stop|restart)
-        # 收集 init 脚本输出回传给前端；压平换行便于 JSON 转义
+        # 执行 init 脚本；原始输出只写系统日志，不回传前端，
+        # 避免泄露脚本内部细节（路径、进程信息等）
         out=$("$INIT" "$action" 2>&1)
         rc=$?
-        out=$(printf '%s' "$out" | tr '\r\n' '  ')
+        [ -n "$out" ] && logger -t xfrpc-webui "action=$action rc=$rc: $out"
+        case "$action" in
+          start)   msg="服务启动" ;;
+          stop)    msg="服务停止" ;;
+          restart) msg="服务重启" ;;
+        esac
         if [ "$rc" -eq 0 ]; then
-          send_json "{\"success\":true,\"message\":\"$(json_escape "$out")\"}"
+          send_json "{\"success\":true,\"message\":\"${msg}成功\"}"
         else
-          send_json "{\"success\":false,\"message\":\"$(json_escape "$out")\"}" "500 Internal Server Error"
+          send_json "{\"success\":false,\"message\":\"${msg}失败\"}" "500 Internal Server Error"
         fi
         ;;
       *)
-        json_error 400 "未知 action: $action"
+        json_error 400 "未知 action"
         ;;
     esac
   fi

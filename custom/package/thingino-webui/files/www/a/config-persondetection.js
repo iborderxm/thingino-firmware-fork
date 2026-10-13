@@ -755,6 +755,11 @@
     try {
       const data = await requestNotification({ action: 'get' });
       applyNotificationConfig(data);
+      // GET 响应同时携带 prudynt 主进程的运行状态，顺带刷新徽章
+      if (data.status) {
+        svcStatus = data.status;
+        renderServiceStatus();
+      }
       if (!silent) {
         showAlert('info', '通知设置已加载。', 3000);
       }
@@ -843,6 +848,124 @@
     addFromEmailButton.addEventListener('click', addFromEmail);
   }
 
-  // 加载通知设置
+  // ---- prudynt 主进程（人形检测所属的相机核心服务）状态与启停控制 ----
+  // 与 xfrpc 页面一致：徽章显示运行中/已停止/脚本未安装，按钮经 CGI 调 init 脚本
+  const statusBadge = document.getElementById('pd-status-badge');
+  const statusDetail = document.getElementById('pd-status-detail');
+  const serviceButtons = [
+    { id: 'pd-btn-start', action: 'start' },
+    { id: 'pd-btn-stop', action: 'stop' },
+    { id: 'pd-btn-restart', action: 'restart' }
+  ];
+  // 服务运行状态 {running, pid, service}
+  let svcStatus = { running: false, pid: '', service: false };
+  // 服务动作进行中标志（避免轮询与动作请求叠加）
+  let serviceActionPending = false;
+
+  function eachServiceButton(fn) {
+    serviceButtons.forEach(item => {
+      const btn = document.getElementById(item.id);
+      if (btn) fn(btn);
+    });
+  }
+
+  // 渲染服务运行状态与启停按钮可见性
+  function renderServiceStatus() {
+    if (!statusBadge) return;
+
+    // 服务脚本未安装：隐藏按钮并提示
+    if (!svcStatus.service) {
+      statusBadge.className = 'badge text-bg-danger';
+      statusBadge.innerHTML = '<i class="bi bi-exclamation-triangle"></i> 服务脚本未安装';
+      if (statusDetail) statusDetail.textContent = '缺少 /etc/init.d/S31prudynt';
+      eachServiceButton(btn => btn.classList.add('d-none'));
+      return;
+    }
+    eachServiceButton(btn => btn.classList.remove('d-none'));
+
+    if (svcStatus.running) {
+      statusBadge.className = 'badge text-bg-success';
+      statusBadge.innerHTML = '<i class="bi bi-play-circle"></i> prudynt 运行中';
+      if (statusDetail) statusDetail.textContent = svcStatus.pid ? `PID: ${svcStatus.pid}` : '';
+    } else {
+      statusBadge.className = 'badge text-bg-secondary';
+      statusBadge.innerHTML = '<i class="bi bi-stop-circle"></i> prudynt 已停止';
+      if (statusDetail) statusDetail.textContent = '';
+    }
+  }
+
+  // 仅刷新服务状态，不覆盖表单输入（GET 响应同时带配置与 status，配置部分忽略）
+  async function refreshServiceStatus() {
+    try {
+      const data = await requestNotification({ action: 'get' });
+      if (data && data.status) {
+        svcStatus = data.status;
+        renderServiceStatus();
+      }
+    } catch (err) {
+      // 轮询失败保持静默，不打断页面操作
+      console.debug('刷新 prudynt 服务状态失败', err);
+    }
+  }
+
+  // 服务控制：action = start|stop|restart（后端经 S31prudynt 执行，重启可能需要数秒）
+  async function controlService(action) {
+    const labels = { start: '启动', stop: '停止', restart: '重启' };
+
+    serviceActionPending = true;
+    eachServiceButton(btn => { btn.disabled = true; });
+
+    try {
+      showBusy(`正在${labels[action]} prudynt 服务，请稍候...`);
+      const response = await fetch(notificationEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+      // 失败时后端也返回 JSON（HTTP 500），需读取响应体获取具体原因
+      const text = await response.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {
+        data = {};
+      }
+      if (data.error) throw new Error(data.error.message || '操作失败');
+
+      if (data.success === false) {
+        showAlert('danger', `prudynt ${labels[action]}失败：${data.message || '未知错误'}`);
+      } else if (response.ok) {
+        showAlert('success', data.message || `prudynt ${labels[action]}完成`);
+      } else {
+        showAlert('danger', `prudynt ${labels[action]}失败：未知错误`);
+      }
+    } catch (err) {
+      console.error(`prudynt 服务 ${action} 失败:`, err);
+      showAlert('danger', `prudynt ${labels[action]}失败：${err.message || err}`);
+    } finally {
+      eachServiceButton(btn => { btn.disabled = false; });
+      hideBusy();
+      // 后端已在动作成功后才返回，这里再回读一次状态兜底
+      setTimeout(() => {
+        refreshServiceStatus();
+        serviceActionPending = false;
+      }, 800);
+    }
+  }
+
+  // 绑定启停按钮
+  serviceButtons.forEach(item => {
+    const btn = document.getElementById(item.id);
+    if (btn) btn.addEventListener('click', () => controlService(item.action));
+  });
+
+  renderServiceStatus();
+
+  // 定时刷新运行状态（不覆盖表单；动作进行中时跳过）
+  setInterval(() => {
+    if (!serviceActionPending) refreshServiceStatus();
+  }, 5000);
+
+  // 加载通知设置（其 GET 响应会顺带渲染一次服务状态）
   loadNotificationConfig({ silent: true });
 })();

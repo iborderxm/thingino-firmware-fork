@@ -33,6 +33,9 @@ cp -r custom/process_monitor overlay/usr/sbin/process_monitor
 cp -r custom/checknet overlay/usr/sbin/checknet
 cp -r custom/checknet_prompt overlay/usr/sbin/checknet_prompt
 cp -r custom/imapautoclean overlay/usr/sbin/imapautoclean
+# 移除开机播放thingino.opus音效
+cp -r custom/S97sysupgrade overlay/etc/init.d/S97sysupgrade
+# rm -rf package/thingino-sounds/files/thingino.opus
 # 配置xfrpc
 cp -r custom/xfrpc-mipsel-linux-musl overlay/usr/sbin/xfrpc
 cp -r custom/xfrpc-ctl overlay/usr/sbin/xfrpc-ctl
@@ -45,6 +48,13 @@ chmod 755 overlay/usr/sbin/*
 mkdir -p overlay/usr/share/sounds/other
 cp -r custom/sounds/. overlay/usr/share/sounds/other/
 find overlay/usr/share/sounds/other/ -maxdepth 1 -type f -exec chmod 0644 {} +
+# 移除多余文件
+# rm -rf package/thingino-sounds/files/doorbell*.opus
+# rm -rf package/thingino-sounds/files/motiondetection*.opus
+# rm -rf package/thingino-sounds/files/timelapserecording*.opus
+# rm -rf package/thingino-sounds/files/videorecording*.opus
+# rm -rf package/thingino-sounds/files/wificonnect*.opus
+# rm -rf package/thingino-sounds/files/wireguardvpn*.opus
 
 cp -r custom/prudynt.json package/prudynt-t/files/prudynt.json
 cp -r custom/send2email package/prudynt-t/files/send2email

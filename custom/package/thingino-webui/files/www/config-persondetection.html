@@ -45,6 +45,23 @@
             </button>
           </div>
           <div class="card-body">
+            <!-- prudynt 主进程（人形检测所属的相机核心服务）运行状态与服务控制 -->
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3 pb-3 border-bottom" id="pd-status-row">
+              <span class="badge text-bg-secondary" id="pd-status-badge"><i class="bi bi-question-circle"></i> 状态未知</span>
+              <small class="text-muted" id="pd-status-detail"></small>
+              <div class="ms-auto d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-success" id="pd-btn-start" title="启动 prudynt 服务">
+                  <i class="bi bi-play-fill"></i> 启动
+                </button>
+                <button type="button" class="btn btn-sm btn-danger" id="pd-btn-stop" title="停止 prudynt 服务（将同时中断视频流）">
+                  <i class="bi bi-stop-fill"></i> 停止
+                </button>
+                <button type="button" class="btn btn-sm btn-warning" id="pd-btn-restart" title="重启 prudynt 服务">
+                  <i class="bi bi-arrow-repeat"></i> 重启
+                </button>
+              </div>
+            </div>
+
             <div class="row g-4">
               <div class="col-12 col-lg-12">
                 <h4>通用设置</h4>

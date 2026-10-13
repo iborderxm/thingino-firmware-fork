@@ -1,5 +1,5 @@
 {
-    "enable": true,
+    "enable": false,
     "type": "rename",
     "comment": "视频文件处理方式type(delete删除rename重命名)",
     "from_name": "name",
