@@ -1,0 +1,110 @@
+#!/bin/sh
+
+# wifiqrscan - 扫描 Wi-Fi 二维码并切换网络
+# 用法: wifiqrscan
+# 流程:
+#   1. prudyntctl snapshot -c 1 -q 75 抓取子码流截图到 /tmp/qr-code.jpg
+#   2. quirc-scan 识别二维码，内容须为 WiFi 联盟标准文本格式:
+#        WIFI:S:<WiFi名称>;T:<加密类型>;P:<WiFi密码>;H:<是否隐藏SSID>;;
+#   3. 识别结果为空或无法解析时，等待 2 秒后重试，最多循环执行 10 次
+#   4. 解析出 WiFi 名称和密码后，调用 wifichange "新SSID" "新密码"
+
+qr_file=/tmp/qr-code.jpg
+max_attempts=10
+retry_interval=2
+
+# 依赖命令检查
+for cmd in prudyntctl quirc-scan wifichange; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "错误: 未找到 $cmd 命令" >&2
+        exit 1
+    fi
+done
+
+# 从 quirc-scan 输出中提取第一个成功解码的二维码文本
+# quirc-scan 输出形如:
+#   1 QR codes detected
+#   QR CODE 0 data:WIFI:S:xxx;T:WPA;P:yyy;;
+extract_payload() {
+    quirc-scan "$1" 2>/dev/null | sed -n 's/^QR CODE [0-9][0-9]* data://p' | head -n 1
+}
+
+# 解析 WiFi 联盟标准文本，输出两行: 第 1 行 SSID，第 2 行密码
+# - 字段顺序不固定，按 S:/P: 标签提取（T:/H: 不需要）
+# - 处理反斜杠转义字符（\; \: \, \\ \"）
+# - 非 WIFI: 前缀或缺少 SSID 时不输出任何内容（视为无法解析）
+parse_wifi() {
+    awk '
+    {
+        if (substr($0, 1, 5) != "WIFI:") exit 1
+        s = substr($0, 6)
+        # 去掉结尾的终止符 ";;"
+        if (substr(s, length(s) - 1, 2) == ";;")
+            s = substr(s, 1, length(s) - 2)
+        # 逐字符切分字段，支持反斜杠转义
+        n = 0; cur = ""; esc = 0
+        for (i = 1; i <= length(s); i++) {
+            c = substr(s, i, 1)
+            if (esc)       { cur = cur c; esc = 0; continue }
+            if (c == "\\") { esc = 1; continue }
+            if (c == ";")  { n++; f[n] = cur; cur = ""; continue }
+            cur = cur c
+        }
+        n++; f[n] = cur
+        ssid = ""; pass = ""
+        for (i = 1; i <= n; i++) {
+            tag = substr(f[i], 1, 2)
+            if (tag == "S:")      ssid = substr(f[i], 3)
+            else if (tag == "P:") pass = substr(f[i], 3)
+        }
+        if (ssid == "") exit 1
+        printf "%s\n%s\n", ssid, pass
+    }'
+}
+
+ssid=""
+password=""
+attempt=1
+# 提示音：请将二维码对准摄像头
+play /usr/share/sounds/other/qrcode2camera.opus
+while [ "$attempt" -le "$max_attempts" ]; do
+    echo "[$attempt/$max_attempts] 抓取截图并识别二维码 ..."
+    # 先删除旧截图，保证识别的是本次抓取的图像
+    rm -f "$qr_file"
+    prudyntctl snapshot -c 1 -q 75 > "$qr_file"
+
+    payload=$(extract_payload "$qr_file")
+    if [ -n "$payload" ]; then
+        result=$(printf '%s\n' "$payload" | parse_wifi)
+        if [ -n "$result" ]; then
+            ssid=$(printf '%s\n' "$result" | head -n 1)
+            password=$(printf '%s\n' "$result" | sed -n '2p')
+            break
+        fi
+        echo "      二维码内容不是有效的 Wi-Fi 格式"
+    else
+        echo "      未识别到二维码"
+    fi
+
+    # 最后一次失败后不再等待
+    if [ "$attempt" -lt "$max_attempts" ]; then
+        sleep "$retry_interval"
+    fi
+    attempt=$((attempt + 1))
+done
+
+if [ -z "$ssid" ]; then
+    echo "失败: 连续 $max_attempts 次未能识别 Wi-Fi 二维码" >&2
+    # 提示音：识别超时，停止扫码
+    play /usr/share/sounds/other/qrcodestop.opus
+    exit 1
+fi
+
+# 开放网络（T:nopass）没有密码，wifichange 仅支持加密网络
+if [ -z "$password" ]; then
+    echo "错误: \"$ssid\" 为开放网络（无密码），wifichange 仅支持加密网络" >&2
+    exit 1
+fi
+
+echo "识别成功: SSID=\"$ssid\"，开始切换 Wi-Fi ..."
+wifichange "$ssid" "$password"

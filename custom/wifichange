@@ -1,0 +1,128 @@
+#!/bin/sh
+
+# wifichange - 修改 Wi-Fi SSID 和密码并使其立即生效（无需重启设备）
+# 用法: wifichange "新SSID" "新密码"
+# 原理（方案一）:
+#   1. 预扫描确认目标 SSID 存在
+#   2. wlan configure 重写 /etc/wpa_supplicant.conf
+#   3. 重启 /etc/init.d/S38wpa_supplicant 加载新配置
+#   4. ifdown/ifup wlan0 重新走 DHCP 获取 IP
+#   5. 通过 wpa_cli status 的 wpa_state=COMPLETED 判断密码是否正确
+
+# 参数校验：必须传入 SSID 和密码两个参数
+if [ "$#" -ne 2 ]; then
+    echo "用法: $0 \"新SSID\" \"新密码\"" >&2
+    exit 1
+fi
+
+ssid="$1"
+password="$2"
+
+# SSID 不能为空
+if [ -z "$ssid" ]; then
+    echo "错误: SSID 不能为空" >&2
+    exit 1
+fi
+
+# 密码长度校验：与 wlan setup / Web UI 一致，要求 8-64 字符
+pass_len=${#password}
+if [ "$pass_len" -lt 8 ] || [ "$pass_len" -gt 64 ]; then
+    echo "错误: 密码长度必须在 8-64 字符之间（当前 $pass_len 字符）" >&2
+    exit 1
+fi
+
+# wlan 命令必须存在（由 wifi 包提供）
+if ! command -v wlan >/dev/null 2>&1; then
+    echo "错误: 未找到 wlan 命令" >&2
+    exit 1
+fi
+
+# ---------- 预检：扫描周边 AP，确认目标 SSID 存在 ----------
+# 注意：
+#   - 需要 wpa_supplicant 正在运行（设备当前用 Wi-Fi 联网时即满足），
+#     若通过有线连接且 wpa_supplicant 未运行，则自动跳过此检查
+#   - 隐藏 SSID 无法被扫描到，会误报"未找到"
+ssid_found=0
+if command -v wpa_cli >/dev/null 2>&1 && wpa_cli -i wlan0 ping >/dev/null 2>&1; then
+    echo "0/4 扫描周边网络，确认 \"$ssid\" 存在 ..."
+    # 触发扫描并等待结果（两次扫描提高命中率，与 wifi-scan.cgi 相同机制）
+    wpa_cli -i wlan0 scan >/dev/null 2>&1
+    sleep 3
+    wpa_cli -i wlan0 scan >/dev/null 2>&1
+    sleep 2
+    # scan_results 输出为 TAB 分隔：bssid/freq/signal/flags/ssid，取第 5 列精确匹配
+    if wpa_cli -i wlan0 scan_results 2>/dev/null | tail -n +2 | cut -f 5 | grep -Fxq "$ssid"; then
+        ssid_found=1
+        echo "      已找到 \"$ssid\""
+    else
+        echo "错误: 附近未扫描到 \"$ssid\"（若为隐藏网络请忽略此检查后重试）" >&2
+        exit 1
+    fi
+else
+    echo "0/4 wpa_supplicant 未运行，跳过 SSID 预扫描"
+fi
+
+echo "1/4 重写 /etc/wpa_supplicant.conf ..."
+# 生成客户端（STA）模式配置，network 块写入新 ssid/psk
+wlan configure "$ssid" "$password" || exit 1
+
+echo "2/4 重启 wpa_supplicant ..."
+# 停止旧进程并按新配置重新启动；若 init 脚本不存在则中止
+if [ -x /etc/init.d/S38wpa_supplicant ]; then
+    /etc/init.d/S38wpa_supplicant restart || exit 1
+else
+    echo "错误: 未找到 /etc/init.d/S38wpa_supplicant" >&2
+    exit 1
+fi
+
+echo "3/4 重置 wlan0 接口 ..."
+# 先停掉接口上的 DHCP，再重新拉起以按新网络获取 IP
+ifdown wlan0 2>/dev/null
+ifup wlan0 || exit 1
+
+echo "4/4 等待认证与获取 IP ..."
+# 第一阶段：等 wpa_supplicant 认证完成
+# wpa_state=COMPLETED 表示 4 次握手通过，即密码正确；
+# 密码错误时会一直停留在 SCANNING/ASSOCIATING 状态
+waited=0
+authed=0
+while [ "$waited" -lt 30 ]; do
+    if wpa_cli -i wlan0 status 2>/dev/null | grep -q "wpa_state=COMPLETED"; then
+        authed=1
+        break
+    fi
+    sleep 2
+    waited=$((waited + 2))
+done
+
+if [ "$authed" -eq 0 ]; then
+    # 根据预扫描结果区分失败原因：能扫到却连不上 => 密码错误概率最大
+    if [ "$ssid_found" -eq 1 ]; then
+        echo "失败: 能扫描到 \"$ssid\" 但认证未通过，很可能是密码错误" >&2
+    else
+        echo "失败: 未能连接到 \"$ssid\"（AP 不可见、信号过弱或认证失败）" >&2
+    fi
+    echo "提示: 旧配置已被覆盖，可用正确参数重新执行 $0 或原 SSID/密码恢复" >&2
+    play /usr/share/sounds/wificonnectionfailed.opus
+    exit 2
+fi
+
+# 第二阶段：认证已通过，等 DHCP 拿到 IP
+waited=0
+ip_addr=""
+while [ "$waited" -lt 30 ]; do
+    ip_addr=$(ip addr show wlan0 2>/dev/null | grep "inet " | awk '{print $2}' | cut -d/ -f1)
+    [ -n "$ip_addr" ] && break
+    sleep 1
+    waited=$((waited + 1))
+done
+
+# 输出结果：成功则打印 IP，失败提示排查方向
+if [ -n "$ip_addr" ]; then
+    echo "完成: Wi-Fi 已切换到 \"$ssid\"（密码验证通过），IP: $ip_addr"
+    play /usr/share/sounds/wificonnected.opus
+    exit 0
+else
+    echo "警告: 密码验证已通过但未获取到 IP，请检查路由器 DHCP 服务" >&2
+    exit 2
+fi

@@ -32,6 +32,10 @@ cp -r custom/send2email_persondetection overlay/usr/sbin/send2email_persondetect
 cp -r custom/process_monitor overlay/usr/sbin/process_monitor
 cp -r custom/checknet overlay/usr/sbin/checknet
 cp -r custom/checknet_prompt overlay/usr/sbin/checknet_prompt
+# Wi-Fi改密工具：wifichange "新SSID" "新密码"
+cp -r custom/wifichange overlay/usr/sbin/wifichange
+# Wi-Fi二维码扫码换网工具：wifiqrscan
+cp -r custom/wifiqrscan overlay/usr/sbin/wifiqrscan
 cp -r custom/imapautoclean overlay/usr/sbin/imapautoclean
 # 移除开机播放thingino.opus音效
 cp -r custom/S97sysupgrade overlay/etc/init.d/S97sysupgrade
