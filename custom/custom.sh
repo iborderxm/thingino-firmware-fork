@@ -55,18 +55,25 @@ cp -r custom/send2email package/prudynt-t/files/send2email
 cp -r custom/package/thingino-sounds package/thingino-sounds
 echo "thingino-sounds 配置完成"
 
+# 配置quirc
+cp -r custom/package/quirc package/quirc
+sed -i '/source "$BR2_EXTERNAL_THINGINO_PATH\/package\/lightnvr\/Config.in"/a source "$BR2_EXTERNAL_THINGINO_PATH\/package\/quirc\/Config.in"' Config.in
+sed -i '$a BR2_PACKAGE_QUIRC=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
+echo "quirc 配置完成:"
+cat Config.in | grep quirc -A 3
+
 # 配置imapautoclean
 cp -r custom/package/imapautoclean package/imapautoclean
 sed -i '/source "$BR2_EXTERNAL_THINGINO_PATH\/package\/lightnvr\/Config.in"/a source "$BR2_EXTERNAL_THINGINO_PATH\/package\/imapautoclean\/Config.in"' Config.in
+sed -i '$a BR2_PACKAGE_IMAPAUTOCLEAN=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
 echo "imapautoclean 配置完成:"
-cat Config.in | grep imapautoclean
+cat Config.in | grep imapautoclean -A 3
 
 # 配置thingino-button
 rm -rf package/thingino-button
 cp -r custom/package/thingino-button package/thingino-button
 
-sed -i '$a BR2_PACKAGE_IMAPAUTOCLEAN=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig 
-echo "iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig 配置完成:"
+echo "iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig 配置完成"
 cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
 
 # 更新覆盖thingino-webui和wifi

@@ -33,6 +33,12 @@ on:
         description: 'Create GitHub release'
         required: false
         default: false
+      # 关闭包并行编译
+      close_parallel_build:
+        type: boolean
+        description: 'Close parallel build'
+        required: false
+        default: false
       create_buildroot-dl-cache:
         type: boolean
         description: 'Create buildroot-dl-cache GitHub release'
@@ -800,8 +806,11 @@ jobs:
           chmod +x scripts/*.sh
           chmod +x scripts/menu/*.sh
 
+      - name: Close parallel build
+        if: ${{ github.event.inputs.close_parallel_build != 'false' }}
+        run: |
           # 关闭包并行编译
-          # sed -i 's/BR2_PER_PACKAGE_DIRECTORIES/# BR2_PER_PACKAGE_DIRECTORIES/' configs/github/toolchain_*_defconfig
+          sed -i 's/BR2_PER_PACKAGE_DIRECTORIES/# BR2_PER_PACKAGE_DIRECTORIES/' configs/github/toolchain_*_defconfig
 
       - name: Build firmware
         if: ${{ github.event.inputs.debug_enabled != 'true' }}

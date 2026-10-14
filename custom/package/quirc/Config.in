@@ -1,0 +1,7 @@
+config BR2_PACKAGE_QUIRC
+	bool "quirc"
+	select BR2_PACKAGE_JPEG
+	help
+	  QR scanner
+
+	  https://github.com/dlbeer/quirc.git
