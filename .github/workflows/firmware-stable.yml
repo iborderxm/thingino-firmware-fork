@@ -337,7 +337,7 @@ jobs:
           apt-get install -y --no-install-recommends --no-install-suggests autoconf build-essential bc cmake cpio curl ca-certificates file git gh make gawk jq m4 p7zip-full perl procps python3 python3-dev python3-setuptools lzop rsync tzdata u-boot-tools unzip wget libncurses-dev swig help2man
 
       - name: Checkout prudynt-t
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.PRIVATE_TOKEN }}
           repository: iborderxm/prudynt-t
@@ -869,6 +869,13 @@ jobs:
 
             UPDATE_FW_DATETIME=$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')
             echo "UPDATE_FW_DATETIME=${UPDATE_FW_DATETIME}" >> ${GITHUB_ENV}
+
+            # 创建params.json文件
+            PARAMS_FW=${HOME}/output/${{ github.event.inputs.branch }}/${DYNAMIC_PART}/params/params.json
+            mkdir -p $(dirname ${PARAMS_FW})
+            # 写入全部inputs参数到params.json文件
+            echo '${{ toJSON(github.event.inputs) }}' > ${PARAMS_FW}
+            echo "PARAMS_FW=${PARAMS_FW}" >> ${GITHUB_ENV}
           else
             echo "Matching .bin files not found."
             exit 1
@@ -893,7 +900,8 @@ jobs:
             "${{ env.FULL_FW_ROOTFS_TAR }}" \
             "${{ env.FULL_FW_SHA }}" \
             "${{ env.UPDATE_FW }}" \
-            "${{ env.UPDATE_FW_SHA }}"
+            "${{ env.UPDATE_FW_SHA }}" \
+            "${{ env.PARAMS_FW }}"
 
       - name: Upload encrypted firmware artifacts
         uses: actions/upload-artifact@v4
