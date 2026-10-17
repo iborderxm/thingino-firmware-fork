@@ -10,8 +10,8 @@
 #   4. 解析出 WiFi 名称和密码后，调用 wifichange "新SSID" "新密码"
 
 qr_file=/tmp/qr-code.jpg
-max_attempts=10
-retry_interval=2
+max_attempts=15
+retry_interval=3
 
 # 依赖命令检查
 for cmd in prudyntctl quirc-scan wifichange; do
@@ -23,10 +23,9 @@ done
 
 # 从 quirc-scan 输出中提取第一个成功解码的二维码文本
 # quirc-scan 输出形如:
-#   1 QR codes detected
-#   QR CODE 0 data:WIFI:S:xxx;T:WPA;P:yyy;;
+# WIFI:S:xxx;T:WPA;P:yyy;;
 extract_payload() {
-    quirc-scan "$1" 2>/dev/null | sed -n 's/^QR CODE [0-9][0-9]* data://p' | head -n 1
+    quirc-scan "$1" 2>/dev/null | grep -v '^$' | head -n 1
 }
 
 # 解析 WiFi 联盟标准文本，输出两行: 第 1 行 SSID，第 2 行密码
@@ -88,6 +87,10 @@ while [ "$attempt" -le "$max_attempts" ]; do
 
     # 最后一次失败后不再等待
     if [ "$attempt" -lt "$max_attempts" ]; then
+        # 每连续 5 次识别失败播放一次提示音：请将二维码对准摄像头
+        if [ $((attempt % 5)) -eq 0 ]; then
+            play /usr/share/sounds/other/qrcode2camera.opus
+        fi
         sleep "$retry_interval"
     fi
     attempt=$((attempt + 1))
@@ -97,14 +100,17 @@ if [ -z "$ssid" ]; then
     echo "失败: 连续 $max_attempts 次未能识别 Wi-Fi 二维码" >&2
     # 提示音：识别超时，停止扫码
     play /usr/share/sounds/other/qrcodestop.opus
+    # rm -f "$qr_file"
     exit 1
 fi
 
 # 开放网络（T:nopass）没有密码，wifichange 仅支持加密网络
 if [ -z "$password" ]; then
     echo "错误: \"$ssid\" 为开放网络（无密码），wifichange 仅支持加密网络" >&2
+    # rm -f "$qr_file"
     exit 1
 fi
 
 echo "识别成功: SSID=\"$ssid\"，开始切换 Wi-Fi ..."
+# rm -f "$qr_file"
 wifichange "$ssid" "$password"

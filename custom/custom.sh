@@ -56,7 +56,7 @@ cp -r custom/prudynt.json package/prudynt-t/files/prudynt.json
 cp -r custom/send2email package/prudynt-t/files/send2email
 
 # 配置thingino-sounds
-cp -r custom/package/thingino-sounds package/thingino-sounds
+cp -r custom/package/thingino-sounds package
 echo "thingino-sounds 配置完成"
 
 # 配置quirc
