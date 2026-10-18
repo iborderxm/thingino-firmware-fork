@@ -13,6 +13,34 @@
     integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/a/main.css">
+  <style>
+    /* 画布按视频原始分辨率创建（如 2304x1296），约束在弹窗宽度内并保持比例 */
+    #player canvas,
+    #player video {
+      display: block;
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    /* SDK 的 fullScreen() 作用在 #player 上，全屏时让画面居中且保持比例 */
+    #player:fullscreen,
+    #player:webkit-full-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    #player:fullscreen canvas,
+    #player:fullscreen video,
+    #player:webkit-full-screen canvas,
+    #player:webkit-full-screen video {
+      width: auto !important;
+      height: auto !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+    }
+  </style>
 </head>
 
 <body id="page-tool-persondetection-videos">
@@ -99,9 +127,40 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
       </div>
       <div class="modal-body">
-        <video id="player" class="w-100" controls playsinline preload="metadata"></video>
+        <div class="position-relative bg-black rounded overflow-hidden" id="playerStage" style="min-height:240px">
+          <div id="player"></div>
+          <div id="playerLoading" class="position-absolute top-50 start-50 translate-middle d-none text-secondary">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <span>正在加载播放器与视频数据…</span>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 mt-2" id="playerControls">
+          <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0" id="playerBtnPlayPause" disabled>
+            <i class="bi bi-play-fill"></i>
+          </button>
+          <span class="small text-secondary text-nowrap" id="playerTime">00:00 / --:--</span>
+          <input type="range" class="form-range flex-grow-1" id="playerSeek" min="0" max="100" step="0.1" value="0" disabled>
+          <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0" id="playerModalSound" disabled
+            title="静音">
+            <i class="bi bi-volume-up-fill"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0" id="playerBtnFullscreen" disabled
+            title="全屏">
+            <i class="bi bi-arrows-fullscreen"></i>
+          </button>
+        </div>
+        <p class="small text-secondary mt-2 mb-0" id="playerMeta"></p>
+        <div id="playerFallback" class="alert alert-warning mt-2 mb-0 d-none">
+          <p class="mb-1" id="playerFallbackText"></p>
+          <p class="mb-0 small">在线播放依赖 <code>h265web.js</code> 运行时（H.265/HEVC 解码），需要当前浏览器能够访问外网；也可以先下载文件，再用本地播放器观看。</p>
+        </div>
       </div>
       <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" id="playerModalSoft" disabled>
+          <i class="bi bi-cpu me-1"></i>软件解码
+        </button>
         <a href="#" class="btn btn-primary" id="playerModalDownload">
           <i class="bi bi-download me-1"></i>下载
         </a>
