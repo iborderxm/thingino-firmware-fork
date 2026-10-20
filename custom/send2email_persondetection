@@ -1,5 +1,7 @@
 #!/bin/env sh
 
+. /usr/share/common
+
 PRUDYNT_CONFIG="/etc/prudynt.json"
 PERSONDETECTION_CONFIG="/etc/persondetection.json"
 PIDFILE="/var/run/send2email_persondetection.pid"
@@ -178,13 +180,11 @@ send_video_email() {
 	fi
 
 	if [ "$use_ssl" = "true" ]; then
-		if ! output=$(/usr/sbin/send2email -V "$video_file" -b "$email_body" -h "$smtp_host" -p "$smtp_port" -u "$from_username" -P "$from_password" -f "$from_address" -t "$to_address" -s "$subject" -k 2>&1); then
-			exit_code=$?
-		fi
+		output=$(/usr/sbin/send2email -V "$video_file" -b "$email_body" -h "$smtp_host" -p "$smtp_port" -u "$from_username" -P "$from_password" -f "$from_address" -t "$to_address" -s "$subject" -k 2>&1)
+		exit_code=$?
 	else
-		if ! output=$(/usr/sbin/send2email -V "$video_file" -b "$email_body" -h "$smtp_host" -p "$smtp_port" -u "$from_username" -P "$from_password" -f "$from_address" -t "$to_address" -s "$subject" 2>&1); then
-			exit_code=$?
-		fi
+		output=$(/usr/sbin/send2email -V "$video_file" -b "$email_body" -h "$smtp_host" -p "$smtp_port" -u "$from_username" -P "$from_password" -f "$from_address" -t "$to_address" -s "$subject" 2>&1)
+		exit_code=$?
 	fi
 
 	if echo "$output" | grep -qi "illegal\|invalid\|error\|fail\|unable"; then
@@ -250,7 +250,9 @@ process_video_list() {
 			[ -z "$video_file" ] && continue
 			[ "$daily_limit_reached" -eq 1 ] && break
 
-			if [ $end_video_file \> $video_file ]; then
+			# 用文件名比较：$video_file 是完整路径，直接与纯文件名比较会因 '/' < 'p' 恒为真
+			local video_name=$(basename "$video_file")
+			if [ "$end_video_file" \> "$video_name" ]; then
 				continue
 			fi
 
@@ -271,7 +273,7 @@ process_video_list() {
 				echo_warning "Daily sending limit reached"
 				disable_email $email_index
 				break
-			elif [ $send_result -eq 4 ]; then
+			elif [ $send_result -eq 4 ] || [ $send_result -eq 5 ] || [ $send_result -eq 6 ]; then
 				local new_fail_num=$((fail_num + 1))
 				update_email_fail_count $email_index $new_fail_num
 
@@ -308,10 +310,6 @@ process_video_list() {
 			[ -z "$video_file" ] && continue
 			[ "$daily_limit_reached" -eq 1 ] && break
 
-			if [ "$current_hour" != "00" ] && [ $video_file \> $end_video_file ]; then
-				continue
-			fi
-
 			find_available_email
 			local email_index=$?
 
@@ -329,7 +327,7 @@ process_video_list() {
 				echo_warning "Daily sending limit reached"
 				disable_email $email_index
 				break
-			elif [ $send_result -eq 4 ]; then
+			elif [ $send_result -eq 4 ] || [ $send_result -eq 5 ] || [ $send_result -eq 6 ]; then
 				local new_fail_num=$((fail_num + 1))
 				update_email_fail_count $email_index $new_fail_num
 
