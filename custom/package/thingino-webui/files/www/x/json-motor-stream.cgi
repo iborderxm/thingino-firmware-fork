@@ -52,15 +52,15 @@ case "$STREAM_INTERVAL_RAW" in
   ''|*[!0-9]*) STREAM_INTERVAL=1 ;;
   *) STREAM_INTERVAL="$STREAM_INTERVAL_RAW" ;;
 esac
+# 0 会导致 sleep 0 忙循环烧 CPU
+[ "$STREAM_INTERVAL" -lt 1 ] && STREAM_INTERVAL=1
 STREAM_RETRY_MS=$((STREAM_INTERVAL * 300))
 
 send_headers() {
   http_200
-  cat <<EOF
-Content-Type: text/event-stream
-Cache-Control: no-cache
-
-EOF
+  printf 'Content-Type: text/event-stream\r\n'
+  printf 'Cache-Control: no-cache\r\n'
+  printf '\r\n'
 }
 
 emit_single_event() {

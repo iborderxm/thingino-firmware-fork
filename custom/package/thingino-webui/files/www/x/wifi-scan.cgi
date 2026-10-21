@@ -9,12 +9,12 @@ json_encode() {
 }
 
 json_response() {
-	echo "Content-type: application/json; charset=UTF-8"
-	echo "Cache-Control: no-store"
-	echo "Pragma: no-cache"
-	echo "Connection: close"
-	echo ""
-	echo "$1"
+	printf 'Content-type: application/json; charset=UTF-8\r\n'
+	printf 'Cache-Control: no-store\r\n'
+	printf 'Pragma: no-cache\r\n'
+	printf 'Connection: close\r\n'
+	printf '\r\n'
+	printf '%s\n' "$1"
 }
 
 scan_networks() {
@@ -56,9 +56,18 @@ scan_networks() {
 	echo "\"networks\": ["
 
 	first=1
-	wpa_cli -i wlan0 scan_results 2>/dev/null | tail -n +2 | while IFS=$'\t' read -r bssid freq signal flags ssid; do
+	# POSIX sh 不支持 $'\t'（dash/ash 会当成字面量 $\t，字段全部错位、
+	# signal 为空还会产出非法 JSON）。制表符属于 IFS 空白类，连续制表符
+	# （开放网络的 flags 为空）会被折叠成单个分隔符导致字段错位，
+	# 因此先 tr 成非空白控制字符 \037 再按它切分，空字段得以保留。
+	wpa_cli -i wlan0 scan_results 2>/dev/null | tail -n +2 | tr '\t' '\037' | while IFS="$(printf '\037')" read -r bssid freq signal flags ssid; do
 		# Skip empty SSIDs and header
 		[ -z "$ssid" ] || [ "$ssid" = "ssid" ] && continue
+
+		# 信号强度兜底：非数值（含负号）时归零，避免 "signal": 空值破坏 JSON
+		case "$signal" in
+			''|*[!0-9-]*) signal=0 ;;
+		esac
 
 		# Determine security type
 		security="Open"

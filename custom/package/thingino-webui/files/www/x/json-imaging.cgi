@@ -34,6 +34,9 @@ json_error() {
   exit 0
 }
 
+# jct 是读取 imaging 状态文件的唯一工具，缺失时直接报错而不是静默失败
+command -v jct >/dev/null 2>&1 || json_error "jct is not available"
+
 json_ok() {
   http_200
   json_header
@@ -160,7 +163,14 @@ parse_body() {
 handle_post() {
   local body param value
   if [ -n "$CONTENT_LENGTH" ]; then
-    body=$(dd bs=1 count="$CONTENT_LENGTH" 2>/dev/null)
+    case "$CONTENT_LENGTH" in
+      *[!0-9]*) json_error "invalid Content-Length" ;;
+    esac
+    if [ "$CONTENT_LENGTH" -eq 0 ]; then
+      json_error "empty request body"
+    fi
+    # head -c 为缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文会明显变慢
+    body=$(head -c "$CONTENT_LENGTH")
   else
     body=$(cat)
   fi

@@ -41,15 +41,13 @@ json_escape() {
 
 send_json() {
   status="${2:-200 OK}"
-  printf 'Status: %s\n' "$status"
-  cat <<EOF
-Content-Type: application/json
-Cache-Control: no-store
-Pragma: no-cache
-Connection: close
-
-$1
-EOF
+  printf 'Status: %s\r\n' "$status"
+  printf 'Content-Type: application/json\r\n'
+  printf 'Cache-Control: no-store\r\n'
+  printf 'Pragma: no-cache\r\n'
+  printf 'Connection: close\r\n'
+  printf '\r\n'
+  printf '%s\n' "$1"
   exit 0
 }
 
@@ -58,6 +56,10 @@ json_error() {
   message="$2"
   send_json "{\"error\":{\"code\":$code,\"message\":\"$(json_escape "$message")\"}}" "${3:-400 Bad Request}"
 }
+
+# jct 用于解析 POST 报文，缺失时直接报错而不是静默不保存
+command -v jct >/dev/null 2>&1 || \
+  json_error 500 "jct is not available" "500 Internal Server Error"
 
 # xfrpc-ctl 可用性检查
 require_ctl() {
@@ -160,13 +162,20 @@ fi
 if [ "$REQUEST_METHOD" = "POST" ]; then
   require_ctl
 
-  # 读取 POST 数据
-  if [ -n "$CONTENT_LENGTH" ] && [ "$CONTENT_LENGTH" -gt 0 ]; then
+  # 读取 POST 数据（head -c 缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文太慢）
+  if [ -n "$CONTENT_LENGTH" ]; then
+    case "$CONTENT_LENGTH" in
+      *[!0-9]*) json_error 400 "Invalid Content-Length header" "400 Bad Request" ;;
+    esac
+    if [ "$CONTENT_LENGTH" -eq 0 ]; then
+      json_error 400 "Empty request body" "400 Bad Request"
+    fi
     TMP_FILE=$(mktemp /tmp/xfrpc-req.XXXXXX)
-    dd bs=1 count="$CONTENT_LENGTH" 2>/dev/null > "$TMP_FILE"
+    head -c "$CONTENT_LENGTH" > "$TMP_FILE"
   else
     json_error 400 "未收到 POST 数据"
   fi
+  [ -s "$TMP_FILE" ] || json_error 400 "Empty request body" "400 Bad Request"
 
   # 服务控制：action=start|stop|restart（经 /etc/init.d/S99xfrpc）
   action=$(jct "$TMP_FILE" get action 2>/dev/null)

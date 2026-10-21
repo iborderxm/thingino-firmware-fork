@@ -121,11 +121,9 @@ stream_payload() {
 
 send_headers() {
   http_200
-  cat <<EOF
-Content-Type: text/event-stream
-Cache-Control: no-cache
-
-EOF
+  printf 'Content-Type: text/event-stream\r\n'
+  printf 'Cache-Control: no-cache\r\n'
+  printf '\r\n'
 }
 
 stream_data() {

@@ -35,11 +35,12 @@ json_escape() {
 send_json() {
   status="$2"
   [ -z "$status" ] && status="200 OK"
-  printf 'Status: %s\n' "$status"
-  printf 'Content-Type: application/json\n'
-  printf 'Cache-Control: no-store\n'
-  printf 'Pragma: no-cache\n'
-  printf '\n'
+  printf 'Status: %s\r\n' "$status"
+  printf 'Content-Type: application/json\r\n'
+  printf 'Cache-Control: no-store\r\n'
+  printf 'Pragma: no-cache\r\n'
+  printf 'Connection: close\r\n'
+  printf '\r\n'
   printf '%s\n' "$1"
   exit 0
 }
@@ -52,6 +53,10 @@ json_error() {
   [ -z "$status" ] && status="400 Bad Request"
   send_json "{\"error\":{\"code\":$code,\"message\":\"$(json_escape "$message")\"}}" "$status"
 }
+
+# jct 是读取 persondetection.save_path 的唯一工具，缺失时直接报错
+command -v jct >/dev/null 2>&1 || \
+  json_error 500 "jct is not available" "500 Internal Server Error"
 
 urldecode() {
   data=$(echo "$1" | sed 's/+/ /g')

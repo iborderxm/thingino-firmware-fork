@@ -11,9 +11,16 @@ send_json() {
   printf '%s\n' "$1"
 }
 
-echo "Content-Type: application/json"
-echo "Connection: close"
-echo
+# 必须先于请求体读取定义：set -e 下未定义函数会让脚本直接退出且响应已发出头部
+error_response() {
+  send_json "{\"error\":\"$1\",\"message\":\"$2\"}"
+  exit 0
+}
+
+printf 'Content-Type: application/json\r\n'
+printf 'Cache-Control: no-store\r\n'
+printf 'Connection: close\r\n'
+printf '\r\n'
 
 if ! command -v curl >/dev/null 2>&1; then
   send_json '{"error":"curl_missing","message":"curl is required to contact Google APIs"}'
@@ -28,10 +35,18 @@ cleanup() {
 trap cleanup EXIT
 
 if [ -n "$CONTENT_LENGTH" ]; then
-  dd bs=1 count="$CONTENT_LENGTH" 2>/dev/null >"$req_file"
+  # head -c 为缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文会明显变慢
+  case "$CONTENT_LENGTH" in
+    *[!0-9]*) error_response "invalid_content_length" "Invalid Content-Length header" ;;
+  esac
+  if [ "$CONTENT_LENGTH" -eq 0 ]; then
+    error_response "empty_body" "Empty request body"
+  fi
+  head -c "$CONTENT_LENGTH" >"$req_file"
 else
   cat >"$req_file"
 fi
+[ -s "$req_file" ] || error_response "empty_body" "Empty request body"
 
 read_field() {
   jct "$req_file" get "$1" 2>/dev/null
@@ -42,11 +57,6 @@ client_secret=$(read_field client_secret)
 code=$(read_field code)
 redirect_uri=$(read_field redirect_uri)
 [ -n "$redirect_uri" ] || redirect_uri="http://localhost"
-
-error_response() {
-  send_json "{\"error\":\"$1\",\"message\":\"$2\"}"
-  exit 0
-}
 
 [ -n "$client_id" ] || error_response "missing_client_id" "Provide your Google OAuth client ID."
 [ -n "$client_secret" ] || error_response "missing_client_secret" "Provide your Google OAuth client secret."

@@ -32,8 +32,15 @@ json_error() {
 }
 
 read_body() {
+  # head -c 为缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文会明显变慢
   if [ -n "$CONTENT_LENGTH" ]; then
-    dd bs=1 count="$CONTENT_LENGTH" 2>/dev/null
+    case "$CONTENT_LENGTH" in
+      *[!0-9]*) json_error 400 "Invalid Content-Length header" "400 Bad Request" ;;
+    esac
+    if [ "$CONTENT_LENGTH" -eq 0 ]; then
+      json_error 400 "Empty request body" "400 Bad Request"
+    fi
+    head -c "$CONTENT_LENGTH"
   else
     cat
   fi

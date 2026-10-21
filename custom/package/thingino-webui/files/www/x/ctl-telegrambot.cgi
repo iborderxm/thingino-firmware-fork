@@ -1,8 +1,16 @@
 #!/bin/sh
+
+# Check authentication
+. /var/www/x/auth.sh
+require_auth
+
 CTL="/etc/init.d/telegrambot"
-echo "Content-Type: application/json"
-echo "Connection: close"
-echo
+
+printf 'Content-Type: application/json\r\n'
+printf 'Cache-Control: no-store\r\n'
+printf 'Connection: close\r\n'
+printf '\r\n'
+
 case "$QUERY_STRING" in
    enabled=1)
       $CTL enable >/dev/null 2>&1

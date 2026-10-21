@@ -17,7 +17,8 @@ json_escape() {
 
 read_post_data() {
   if [ -n "$CONTENT_LENGTH" ] && [ "$CONTENT_LENGTH" -gt 0 ]; then
-    body=$(dd bs=1 count="$CONTENT_LENGTH" 2>/dev/null)
+    # head -c 为缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文会明显变慢
+    body=$(head -c "$CONTENT_LENGTH")
     eval "$(printf '%s' "$body" | awk -F'&' '{
       for (i=1; i<=NF; i++) {
         split($i, kv, "=")
@@ -55,6 +56,9 @@ json_error() {
   printf '{"error":{"code":412,"message":"%s"}}\n' "$(json_escape "$1")"
   exit 0
 }
+
+# jct 是读写配置的唯一工具，缺失时直接报错而不是静默失败
+command -v jct >/dev/null 2>&1 || json_error "jct is not available"
 
 json_ok() {
   http_200

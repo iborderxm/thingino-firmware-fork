@@ -16,15 +16,13 @@ json_escape() {
 
 send_json() {
   status="${2:-200 OK}"
-  printf 'Status: %s\n' "$status"
-  cat <<EOF
-Content-Type: application/json
-Cache-Control: no-store
-Pragma: no-cache
-Connection: close
-
-$1
-EOF
+  printf 'Status: %s\r\n' "$status"
+  printf 'Content-Type: application/json\r\n'
+  printf 'Cache-Control: no-store\r\n'
+  printf 'Pragma: no-cache\r\n'
+  printf 'Connection: close\r\n'
+  printf '\r\n'
+  printf '%s\n' "$1"
   exit 0
 }
 

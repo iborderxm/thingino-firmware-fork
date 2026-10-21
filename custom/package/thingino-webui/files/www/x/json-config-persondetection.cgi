@@ -23,14 +23,13 @@ REQ_FILE=""
 emit_json() {
   local status="$1"
   shift
-  [ -n "$status" ] && printf 'Status: %s\n' "$status"
-  cat <<EOF
-Content-Type: application/json
-Cache-Control: no-store
-Pragma: no-cache
-
-$1
-EOF
+  [ -n "$status" ] && printf 'Status: %s\r\n' "$status"
+  printf 'Content-Type: application/json\r\n'
+  printf 'Cache-Control: no-store\r\n'
+  printf 'Pragma: no-cache\r\n'
+  printf 'Connection: close\r\n'
+  printf '\r\n'
+  printf '%s\n' "$1"
   exit 0
 }
 
@@ -55,11 +54,19 @@ trap cleanup EXIT
 
 read_body() {
   REQ_FILE=$(mktemp /tmp/json-config-persondetection.XXXXXX)
+  # head -c 为缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文会明显变慢
   if [ -n "$CONTENT_LENGTH" ]; then
-    dd bs=1 count="$CONTENT_LENGTH" 2>/dev/null >"$REQ_FILE"
+    case "$CONTENT_LENGTH" in
+      *[!0-9]*) json_error "400 Bad Request" "Invalid Content-Length header" "invalid_content_length" ;;
+    esac
+    if [ "$CONTENT_LENGTH" -eq 0 ]; then
+      json_error "400 Bad Request" "Empty request body" "empty_body"
+    fi
+    head -c "$CONTENT_LENGTH" >"$REQ_FILE"
   else
     cat >"$REQ_FILE"
   fi
+  [ -s "$REQ_FILE" ] || json_error "400 Bad Request" "Empty request body" "empty_body"
 }
 
 ensure_persondetection_file() {

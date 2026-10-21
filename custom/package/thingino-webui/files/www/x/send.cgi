@@ -49,15 +49,14 @@ json_ok() {
 # redirect_to "url" "flash class" "flash text"
 redirect_to() {
   #[ -n "$3" ] && alert_append "$2" "$3"
-  echo "HTTP/1.1 303 See Other
-Content-type: text/html; charset=UTF-8
-Cache-Control: no-store
-Pragma: no-cache
-Date: $(TZ=GMT0 date +'%a, %d %b %Y %T %Z')
-Server: $SERVER_SOFTWARE
-Location: $1
-
-"
+  printf 'HTTP/1.1 303 See Other\r\n'
+  printf 'Content-type: text/html; charset=UTF-8\r\n'
+  printf 'Cache-Control: no-store\r\n'
+  printf 'Pragma: no-cache\r\n'
+  printf 'Date: %s\r\n' "$(TZ=GMT0 date +'%a, %d %b %Y %T %Z')"
+  printf 'Server: %s\r\n' "$SERVER_SOFTWARE"
+  printf 'Location: %s\r\n' "$1"
+  printf '\r\n'
   exit 0
 }
 
@@ -143,7 +142,8 @@ parse_post_body() {
     ''|*[!0-9]*) len=0 ;;
   esac
   [ "$len" -gt 0 ] || return
-  raw=$(dd bs=1 count="$len" 2>/dev/null)
+  # head -c 为缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文会明显变慢
+  raw=$(head -c "$len")
   parse_kv_pairs "$raw" "POST"
 }
 

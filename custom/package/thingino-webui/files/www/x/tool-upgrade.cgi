@@ -28,15 +28,13 @@ json_escape() {
 send_json() {
   local payload="$1"
   local status="${2:-200 OK}"
-  printf 'Status: %s\n' "$status"
-  cat <<EOF
-Content-Type: application/json
-Cache-Control: no-store
-Pragma: no-cache
-Connection: close
-
-$payload
-EOF
+  printf 'Status: %s\r\n' "$status"
+  printf 'Content-Type: application/json\r\n'
+  printf 'Cache-Control: no-store\r\n'
+  printf 'Pragma: no-cache\r\n'
+  printf 'Connection: close\r\n'
+  printf '\r\n'
+  printf '%s\n' "$payload"
   exit 0
 }
 
@@ -91,7 +89,8 @@ read_request_body() {
     ''|*[!0-9]*) length=0 ;;
   esac
   if [ "$length" -gt 0 ] 2>/dev/null; then
-    REQUEST_BODY=$(dd bs=1 count="$length" 2>/dev/null)
+    # head -c 为缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文会明显变慢
+    REQUEST_BODY=$(head -c "$length")
   fi
 }
 
@@ -319,7 +318,8 @@ save_upload_payload() {
     json_error 411 "Empty upload payload."
   fi
   tmpfile=$(mktemp /tmp/fwupload.XXXXXX) || json_error 500 "Unable to allocate temporary file."
-  if ! dd bs=1 count="$length" of="$tmpfile" 2>/dev/null; then
+  # 固件镜像可达数 MB：dd bs=1 每字节一次系统调用会跑满数分钟，必须用缓冲读取
+  if ! head -c "$length" >"$tmpfile" 2>/dev/null; then
     rm -f "$tmpfile"
     json_error 500 "Failed to buffer upload payload."
   fi

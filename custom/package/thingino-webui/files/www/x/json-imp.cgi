@@ -49,13 +49,21 @@ json_ok() {
 
 bad_request() {
   http_400
-  echo
-  echo "$1"
+  printf '\r\n'
+  printf '%s\n' "$1"
   exit 1
 }
 
-# Read POST data
-read -r POST_DATA
+# Read POST data（按 CONTENT_LENGTH 精确读取，兼容无换行/多行报文体；
+# 原 read -r 只能读到第一行）
+if [ -n "$CONTENT_LENGTH" ]; then
+  case "$CONTENT_LENGTH" in
+    *[!0-9]*) POST_DATA="" ;;
+    *) POST_DATA=$(head -c "$CONTENT_LENGTH") ;;
+  esac
+else
+  POST_DATA=$(cat)
+fi
 
 # Parse JSON (supports quoted or numeric val)
 cmd=$(printf '%s' "$POST_DATA" | awk -F'"' '/"cmd"/{for(i=1;i<=NF;i++){if($i=="cmd"){print $(i+2); exit}}}')

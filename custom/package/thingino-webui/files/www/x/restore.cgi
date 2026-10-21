@@ -16,9 +16,9 @@ referer="${HTTP_REFERER:-/}"
 
 # Validate file parameter
 if [ -z "$f" ]; then
-  printf 'Status: 302 Found\n'
-  printf 'Connection: close\n'
-  printf 'Location: %s?error=%s\n\n' "$referer" "$(echo 'Nothing to restore.' | sed 's/ /%20/g')"
+  printf 'Status: 302 Found\r\n'
+  printf 'Connection: close\r\n'
+  printf 'Location: %s?error=%s\r\n\r\n' "$referer" "$(echo 'Nothing to restore.' | sed 's/ /%20/g')"
   exit 1
 fi
 
@@ -26,9 +26,9 @@ file="$f"
 
 # Check if file exists in ROM
 if [ ! -f "/rom/$file" ]; then
-  printf 'Status: 302 Found\n'
-  printf 'Connection: close\n'
-  printf 'Location: %s?error=%s\n\n' "$referer" "$(echo "File /rom/$file not found!" | sed 's/ /%20/g;s/\//%2F/g')"
+  printf 'Status: 302 Found\r\n'
+  printf 'Connection: close\r\n'
+  printf 'Location: %s?error=%s\r\n\r\n' "$referer" "$(echo "File /rom/$file not found!" | sed 's/ /%20/g;s/\//%2F/g')"
   exit 1
 fi
 
@@ -36,11 +36,11 @@ fi
 cp "/rom/$file" "$file"
 
 if [ $? -eq 0 ]; then
-  printf 'Status: 302 Found\n'
-  printf 'Connection: close\n'
-  printf 'Location: %s?success=%s\n\n' "$referer" "$(echo "File $file restored from ROM." | sed 's/ /%20/g')"
+  printf 'Status: 302 Found\r\n'
+  printf 'Connection: close\r\n'
+  printf 'Location: %s?success=%s\r\n\r\n' "$referer" "$(echo "File $file restored from ROM." | sed 's/ /%20/g')"
 else
-  printf 'Status: 302 Found\n'
-  printf 'Connection: close\n'
-  printf 'Location: %s?error=%s\n\n' "$referer" "$(echo "Cannot restore $file!" | sed 's/ /%20/g;s/!/%21/g')"
+  printf 'Status: 302 Found\r\n'
+  printf 'Connection: close\r\n'
+  printf 'Location: %s?error=%s\r\n\r\n' "$referer" "$(echo "Cannot restore $file!" | sed 's/ /%20/g;s/!/%21/g')"
 fi

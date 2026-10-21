@@ -35,15 +35,13 @@ base64_encode_string() {
 send_json() {
   local payload="$1"
   local status="${2:-200 OK}"
-  printf 'Status: %s\n' "$status"
-  cat <<EOF
-Content-Type: application/json
-Cache-Control: no-store
-Pragma: no-cache
-Connection: close
-
-$payload
-EOF
+  printf 'Status: %s\r\n' "$status"
+  printf 'Content-Type: application/json\r\n'
+  printf 'Cache-Control: no-store\r\n'
+  printf 'Pragma: no-cache\r\n'
+  printf 'Connection: close\r\n'
+  printf '\r\n'
+  printf '%s\n' "$payload"
   exit 0
 }
 
@@ -66,7 +64,8 @@ read_request_body() {
     ''|*[!0-9]*) length=0 ;;
   esac
   if [ "$length" -gt 0 ] 2>/dev/null; then
-    request_body=$(dd bs=1 count="$length" 2>/dev/null)
+    # head -c 为缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文会明显变慢
+    request_body=$(head -c "$length")
   fi
 }
 

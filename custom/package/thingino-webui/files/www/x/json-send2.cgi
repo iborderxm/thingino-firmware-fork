@@ -57,8 +57,16 @@ fi
 # POST - Save configuration
 if [ "$REQUEST_METHOD" = "POST" ]; then
   # Read POST body (read entire content based on CONTENT_LENGTH)
-  if [ -n "$CONTENT_LENGTH" ] && [ "$CONTENT_LENGTH" -gt 0 ]; then
-    post_data=$(dd bs=1 count="$CONTENT_LENGTH" 2>/dev/null)
+  # head -c 为缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文会明显变慢
+  if [ -n "$CONTENT_LENGTH" ]; then
+    case "$CONTENT_LENGTH" in
+      *[!0-9]*) send_error "Invalid Content-Length header"; exit 1 ;;
+    esac
+    if [ "$CONTENT_LENGTH" -eq 0 ]; then
+      post_data=""
+    else
+      post_data=$(head -c "$CONTENT_LENGTH")
+    fi
   else
     post_data=""
   fi

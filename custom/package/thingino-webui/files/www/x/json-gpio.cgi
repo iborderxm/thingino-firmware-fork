@@ -47,7 +47,8 @@ json_ok() {
 # @params: n - name, s - state
 if [ "$REQUEST_METHOD" = "POST" ]; then
   if [ -n "$CONTENT_LENGTH" ] && [ "$CONTENT_LENGTH" -gt 0 ]; then
-    CONTENT=$(dd bs=1 count="$CONTENT_LENGTH" 2>/dev/null)
+    # head -c 为缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文会明显变慢
+    CONTENT=$(head -c "$CONTENT_LENGTH")
     eval $(echo "$CONTENT" | sed "s/&/;/g")
   fi
 else

@@ -5,9 +5,10 @@
 . /var/www/x/auth.sh
 require_auth
 
-echo "Content-Type: application/json"
-echo "Connection: close"
-echo
-echo '{"status":"ok","message":"Prudynt restart initiated"}'
+printf 'Content-Type: application/json\r\n'
+printf 'Cache-Control: no-store\r\n'
+printf 'Connection: close\r\n'
+printf '\r\n'
+printf '{"status":"ok","message":"Prudynt restart initiated"}\n'
 
 service restart prudynt >/dev/null 2>&1 &

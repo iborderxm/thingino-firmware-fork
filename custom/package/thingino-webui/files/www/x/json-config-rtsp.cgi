@@ -10,15 +10,13 @@ PRUDYNT_CONFIG="/etc/prudynt.json"
 emit_json() {
   status="$1"
   shift
-  [ -n "$status" ] && printf 'Status: %s\n' "$status"
-  cat <<EOF
-Content-Type: application/json
-Cache-Control: no-store
-Pragma: no-cache
-Connection: close
-
-$1
-EOF
+  [ -n "$status" ] && printf 'Status: %s\r\n' "$status"
+  printf 'Content-Type: application/json\r\n'
+  printf 'Cache-Control: no-store\r\n'
+  printf 'Pragma: no-cache\r\n'
+  printf 'Connection: close\r\n'
+  printf '\r\n'
+  printf '%s\n' "$1"
   exit 0
 }
 
@@ -28,6 +26,10 @@ json_error() {
   code="${3:-error}"
   emit_json "$status" "$(printf '{"error":{"code":"%s","message":"%s"}}' "$(json_escape "$code")" "$(json_escape "$text")")"
 }
+
+# jct 是读写配置的唯一工具，缺失时直接报错而不是静默失败
+command -v jct >/dev/null 2>&1 || \
+  json_error "500 Internal Server Error" "jct is not available" "jct_missing"
 
 json_escape() {
   printf '%s' "$1" | sed \
@@ -64,11 +66,19 @@ send_config() {
 
 read_body() {
   req_file=$(mktemp /tmp/config-rtsp-body.XXXXXX)
+  # head -c 为缓冲读取；dd bs=1 每字节一次系统调用，KB 级报文会明显变慢
   if [ -n "$CONTENT_LENGTH" ]; then
-    dd bs=1 count="$CONTENT_LENGTH" 2>/dev/null >"$req_file"
+    case "$CONTENT_LENGTH" in
+      *[!0-9]*) json_error "400 Bad Request" "Invalid Content-Length header" "invalid_content_length" ;;
+    esac
+    if [ "$CONTENT_LENGTH" -eq 0 ]; then
+      json_error "400 Bad Request" "Empty request body" "empty_body"
+    fi
+    head -c "$CONTENT_LENGTH" >"$req_file"
   else
     cat >"$req_file"
   fi
+  [ -s "$req_file" ] || json_error "400 Bad Request" "Empty request body" "empty_body"
 }
 
 cleanup() {
