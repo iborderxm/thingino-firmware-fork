@@ -70,16 +70,16 @@
               </div>
               <div class="col-12 col-md-8">
                 <label class="form-label" for="hostc-subdomain">子域名 (subdomain)</label>
-                <input type="text" class="form-control" id="hostc-subdomain" maxlength="12"
-                  placeholder="12 位小写字母+数字" autocomplete="off" aria-describedby="hostc-subdomain-help">
+                <div class="input-group">
+                  <input type="text" class="form-control" id="hostc-subdomain" maxlength="12"
+                    placeholder="12 位小写字母+数字" autocomplete="off" aria-describedby="hostc-subdomain-help">
+                  <button type="button" class="btn btn-outline-secondary" id="btn-gen-subdomain" title="随机生成 12 位子域名">
+                    <i class="bi bi-shuffle"></i> 随机生成
+                  </button>
+                </div>
                 <div id="hostc-subdomain-help" class="form-text text-muted">
                   长度 12 位，仅由小写字母或数字组成；保存在 uboot 环境变量 HOSTC_SUBDOMAIN。
                 </div>
-              </div>
-              <div class="col-12 col-md-4 d-flex align-items-end">
-                <button type="button" class="btn btn-outline-secondary w-100" id="btn-gen-subdomain" title="随机生成 12 位子域名">
-                  <i class="bi bi-shuffle"></i> 随机生成
-                </button>
               </div>
               <div class="col-12">
                 <div class="form-check form-switch">
