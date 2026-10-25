@@ -44,6 +44,10 @@
                 <p><label for="dns_secondary">备用 DNS</label>
                   <input type="text" class="form-control" id="dns_secondary" placeholder="8.8.8.8"></p>
                 <p class="small">至少需要一个 DNS 服务器；第二个是可选的，提供冗余。</p>
+                <p class="form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="ipv6_enabled" data-help="默认关闭：禁用内核 IPv6 并停止 odhcp6c（不删除软件包），适合不需要 IPv6 的摄像机以省内存；勾选后恢复。">
+                  <label class="form-check-label" for="ipv6_enabled">启用 IPv6 / DHCPv6 (odhcp6c)</label>
+                </p>
               </div><!-- .col -->
               <div class="col col-xl-8">
                 <h4>Wi-Fi Configuration</h4>
@@ -99,8 +103,6 @@
                       <p><label for="eth0_broadcast">广播</label>
                         <input type="text" class="form-control iface-broadcast" id="eth0_broadcast"></p>
                     </div>
-                    <p class="form-switch"><input class="form-check-input iface-ipv6" type="checkbox" id="eth0_ipv6">
-                      <label class="form-check-label" for="eth0_ipv6">请求 DHCPv6</label></p>
                   </div><!-- .card-body -->
                 </div><!-- .card -->
               </div>
@@ -134,8 +136,6 @@
                       <p><label for="wlan0_broadcast">广播</label>
                         <input type="text" class="form-control iface-broadcast" id="wlan0_broadcast"></p>
                     </div>
-                    <p class="form-switch"><input class="form-check-input iface-ipv6" type="checkbox" id="wlan0_ipv6">
-                      <label class="form-check-label" for="wlan0_ipv6">请求 DHCPv6</label></p>
                   </div>
                 </div>
               </div>
@@ -167,8 +167,6 @@
                       <p><label for="usb0_broadcast">广播</label>
                         <input type="text" class="form-control iface-broadcast" id="usb0_broadcast"></p>
                     </div>
-                    <p class="form-switch"><input class="form-check-input iface-ipv6" type="checkbox" id="usb0_ipv6">
-                      <label class="form-check-label" for="usb0_ipv6">请求 DHCPv6</label></p>
                   </div><!-- .card-body -->
                 </div><!-- .card -->
               </div><!-- .col -->

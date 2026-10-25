@@ -319,6 +319,12 @@ interface_state_json() {
 send_state() {
   ensure_config_file
 
+  local ipv6_global="false" ipv6_val
+  ipv6_val=$(read_fw_env ipv6_enabled)
+  case "$ipv6_val" in
+    1|true|on|enabled|yes) ipv6_global="true" ;;
+  esac
+
   local hostname_value
   hostname_value=$(hostname -s)
 
@@ -346,6 +352,8 @@ send_state() {
     "$(json_escape "$wifi_pass")"
 
   printf '"wifi_ap":{"enabled":%s},' "$wifi_ap_enabled"
+
+  printf '"ipv6":%s,' "$ipv6_global"
 
   printf '"interfaces":{'
   local first=1 iface output
@@ -512,6 +520,41 @@ handle_post() {
     #   ssid_line="ssid=\"$ssid\""
     # fi
     wlan configure "$wifi_ssid" "$wifi_pass"
+  fi
+
+  # Apply global IPv6 toggle (controls kernel IPv6 stack + odhcp6c residency).
+  # Persisted in uboot env (ipv6_enabled=1/0); default off.
+  ipv6_enabled=$(read_json_bool ipv6 "false")
+  if [ "$ipv6_enabled" = "true" ]; then
+    fw_setenv ipv6_enabled 1 2>/dev/null
+  else
+    fw_setenv ipv6_enabled 0 2>/dev/null
+  fi
+  if [ "$ipv6_enabled" = "true" ]; then
+    sysctl -w net.ipv6.conf.all.disable_ipv6=0 >/dev/null 2>&1 || true
+  else
+    sysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null 2>&1 || true
+    for pf in /var/run/odhcp6c_*.pid; do
+      [ -f "$pf" ] || continue
+      p=$(cat "$pf" 2>/dev/null)
+      [ -n "$p" ] && kill -9 "$p" 2>/dev/null
+      rm -f "$pf"
+    done
+  fi
+
+  # Start odhcp6c immediately on enabled+up interfaces so the toggle takes
+  # effect without a reboot (if-up.d only runs when an interface is brought up).
+  if [ "$ipv6_enabled" = "true" ]; then
+    for iface in eth0 wlan0 usb0; do
+      [ -f "/sys/class/net/$iface/operstate" ] || continue
+      [ "$(cat "/sys/class/net/$iface/operstate" 2>/dev/null)" = "up" ] || continue
+      pidfile="/var/run/odhcp6c_$iface.pid"
+      if [ -f "$pidfile" ]; then
+        p=$(cat "$pidfile" 2>/dev/null)
+        [ -n "$p" ] && kill -0 "$p" 2>/dev/null && continue
+      fi
+      /sbin/odhcp6c -d -v -p "$pidfile" -t120 "$iface" 2>/dev/null
+    done
   fi
 
   emit_json "" '{"status":"ok"}'
