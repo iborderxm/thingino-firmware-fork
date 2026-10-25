@@ -83,6 +83,8 @@ cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_j
 # 更新覆盖thingino-webui和wifi
 cp -rf custom/package/thingino-webui package
 cp -rf custom/package/wifi package
+# 更新覆盖thingino-wpa_supplicant（裁剪：CONFIG_NO_STDOUT_DEBUG + 默认关闭漫游/syslog）
+cp -rf custom/package/thingino-wpa_supplicant package
 cat custom/package/wifi/files/index.html | grep "<title>"
 echo "更新覆盖thingino-webui和wifi 配置完成:"
 cat package/wifi/files/index.html | grep "<title>"

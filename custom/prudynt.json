@@ -1,15 +1,15 @@
 {
   "audio": {
-    "force_stereo": false,
+    "force_stereo": true,
     "mic_agc_compression_gain_db": 0,
-    "mic_agc_enabled": false,
+    "mic_agc_enabled": true,
     "mic_agc_target_level_dbfs": 10,
     "mic_alc_gain": 0,
     "mic_bitrate": 40,
     "mic_enabled": true,
     "mic_format": "AAC",
     "mic_gain": 25,
-    "mic_high_pass_filter": false,
+    "mic_high_pass_filter": true,
     "mic_is_digital": false,
     "mic_noise_suppression": 3,
     "mic_sample_rate": 8000,
@@ -40,7 +40,7 @@
     "switch_below_percent": 15,
     "tolerance_percent": 50,
     "total_gain_day_threshold": 500,
-    "total_gain_night_threshold": 3000,
+    "total_gain_night_threshold": 20000,
     "controls": {
       "color": true,
       "ircut": true,
@@ -209,7 +209,7 @@
     "pb_delta": -1,
     "max_bitrate": 0,
     "max_gop": 60,
-    "mode": "CBR",
+    "mode": "VBR",
     "osd": {
       "enabled": true,
       "font_path": "/usr/share/fonts/default.ttf",
@@ -234,7 +234,7 @@
         "width": 100
       },
       "privacy": {
-        "enabled": true,
+        "enabled": false,
         "text": "PRIVACY ENABLED",
         "position": "0,-120",
         "font_size": 16384,
@@ -257,7 +257,7 @@
         "stroke_color": "#000000CC"
       },
       "uptime": {
-        "enabled": true,
+        "enabled": false,
         "fill_color": "#FFFFFFCC",
         "format": "Uptime: %02lu:%02lu:%02lu",
         "position": "-10,10",
@@ -300,7 +300,7 @@
     "pb_delta": -1,
     "max_bitrate": 0,
     "max_gop": 60,
-    "mode": "CBR",
+    "mode": "VBR",
     "osd": {
       "enabled": true,
       "font_path": "/usr/share/fonts/default.ttf",
@@ -325,7 +325,7 @@
         "width": 100
       },
       "privacy": {
-        "enabled": true,
+        "enabled": false,
         "text": "PRIVACY ENABLED",
         "position": "0,-120",
         "font_size": 16384,
@@ -348,7 +348,7 @@
         "stroke_color": "#000000CC"
       },
       "uptime": {
-        "enabled": true,
+        "enabled": false,
         "fill_color": "#FFFFFFCC",
         "format": "Uptime: %02lu:%02lu:%02lu",
         "position": "-5,5",
