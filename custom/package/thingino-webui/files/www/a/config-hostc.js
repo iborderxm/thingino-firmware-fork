@@ -147,6 +147,64 @@ function renderUI() {
   $('#hostc-target').value = hostcConfig.target || '';
   $('#hostc-subdomain').value = hostcConfig.subdomain || '';
   $('#hostc-enabled').checked = hostcConfig.enabled === true;
+  updateTunnelPreview();
+}
+
+// 由 server 与 subdomain 拼出完整隧道地址 https://{subdomain}.{host}
+function buildTunnelUrl(subdomain, server) {
+  if (!subdomain) return '';
+  let host = (server || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  if (!host) host = '166989.xyz';
+  return 'https://' + subdomain + '.' + host;
+}
+
+// 根据当前输入刷新隧道地址预览与复制按钮可用性
+function updateTunnelPreview() {
+  const subdomain = $('#hostc-subdomain').value.trim();
+  const server = $('#hostc-server').value.trim();
+  const url = buildTunnelUrl(subdomain, server);
+  const urlInput = $('#hostc-tunnel-url');
+  if (urlInput) urlInput.value = url;
+  const copyBtn = $('#btn-copy-tunnel');
+  if (copyBtn) copyBtn.disabled = !url;
+  updateSubdomainCounter();
+}
+
+// 子域名长度计数器（必须正好 12 位）
+function updateSubdomainCounter() {
+  const el = $('#hostc-subdomain');
+  const cnt = $('#hostc-subdomain-count');
+  if (!el || !cnt) return;
+  const len = el.value.length;
+  cnt.textContent = len + ' / 12';
+  cnt.classList.remove('text-success', 'text-danger');
+  if (len === 12) {
+    cnt.classList.add('text-success');
+  } else if (len > 0) {
+    cnt.classList.add('text-danger');
+  }
+}
+
+// 复制完整隧道地址到剪贴板（优先 Clipboard API，失败回退 execCommand）
+async function copyTunnelUrl() {
+  const url = $('#hostc-tunnel-url').value;
+  if (!url) return;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(url);
+    } else {
+      const input = $('#hostc-tunnel-url');
+      input.removeAttribute('readonly');
+      input.select();
+      input.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      input.setAttribute('readonly', '');
+    }
+    showMessage('隧道地址已复制: ' + url, 'success');
+  } catch (err) {
+    console.error('Copy failed:', err);
+    showMessage('复制失败: ' + err.message, 'danger');
+  }
 }
 
 // 随机生成 12 位子域名（小写字母 + 数字）
@@ -183,8 +241,12 @@ async function saveData() {
     showMessage('本地目标格式须为 host:port，端口 1-65535', 'danger');
     return;
   }
+  if (enabled && !subdomain) {
+    showMessage('启用 hostc 前必须先填写 12 位子域名', 'danger');
+    return;
+  }
   if (subdomain && !isValidSubdomain(subdomain)) {
-    showMessage('子域名须为 12 位小写字母或数字', 'danger');
+    showMessage('子域名长度必须正好 12 位，且仅含小写字母或数字', 'danger');
     return;
   }
 
@@ -237,7 +299,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // 随机生成子域名
   $('#btn-gen-subdomain').addEventListener('click', () => {
     $('#hostc-subdomain').value = generateSubdomain();
+    updateTunnelPreview();
   });
+
+  // 子域名 / 服务器变化时刷新隧道地址预览
+  $('#hostc-subdomain').addEventListener('input', updateTunnelPreview);
+  $('#hostc-server').addEventListener('input', updateTunnelPreview);
+
+  // 复制完整隧道地址
+  $('#btn-copy-tunnel').addEventListener('click', copyTunnelUrl);
 
   // 重新加载按钮
   const btnReload = $('#hostc-reload');

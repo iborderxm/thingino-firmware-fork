@@ -69,7 +69,7 @@
                 <small class="form-text text-muted">本地被映射的服务地址:端口（默认 127.0.0.1:80）。</small>
               </div>
               <div class="col-12 col-md-8">
-                <label class="form-label" for="hostc-subdomain">子域名 (subdomain)</label>
+                <label class="form-label" for="hostc-subdomain">子域名 (subdomain) <span id="hostc-subdomain-count" class="small"></span></label>
                 <div class="input-group">
                   <input type="text" class="form-control" id="hostc-subdomain" maxlength="12"
                     placeholder="12 位小写字母+数字" autocomplete="off" aria-describedby="hostc-subdomain-help">
@@ -78,7 +78,17 @@
                   </button>
                 </div>
                 <div id="hostc-subdomain-help" class="form-text text-muted">
-                  长度 12 位，仅由小写字母或数字组成；保存在 uboot 环境变量 HOSTC_SUBDOMAIN。
+                  长度必须正好 12 位，仅由小写字母(a-z)或数字(0-9)组成.
+                </div>
+                <div class="mt-2">
+                  <label class="form-label small text-muted mb-1 d-block">完整隧道地址</label>
+                  <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" id="hostc-tunnel-url" readonly
+                      placeholder="填写子域名后自动生成" aria-label="完整隧道地址" autocomplete="off">
+                    <button type="button" class="btn btn-outline-secondary" id="btn-copy-tunnel" title="复制隧道地址">
+                      <i class="bi bi-clipboard"></i> 复制
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="col-12">
@@ -95,6 +105,10 @@
           <button type="button" class="btn btn-primary" id="btn-save">
             <i class="bi bi-check-circle"></i> 保存配置
           </button>
+        </div>
+        <div class="alert alert-info py-2 mb-3" role="alert">
+          <i class="bi bi-info-circle me-1"></i>
+          修改配置后需先点击「保存配置」写入 uboot 环境变量；若服务正在运行，还需点击上方的「重启」按钮才能使新配置生效。
         </div>
       </form>
     </section>
