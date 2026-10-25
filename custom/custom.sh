@@ -47,6 +47,10 @@ cp -r custom/xfrpc-ctl overlay/usr/sbin/xfrpc-ctl
 cp -r custom/xfrpc.toml overlay/etc/xfrpc.toml
 cp -r custom/S99xfrpc overlay/etc/init.d/S99xfrpc
 
+# 配置hostc (Cloudflare Worker Tunnel 客户端)
+cp -r custom/hostc overlay/usr/sbin/hostc
+cp -r custom/S99hostc overlay/etc/init.d/S99hostc
+
 chmod 755 overlay/etc/init.d/*
 chmod 755 overlay/usr/sbin/*
 

@@ -1,0 +1,117 @@
+#!/bin/sh
+# S99hostc - Cloudflare Worker Tunnel 客户端 (hostc) 服务
+#
+# 配置来自 uboot 环境变量（持久化，重启不丢）：
+#   HOSTC_ENABLED   是否启用 (1/true/on/yes/enabled 视为启用)
+#   HOSTC_SERVER    tunnel server 地址 (默认 https://166989.xyz)
+#   HOSTC_TARGET    本地目标 地址:端口 (默认 127.0.0.1:80)
+#   HOSTC_SUBDOMAIN 12 位小写字母+数字组成的子域名
+#
+# 开机自启策略：仅当 HOSTC_ENABLED 为启用值，且已配置 HOSTC_SUBDOMAIN 时才启动。
+# 与 /etc/init.d 下其他 thingino 服务的 PIDFILE/DAEMON 惯例保持一致。
+
+. /usr/share/common
+
+DAEMON_SHORT="hostc"
+DAEMON_FULL="/usr/sbin/hostc"
+PIDFILE="/var/run/hostc.pid"
+
+# 默认 server / target（按需求固定）
+HOSTC_SERVER_DEF="https://166989.xyz"
+HOSTC_TARGET_DEF="127.0.0.1:80"
+
+# 从 uboot 环境读取配置
+read_env() {
+	if command -v fw_printenv >/dev/null 2>&1; then
+		HOSTC_ENABLED=$(fw_printenv -n HOSTC_ENABLED 2>/dev/null)
+		HOSTC_SERVER=$(fw_printenv -n HOSTC_SERVER 2>/dev/null)
+		HOSTC_TARGET=$(fw_printenv -n HOSTC_TARGET 2>/dev/null)
+		HOSTC_SUBDOMAIN=$(fw_printenv -n HOSTC_SUBDOMAIN 2>/dev/null)
+	fi
+	[ -n "$HOSTC_ENABLED" ] || HOSTC_ENABLED="false"
+	[ -n "$HOSTC_SERVER" ]  || HOSTC_SERVER="$HOSTC_SERVER_DEF"
+	[ -n "$HOSTC_TARGET" ]  || HOSTC_TARGET="$HOSTC_TARGET_DEF"
+}
+
+# HOSTC_ENABLED 是否为启用值
+is_enabled() {
+	case "$HOSTC_ENABLED" in
+		1|true|on|enabled|yes) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+# 服务是否在运行
+is_running() {
+	if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
+		return 0
+	fi
+	pidof "$DAEMON_SHORT" >/dev/null 2>&1
+}
+
+start() {
+	if [ ! -x "$DAEMON_FULL" ]; then
+		echo_error "$DAEMON_FULL not found or not executable"
+		return 1
+	fi
+
+	read_env
+
+	if ! is_enabled; then
+		echo_warning "hostc disabled (HOSTC_ENABLED != true), not starting"
+		return 1
+	fi
+
+	if [ -z "$HOSTC_SUBDOMAIN" ]; then
+		echo_error "hostc subdomain not set (HOSTC_SUBDOMAIN empty), not starting"
+		return 1
+	fi
+
+	if is_running; then
+		echo_info "hostc is already running"
+		return 0
+	fi
+
+	# hostc <target> [--server <url>] [--subdomain <id>]
+	DAEMON_ARGS="$HOSTC_TARGET --server $HOSTC_SERVER --subdomain $HOSTC_SUBDOMAIN"
+	COMMAND="$DAEMON_FULL"
+
+	echo_title "Starting hostc"
+	start_daemon
+}
+
+stop() {
+	echo_title "Stopping hostc"
+	stop_daemon
+}
+
+status() {
+	if is_running; then
+		echo_info "hostc is running (PID: $(pidof "$DAEMON_SHORT"))"
+		return 0
+	fi
+	echo_info "hostc is not running"
+	return 1
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		sleep 1
+		start
+		;;
+	status)
+		status
+		;;
+	*)
+		usage "{start|stop|restart|status}"
+		;;
+esac
+
+exit 0

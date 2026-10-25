@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>thingino · hostc 隧道</title>
+  <script src="/a/theme-init.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/a/main.css">
+</head>
+
+<body id="page-config-hostc">
+<nav data-app-nav></nav>
+
+<main class="pb-4">
+  <div class="container" style="min-height:80vh">
+    <div data-app-controls></div>
+
+    <div id="hostc-not-supported" class="alert alert-danger d-none">
+      <p><strong>此相机不支持 hostc 隧道。</strong></p>
+      <p>您的系统上未找到 hostc 命令或服务脚本。</p>
+    </div>
+
+    <section>
+      <form id="hostcForm" class="needs-validation" novalidate>
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title"><i class="bi bi-hdd-network me-2"></i> hostc Cloudflare 隧道客户端</h2>
+            <small>把本地 HTTP/WebSocket 服务（默认 127.0.0.1:80）通过 Cloudflare Worker Tunnel 映射到公网。</small>
+            <button type="button" class="btn btn-outline-secondary" id="hostc-reload" title="从相机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
+            </button>
+          </div><!-- .card-header -->
+          <div class="card-body">
+            <!-- 运行状态与服务控制 -->
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3 pb-3 border-bottom" id="hostc-status-row">
+              <span class="badge text-bg-secondary" id="hostc-status-badge"><i class="bi bi-question-circle"></i> 状态未知</span>
+              <small class="text-muted" id="hostc-status-detail"></small>
+              <div class="ms-auto d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-success" id="btn-start" title="启动 hostc 服务">
+                  <i class="bi bi-play-fill"></i> 启动
+                </button>
+                <button type="button" class="btn btn-sm btn-danger" id="btn-stop" title="停止 hostc 服务">
+                  <i class="bi bi-stop-fill"></i> 停止
+                </button>
+                <button type="button" class="btn btn-sm btn-warning" id="btn-restart" title="重启 hostc 服务">
+                  <i class="bi bi-arrow-repeat"></i> 重启
+                </button>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="hostc-server">隧道服务器 (server)</label>
+                <input type="text" class="form-control" id="hostc-server" maxlength="253"
+                  placeholder="https://166989.xyz" autocomplete="off">
+                <small class="form-text text-muted">Cloudflare Worker Tunnel 服务端地址（默认 https://166989.xyz）。</small>
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="hostc-target">本地目标 (target)</label>
+                <input type="text" class="form-control" id="hostc-target" maxlength="253"
+                  placeholder="127.0.0.1:80" autocomplete="off">
+                <small class="form-text text-muted">本地被映射的服务地址:端口（默认 127.0.0.1:80）。</small>
+              </div>
+              <div class="col-12 col-md-8">
+                <label class="form-label" for="hostc-subdomain">子域名 (subdomain)</label>
+                <input type="text" class="form-control" id="hostc-subdomain" maxlength="12"
+                  placeholder="12 位小写字母+数字" autocomplete="off" aria-describedby="hostc-subdomain-help">
+                <div id="hostc-subdomain-help" class="form-text text-muted">
+                  长度 12 位，仅由小写字母或数字组成；保存在 uboot 环境变量 HOSTC_SUBDOMAIN。
+                </div>
+              </div>
+              <div class="col-12 col-md-4 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-secondary w-100" id="btn-gen-subdomain" title="随机生成 12 位子域名">
+                  <i class="bi bi-shuffle"></i> 随机生成
+                </button>
+              </div>
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="hostc-enabled">
+                  <label class="form-check-label" for="hostc-enabled">启用 hostc 隧道 (HOSTC_ENABLED)</label>
+                </div>
+              </div>
+            </div>
+          </div><!-- .card-body -->
+        </div><!-- .card -->
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+          <button type="button" class="btn btn-primary" id="btn-save">
+            <i class="bi bi-check-circle"></i> 保存配置
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+</main>
+
+<footer data-app-footer></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script src="/a/main.js"></script>
+<script src="/a/runtime-config.js"></script>
+<script src="/a/control-bar.js"></script>
+<script src="/a/navigation.js"></script>
+<script src="/a/footer.js"></script>
+<script src="/a/config-hostc.js"></script>
+</body>
+</html>

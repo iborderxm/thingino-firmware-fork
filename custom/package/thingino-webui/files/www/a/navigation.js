@@ -43,6 +43,7 @@
       { label: 'WireGuard VPN', href: '/config-wireguard.html' },
       { label: 'ZeroTier VPN', href: '/config-zerotier.html' },
       { label: 'xfrp 内网穿透', href: '/config-xfrpc.html' },
+      { label: 'hostc 隧道', href: '/config-hostc.html' },
       { type: 'divider' },
       { label: '重置...', href: '/reset.html' }
     );
