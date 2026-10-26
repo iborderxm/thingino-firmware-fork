@@ -1,6 +1,6 @@
 {
   "audio": {
-    "force_stereo": true,
+    "force_stereo": false,
     "mic_agc_compression_gain_db": 0,
     "mic_agc_enabled": true,
     "mic_agc_target_level_dbfs": 10,
@@ -143,6 +143,8 @@
     "save_path": "/tmp/persondetection/",
     "recording_stream": 1,
     "recording_detection_interval": 1,
+    "ptz_follow_enabled": false,
+    "ptz_script_path": "/usr/sbin/ptz_person_follow",
     "enable_move": true,
     "enable_perm": true,
     "permcnt": 1,

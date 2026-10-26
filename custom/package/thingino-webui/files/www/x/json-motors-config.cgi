@@ -96,9 +96,32 @@ current_config_payload() {
   printf '%s' "$payload"
 }
 
+motors_status_json() {
+  local svc=false
+  local running=false
+  local pid=""
+  if [ -x "/etc/init.d/S59motor" ]; then
+    svc=true
+  fi
+  local pids
+  pids=$(pidof motors-daemon 2>/dev/null)
+  if [ -n "$pids" ]; then
+    running=true
+    pid=$(echo "$pids" | cut -d' ' -f1)
+  fi
+  printf '{"running":%s,"pid":"%s","service":%s}' "$running" "$pid" "$svc"
+}
+
 respond_with_config() {
   ensure_config_file
-  json_ok "$(current_config_payload)"
+  local config_payload
+  config_payload=$(current_config_payload)
+  local status_payload
+  status_payload=$(motors_status_json)
+  # 将运行状态合并进配置对象末尾的 status 键
+  local combined
+  combined=$(printf '%s' "$config_payload" | sed -E 's/\}$/,"status":'"$status_payload"'}/')
+  json_ok "$combined"
 }
 
 handle_get() {
@@ -109,6 +132,36 @@ handle_get() {
 handle_post() {
   ensure_config_file
   read_post_data
+
+  # 服务控制：action=start|stop|restart（经 /etc/init.d/S59motor）
+  action=$POST_action
+  if [ -n "$action" ]; then
+    INIT="/etc/init.d/S59motor"
+    if [ ! -x "$INIT" ]; then
+      json_error "motors 服务脚本未安装"
+    fi
+    case "$action" in
+      start|stop|restart)
+        out=$("$INIT" "$action" 2>&1)
+        rc=$?
+        [ -n "$out" ] && logger -t motors-webui "action=$action rc=$rc: $out"
+        case "$action" in
+          start)   msg="服务启动" ;;
+          stop)    msg="服务停止" ;;
+          restart) msg="服务重启" ;;
+        esac
+        if [ "$rc" -eq 0 ]; then
+          json_ok "{\"success\":true,\"message\":\"${msg}成功\"}"
+        else
+          json_error "${msg}失败"
+        fi
+        ;;
+      *)
+        json_error "未知 action"
+        ;;
+    esac
+  fi
+
   [ "$POST_form" = "motors" ] || json_error "motors-form-missing"
 
   gpio_pan_1=$POST_gpio_pan_1
@@ -120,12 +173,12 @@ handle_post() {
   gpio_tilt_3=$POST_gpio_tilt_3
   gpio_tilt_4=$POST_gpio_tilt_4
   homing_value=${POST_homing:-false}
-  pos_0_x=$POST_pos_0_x
-  pos_0_y=$POST_pos_0_y
   speed_pan_value=$POST_speed_pan
   speed_tilt_value=$POST_speed_tilt
   steps_pan_value=$POST_steps_pan
   steps_tilt_value=$POST_steps_tilt
+  home_pan_value=$POST_home_pan
+  home_tilt_value=$POST_home_tilt
 
   [ "$homing_value" = "true" ] || homing_value="false"
 
@@ -153,10 +206,11 @@ handle_post() {
   motors_set_value speed_tilt "$speed_tilt_value"
   motors_set_value homing "$homing_value"
 
-  if [ -n "$pos_0_x" ] && [ -n "$pos_0_y" ]; then
-    motors_set_value pos_0 "$pos_0_x,$pos_0_y"
-  else
-    motors_set_value pos_0 ""
+  if [ -n "$home_pan_value" ]; then
+    motors_set_value home_pan "$home_pan_value"
+  fi
+  if [ -n "$home_tilt_value" ]; then
+    motors_set_value home_tilt "$home_tilt_value"
   fi
 
   respond_with_config

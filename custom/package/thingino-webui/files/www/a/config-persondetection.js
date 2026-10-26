@@ -4,6 +4,7 @@
   const endpoint = '/x/json-prudynt.cgi';
   const personDetectionParams = [
     'enabled',
+    'ptz_follow_enabled',
     'enable_perm',
     'enable_move',
     'sensitivity',

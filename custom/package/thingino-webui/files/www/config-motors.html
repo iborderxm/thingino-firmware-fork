@@ -28,12 +28,29 @@
         <div class="card mb-3">
           <div class="card-header">
             <h2 class="card-title">云台电机</h2>
-            <small>两个轴的驱动序列需匹配 A → B → C → D。更改后需要重启。</small>
+            <small>两个轴的驱动序列需匹配 A → B → C → D.更改后需要重启.</small>
             <button type="button" class="btn btn-outline-secondary" id="motors-reload" title="从相机重新加载值">
               <i class="bi bi-arrow-clockwise"></i> 重新加载
             </button>
           </div><!-- .card-header -->
           <div class="card-body">
+            <!-- 运行状态与服务控制 -->
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3 pb-3 border-bottom" id="motors-status-row">
+              <span class="badge text-bg-secondary" id="motors-status-badge"><i class="bi bi-question-circle"></i> 状态未知</span>
+              <small class="text-muted" id="motors-status-detail"></small>
+              <div class="ms-auto d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-success" id="btn-start" title="启动电机服务">
+                  <i class="bi bi-play-fill"></i> 启动
+                </button>
+                <button type="button" class="btn btn-sm btn-danger" id="btn-stop" title="停止电机服务">
+                  <i class="bi bi-stop-fill"></i> 停止
+                </button>
+                <button type="button" class="btn btn-sm btn-warning" id="btn-restart" title="重启电机服务">
+                  <i class="bi bi-arrow-repeat"></i> 重启
+                </button>
+              </div>
+            </div>
+
             <div class="row rows-col-xl-3 mb-3">
               <div class="col">
                 <h4>水平电机 GPIO</h4>
@@ -56,7 +73,7 @@
                 </div><!-- .row -->
 
                 <p>
-                  <label for="steps_pan">Max steps</label>
+                  <label for="steps_pan">最大步数</label>
                   <input type="number" class="form-control" id="steps_pan" name="steps_pan" min="1" placeholder="1024">
                 </p>
                 <p>
@@ -67,8 +84,8 @@
               </div><!-- .col -->
               <div class="col">
 
-                <h4>Tilt motor GPIO</h4>
-                <small>Driver pins for vertical motion</small>
+                <h4>垂直电机 GPIO</h4>
+                <small>垂直运动的驱动引脚</small>
 
                 <div class="row row-cols-5 g-1">
                   <p class="col">
@@ -89,7 +106,7 @@
                   </p>
                   <div class="col">
                     <button type="button" class="btn btn-outline-secondary flip_motor" data-direction="tilt" title="Reverse pin order">
-                      <i class="bi bi-arrow-left-right"></i> Flip
+                      <i class="bi bi-arrow-left-right"></i> 翻转
                     </button>
                   </div>
                 </div>
@@ -104,12 +121,12 @@
               </div><!-- .col -->
               <div class="col">
                 <h4>行为</h4>
-                <small>启动姿态和归位逻辑。</small>
+                <small>启动姿态和归位逻辑.</small>
 
-                <p class="alert alert-info small">启动时，相机旋转到最小限制并将两个轴归零。</p>
+                <p class="alert alert-info small">启动时,相机旋转到最小限制并将两个轴归零.</p>
                 <p class="form-switch">
                   <input type="checkbox" class="form-check-input" id="homing" name="homing" value="true" data-help="Disable only when a fixed pose is required">
-                  <label for="homing">Perform homing on boot</label>
+                  <label for="homing">开机启动后云台自检完成回归到中心位置</label>
                 </p>
                 <div class="d-flex gap-2">
                   <p>
@@ -122,6 +139,18 @@
                   </p>
                 </div>
                 <a href="#" class="read-motors mb-3 d-block" title="使用当前姿态">获取当前位置</a>
+                <hr>
+                <p>
+                  <label for="home_pan">中心位置 Pan</label>
+                  <input type="number" class="form-control" id="home_pan" name="home_pan" min="1" placeholder="0">
+                  <small>归位/回中时水平轴停靠的步数,须为不超过最大步数的正整数.</small>
+                </p>
+                <p>
+                  <label for="home_tilt">中心位置 Tilt</label>
+                  <input type="number" class="form-control" id="home_tilt" name="home_tilt" min="1" placeholder="0">
+                  <small>归位/回中时垂直轴停靠的步数,须为不超过最大步数的正整数.</small>
+                </p>
+                <a href="#" class="read-home mb-3 d-block" title="使用当前姿态作为中心位置">使用当前位置为中心</a>
               </div><!-- .col -->
             </div><!-- .row -->
           </div><!-- .card-body -->
