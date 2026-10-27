@@ -1,68 +1,303 @@
 #!/bin/sh
 #
-# PTZ 人形跟踪桩脚本（开发期验证链路用，不含真实电机驱动）
+# PTZ 人形跟踪控制脚本
 #
-# 接口（与 C++ 侧约定，见设计文档 4.3.1）：
-#   ptz_person_follow start  <cx> <cy>  # 开始跟踪；保存原位；启动后台控制循环
-#   ptz_person_follow update <cx> <cy>  # 更新目标中心（主码流像素坐标）
-#   ptz_person_follow home              # 转回原位后退出跟踪
-#   ptz_person_follow status            # 输出当前状态
+# 设计依据：docs/PTZ_PERSON_FOLLOW_DESIGN.md 第 4.3 节
 #
-# 约定：
-#   1. 即发即走：收到指令后立即返回，转动/等待到位等耗时动作放后台执行，
-#      避免阻塞 PersonDetection 的检测循环；
-#   2. 电机标志：转动期间 touch /run/motors-active，到位后立即删除。
-#      若标志常驻，C++ 侧会在此期间持续跳过人形检测，导致 update 饥饿（风险 10）。
+# 接口（由 PersonDetection::ptzNotify 调用，均为"即发即走"）：
+#   ptz_person_follow start  <cx> <cy>  # 开始跟踪：保存当前位置为原位，并做首次修正
+#   ptz_person_follow update <cx> <cy>  # 跟踪中：以当前位置为原点换算新目标坐标
+#   ptz_person_follow home              # 结束跟踪：转回原位
+#   ptz_person_follow status            # 调试：输出模式/位置/行程
 #
-# 调试：日志写 $PTZ_LOG，状态写 $PTZ_STATE。
+# 关键约定（改动前请先读 4.3 节）：
+#   1. 前台必须快速返回。motor 客户端"发一次请求、读一次状态即退出"，
+#      真正的运动由 motor-daemon 在后台完成，故本脚本无需后台化子进程；
+#   2. /run/motors-active 由 motor-daemon 自行创建与删除，本脚本不得 touch/rm，
+#      否则会与其轮询线程竞争；异常退出改用 motors -d s 停止运动；
+#   3. 每次决策都必须重新执行 motors -i 读取当前位置作为原点（已确认为实时值）；
+#   4. 不下发 `-s`：移动速度交由守护进程的 `last_known_speed`（会话级）决定，
+#      其初值与上限由 `/etc/motors.json` 的 `speed_pan` / `speed_tilt` 管控，本脚本不干预；
+#   5. 任一依赖缺失或取值失败都必须记日志后正常返回，不得阻塞 C++ 录制主流程。
 
-. /usr/share/common
+# ------------------------------------------------------------------ 可调参数
+# 无独立配置文件：直接编辑此处，或通过同名环境变量覆盖（便于上机调试）
 
-MOTORS_ACTIVE=${MOTORS_ACTIVE:-/run/motors-active}
-PTZ_LOG=${PTZ_LOG:-/tmp/ptz_person_follow.log}
+MOTORS_BIN=${MOTORS_BIN:-/bin/motors}              # 电机客户端
+MOTORS_JSON=${MOTORS_JSON:-/etc/motors.json}       # 行程/速度配置
+PARAM_JSON=${PARAM_JSON:-/tmp/motors_param.json}   # motors -i 输出快照
 PTZ_STATE=${PTZ_STATE:-/tmp/ptz_person_follow.state}
-MOVE_SEC=${MOVE_SEC:-0.8}	# 模拟单次转动耗时(秒)
+PTZ_LOG=${PTZ_LOG:-/tmp/ptz_person_follow.log}
+SENSOR_DIR=${SENSOR_DIR:-/proc/jz/sensor}          # 主码流分辨率来源（需与 OSD 绘制分辨率一致，本设备 3982x1100）
+
+# P 控制比例系数，以百分数表示：50 即 Kp=0.5
+KP_X=${KP_X:-50}
+KP_Y=${KP_Y:-50}
+# 死区：与 C++ 侧 kPtzToleranceRatioPct 采用同一 definition —— 以画面中心为原点，
+# 允许偏离 = 画面半宽/半高 × DEADZONE_PCT%。取 50% 即 ±W/4、±H/4（容差区面积占画面 1/4）。
+# 本设备 3982×1100 → 半宽 995、半高 275。
+# ⚠️ 两端必须用同一比例：C++ 据此决定是否下发 update，脚本据此决定是否真的转动，
+#    语义不一致会导致"该动不动"或"频繁微调"。
+DEADZONE_PCT=${DEADZONE_PCT:-50}
+# 方向修正：上机核 direction 后若反向，把对应值改为 -1（亦可用 motors -I x / -I y）
+DIR_X=${DIR_X:-1}
+DIR_Y=${DIR_Y:-1}
+# 视场角（度）：把"像素偏差"换算成"角度偏差"，再用行程步数表达。
+# 由"镜头焦距 + 传感器尺寸"决定，与电机行程（pan 360° / tilt 90°）无关。
+# 当前默认值按本设备 JX-Q03P-C1-M3（1/2.7"、2.5μm 像素）+ 主码流 3982x1100 + 2.8mm 镜头估算：
+#   FOV_H = 2·atan(5.2mm / 2 / 2.8mm)              ≈ 85°
+#   FOV_V = 2·atan(tan(42.5°) × 1100 / 3982)       ≈ 29°
+# ⚠️ 镜头焦距未知，上机必须实测校正。估计值偏小只会导致欠修正（收敛更慢），不会发散。
+# 若仅有 FOV_H，可用 FOV_V = 2·atan(tan(FOV_H/2) × HEIGHT/WIDTH) 推导（sh 无 atan，可用线性近似）。
+FOV_H_DEG=${FOV_H_DEG:-85}
+FOV_V_DEG=${FOV_V_DEG:-29}
+
+# ------------------------------------------------------------------ 基础工具
 
 log() {
 	echo "$(date '+%F %T') pid=$$ $*" >>"$PTZ_LOG" 2>/dev/null
 }
 
-# 模拟一次转动：持有电机标志 → 到位 → 释放标志（为 update 留出窗口）
-simulate_move() {
-	(
-		touch "$MOTORS_ACTIVE" 2>/dev/null
-		sleep "$MOVE_SEC"
-		rm -f "$MOTORS_ACTIVE" 2>/dev/null
-	) >/dev/null 2>&1 &
+# Thingino 公共函数库。缺失时必须"记日志后继续"，不得让脚本中断退出 ——
+# 一是遵守脚本头第 5 条约定（不得阻塞 C++ 录制主流程）：dash 下 `.` 打不开
+# 绝对路径会直接以退出码 2 终止整个脚本，那样人形跟踪会静默失效；
+# 二是让本脚本能在宿主机上用桩做单元测试（见 tests/scripts/test_ptz_person_follow.sh）。
+if [ -r /usr/share/common ]; then
+	. /usr/share/common
+else
+	log "WARN: /usr/share/common missing, continue without it"
+fi
+
+command_present() {
+	command -v "$1" >/dev/null 2>&1
 }
 
-case "$1" in
-start)
-	# 幂等：已在跟踪则忽略，避免重复启动控制循环（风险 2）
-	if [ -f "$PTZ_STATE" ] && [ "$(cut -d' ' -f1 "$PTZ_STATE" 2>/dev/null)" = "running" ]; then
-		log "start ignored, already tracking"
-		exit 0
+# 变量必须是纯数字（jct 返回的是字符串，需防御脏数据）
+is_uint() {
+	case "$1" in
+		'' | *[!0-9]*) return 1 ;;
+	esac
+	return 0
+}
+
+clamp() {
+	v=$1
+	[ "$v" -lt "$2" ] && v=$2
+	[ "$v" -gt "$3" ] && v=$3
+	echo "$v"
+}
+
+save_state() {
+	cat >"$PTZ_STATE" 2>/dev/null <<EOF
+mode=$mode
+home_x=$home_x
+home_y=$home_y
+EOF
+}
+
+load_state() {
+	mode=idle
+	home_x=
+	home_y=
+	[ -f "$PTZ_STATE" ] || return 0
+
+	# 只接受本脚本写入的 key=value 格式。桩脚本遗留的是空格分隔格式，
+	# 直接 source 会把它当命令执行而报错，此处识别后按无状态处理。
+	case "$(cat "$PTZ_STATE" 2>/dev/null)" in
+		*mode=*)
+			. "$PTZ_STATE"
+			;;
+		*)
+			log "WARN: incompatible state file, treating as idle"
+			mode=idle
+			home_x=
+			home_y=
+			;;
+	esac
+}
+
+# 异常中断时停止电机：-d s 会让守护进程立即移除 /run/motors-active
+trap 'log "WARN: signal received, stopping motor"; "$MOTORS_BIN" -d s >/dev/null 2>&1; exit 1' INT TERM
+
+# ------------------------------------------------------------------ 环境读取
+
+# 读取分辨率、当前位置、行程上限；成功返回 0 并设置 WIDTH HEIGHT XPOS YPOS XMAX YMAX
+read_env() {
+	WIDTH=$(cat "$SENSOR_DIR/width" 2>/dev/null)
+	HEIGHT=$(cat "$SENSOR_DIR/height" 2>/dev/null)
+	if ! is_uint "$WIDTH" || ! is_uint "$HEIGHT"; then
+		log "ERR: bad resolution '$WIDTH'x'$HEIGHT' from $SENSOR_DIR"
+		return 1
 	fi
-	echo "running $(date +%s) ${2:--1} ${3:--1}" >"$PTZ_STATE" 2>/dev/null
-	log "start cx=${2:--1} cy=${3:--1}"
-	simulate_move
-	;;
-update)
-	echo "running $(date +%s) ${2:--1} ${3:--1}" >"$PTZ_STATE" 2>/dev/null
-	log "update cx=${2:--1} cy=${3:--1}"
-	;;
-home)
-	echo "idle $(date +%s) -1 -1" >"$PTZ_STATE" 2>/dev/null
-	log "home"
-	simulate_move
-	;;
-status)
-	cat "$PTZ_STATE" 2>/dev/null || echo "idle -1 -1"
-	;;
-*)
-	log "unknown action: $1"
-	exit 1
-	;;
+
+	if ! command_present jct; then
+		log "ERR: jct not found"
+		return 1
+	fi
+	if ! command_present "$MOTORS_BIN"; then
+		log "ERR: $MOTORS_BIN not found"
+		return 1
+	fi
+
+	XMAX=$(jct "$MOTORS_JSON" get motors.steps_pan 2>/dev/null)
+	YMAX=$(jct "$MOTORS_JSON" get motors.steps_tilt 2>/dev/null)
+	if ! is_uint "$XMAX" || ! is_uint "$YMAX"; then
+		log "ERR: bad steps '$XMAX'/'$YMAX' from $MOTORS_JSON"
+		return 1
+	fi
+
+	# motors -i 为实时读取，必须每次重新执行：当前位置是换算的唯一基准
+	if ! "$MOTORS_BIN" -i >"$PARAM_JSON" 2>/dev/null; then
+		log "ERR: $MOTORS_BIN -i failed (motor-daemon not running?)"
+		return 1
+	fi
+	XPOS=$(jct "$PARAM_JSON" get xpos 2>/dev/null)
+	YPOS=$(jct "$PARAM_JSON" get ypos 2>/dev/null)
+	if ! is_uint "$XPOS" || ! is_uint "$YPOS"; then
+		log "ERR: bad position '$XPOS'/'$YPOS'"
+		return 1
+	fi
+	return 0
+}
+
+# ------------------------------------------------------------------ 换算与控制
+
+# 人形中心像素坐标 -> 新的电机绝对坐标（4.3.4：以当前位置为原点）
+#   target = 当前位置 + (cx - W/2) * XMAX * KP / 100 / W
+# 结果写入 target_x / target_y
+px_to_target() {
+	cx=$1
+	cy=$2
+
+	dx_px=$((cx - WIDTH / 2))
+	dy_px=$((cy - HEIGHT / 2))
+
+	# 死区：落在中央容差区内则不动作。比例为画面半宽/半高的 DEADZONE_PCT%，
+	# 与 C++ kPtzToleranceRatioPct 保持一致（本设备 → ±995 / ±275）。
+	# ⚠️ 必须用 -ge/-le（含边界）：算法侧"越界"判定是 |d| > tol，即"区内"含边界；
+	#    若写成 -gt/-lt，则 |d| == tol 时脚本会动、算法却不认为是越界，两端相反。
+	tol_x=$((WIDTH / 2 * DEADZONE_PCT / 100))
+	tol_y=$((HEIGHT / 2 * DEADZONE_PCT / 100))
+	if [ "$dx_px" -ge "-$tol_x" ] && [ "$dx_px" -le "$tol_x" ]; then
+		dx_px=0
+	fi
+	if [ "$dy_px" -ge "-$tol_y" ] && [ "$dy_px" -le "$tol_y" ]; then
+		dy_px=0
+	fi
+
+	# 限幅必须在加成之后做，否则可能下发越界目标撞限位
+	# 增益修正：圆周云台 pan=360° / tilt=90°，画面整宽只对应一个 FOV 视角，
+	# 故步数/像素必须按 FOV/行程 缩放（否则按"整幅=整程"会高估数倍导致发散）。
+	# 先 /WIDTH 再乘 KP*FOV/360/100，避免中间值溢出。
+	target_x=$(clamp $((XPOS + DIR_X * dx_px * XMAX / WIDTH * KP_X * FOV_H_DEG / 360 / 100)) 0 "$XMAX")
+	target_y=$(clamp $((YPOS + DIR_Y * dy_px * YMAX / HEIGHT * KP_Y * FOV_V_DEG / 360 / 100)) 0 "$YMAX")
+}
+
+# 绝对定位下发。不带 -s：速度沿用守护进程的 last_known_speed（会话级），
+# 其初值与上限由 /etc/motors.json 的 speed_pan / speed_tilt 管控
+move_to() {
+	"$MOTORS_BIN" -d h -x "$1" -y "$2" >/dev/null 2>&1
+	ret=$?
+	if [ "$ret" -ne 0 ]; then
+		log "WARN: move to $1,$2 failed ret=$ret"
+	fi
+	return $ret
+}
+
+# 依目标坐标做一次跟随
+do_track() {
+	if ! is_uint "$1" || ! is_uint "$2"; then
+		log "WARN: skip track, bad coords '$1','$2'"
+		return 0
+	fi
+
+	px_to_target "$1" "$2"
+
+	if [ "$target_x" -eq "$XPOS" ] && [ "$target_y" -eq "$YPOS" ]; then
+		log "track cx=$1 cy=$2 no move (deadzone), pos=$XPOS,$YPOS"
+		return 0
+	fi
+
+	log "track cx=$1 cy=$2 d=$dx_px,$dy_px pos=$XPOS,$YPOS -> $target_x,$target_y"
+	move_to "$target_x" "$target_y"
+}
+
+# ------------------------------------------------------------------ 命令分发
+
+case "$1" in
+	start)
+		load_state
+		if [ "$mode" = "running" ]; then
+			log "start ignored, already tracking"
+			exit 0
+		fi
+
+		read_env || exit 0
+
+		# 原位 = 本次跟踪开始时的位置，回位时按其恢复，无累积误差
+		mode=running
+		home_x=$XPOS
+		home_y=$YPOS
+		save_state
+		log "start cx=${2:--1} cy=${3:--1} home=$home_x,$home_y res=${WIDTH}x${HEIGHT} max=$XMAX,$YMAX"
+
+		do_track "$2" "$3"
+		;;
+
+	update)
+		load_state
+		if [ "$mode" != "running" ]; then
+			log "update ignored, not tracking"
+			exit 0
+		fi
+
+		# 上一次移动未结束则丢弃本次 update：串行处理会堆积指令，
+		# 且随后的新 update 会带上更准的坐标（下一次机会很快到来）
+		if [ "$("$MOTORS_BIN" -b 2>/dev/null)" = "1" ]; then
+			log "update busied, skip cx=${2:--1} cy=${3:--1}"
+			exit 0
+		fi
+
+		read_env || exit 0
+		do_track "$2" "$3"
+		;;
+
+	home)
+		load_state
+
+		if is_uint "$home_x" && is_uint "$home_y"; then
+			log "home -> $home_x,$home_y"
+			move_to "$home_x" "$home_y"
+		else
+			# 状态文件缺失（如崩溃后重启）：回 4.3.7 的机械 HOME 兜底
+			log "WARN: no saved home, fallback to -d b (mechanical HOME)"
+			"$MOTORS_BIN" -d b >/dev/null 2>&1
+		fi
+
+		mode=idle
+		home_x=
+		home_y=
+		save_state
+		rm -f "$PARAM_JSON"
+		;;
+
+	status)
+		load_state
+		echo "mode=${mode}"
+		echo "home=${home_x:--1},${home_y:--1}"
+		if read_env; then
+			echo "pos=$XPOS,$YPOS"
+			echo "res=${WIDTH}x${HEIGHT}"
+			echo "max=$XMAX,$YMAX"
+		else
+			echo "pos=unavailable"
+		fi
+		;;
+
+	*)
+		log "unknown action: $1"
+		exit 1
+		;;
 esac
 
 exit 0

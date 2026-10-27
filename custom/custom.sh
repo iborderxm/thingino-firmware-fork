@@ -54,12 +54,11 @@ cp -r custom/S99hostc overlay/etc/init.d/S99hostc
 # 智能跟随 / AI人形追踪
 # 电机控制脚本 custom\ptz_person_follow
 cp -r custom/ptz_person_follow overlay/usr/sbin/ptz_person_follow
+# 电机motors配置文件
+cp -r custom/motors.json overlay/etc/motors.json
 
 chmod 755 overlay/etc/init.d/*
 chmod 755 overlay/usr/sbin/*
-
-# 电机motors配置文件
-cp -r custom/motors.json configs/cameras/iflytek_xfp301m_t31x_jxq03_ssv6155/motors.json
 
 mkdir -p overlay/usr/share/sounds/other
 cp -r custom/sounds/. overlay/usr/share/sounds/other/
