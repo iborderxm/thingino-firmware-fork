@@ -5,7 +5,7 @@
     "gpio_power": 11,
     "gpio_switch": -1,
     "gpio_tilt": "61 62 63 51",
-    "homing": false,
+    "homing": true,
     "is_spi": false,
     "speed_pan": 500,
     "speed_tilt": 500,

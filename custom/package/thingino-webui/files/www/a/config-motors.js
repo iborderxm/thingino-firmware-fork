@@ -98,18 +98,6 @@
     if (y) y.disabled = disabled;
   }
 
-  // Keep center (home) coordinate inputs bounded by the configured max steps
-  function updateCenterLimits() {
-    const stepsPanEl = $('#steps_pan');
-    const stepsTiltEl = $('#steps_tilt');
-    const homePanEl = $('#home_pan');
-    const homeTiltEl = $('#home_tilt');
-    const stepsPanVal = stepsPanEl && stepsPanEl.value ? parseInt(stepsPanEl.value, 10) : null;
-    const stepsTiltVal = stepsTiltEl && stepsTiltEl.value ? parseInt(stepsTiltEl.value, 10) : null;
-    if (homePanEl) homePanEl.max = stepsPanVal && stepsPanVal > 0 ? String(stepsPanVal) : '';
-    if (homeTiltEl) homeTiltEl.max = stepsTiltVal && stepsTiltVal > 0 ? String(stepsTiltVal) : '';
-  }
-
   // 渲染电机服务运行状态与启停按钮
   function renderStatus() {
     const badge = $('#motors-status-badge');
@@ -189,10 +177,7 @@
     const posParts = typeof config.pos_0 === 'string' ? config.pos_0.split(/\s*,\s*/) : [];
     setMotorFieldValue('pos_0_x', posParts[0] || '');
     setMotorFieldValue('pos_0_y', posParts[1] || '');
-    setMotorFieldValue('home_pan', config.home_pan);
-    setMotorFieldValue('home_tilt', config.home_tilt);
     updateHomingInputs();
-    updateCenterLimits();
     const isSpi = config.is_spi === true || config.is_spi === 'true';
     setMotorPinInputsEnabled(!isSpi);
     updateBadge(isSpi);
@@ -280,28 +265,6 @@
       errors.push('垂直最大步数必须为正数');
     }
 
-    // Check center (home) coordinates: positive integers not exceeding max steps
-    const stepsPanNum = parseInt(stepsPan, 10) || 0;
-    const stepsTiltNum = parseInt(stepsTilt, 10) || 0;
-    const homePan = formData.get('home_pan');
-    const homeTilt = formData.get('home_tilt');
-    if (homePan !== null && String(homePan).trim() !== '') {
-      const hp = Number(homePan);
-      if (!Number.isInteger(hp) || hp <= 0) {
-        errors.push('中心位置 Pan (home_pan) 必须为正整数');
-      } else if (hp > stepsPanNum) {
-        errors.push('中心位置 Pan (home_pan) 不能超过水平最大步数 (' + stepsPanNum + ')');
-      }
-    }
-    if (homeTilt !== null && String(homeTilt).trim() !== '') {
-      const ht = Number(homeTilt);
-      if (!Number.isInteger(ht) || ht <= 0) {
-        errors.push('中心位置 Tilt (home_tilt) 必须为正整数');
-      } else if (ht > stepsTiltNum) {
-        errors.push('中心位置 Tilt (home_tilt) 不能超过垂直最大步数 (' + stepsTiltNum + ')');
-      }
-    }
-
     if (errors.length > 0) {
       showAlert('danger', '请修复以下错误:' + errors);
       return;
@@ -361,22 +324,6 @@
     }
   }
 
-  async function readHomePosition() {
-    try {
-      const res = await fetch('/x/json-motor.cgi?' + new URLSearchParams({ d: 'i' }).toString());
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const { message } = await res.json();
-      if (message) {
-        if ($('#home_pan')) $('#home_pan').value = message.xpos;
-        if ($('#home_tilt')) $('#home_tilt').value = message.ypos;
-      }
-      showAlert('success', '已捕获当前位置作为新的中心 (home).', 4000);
-    } catch (err) {
-      console.error('Failed to read motors position', err);
-      showAlert('danger', `无法读取当前位置:${err.message || err}`);
-    }
-  }
-
   if (form) {
     form.addEventListener('submit', ev => {
       ev.preventDefault();
@@ -421,23 +368,11 @@
     });
   });
 
-  $$('.read-home').forEach(el => {
-    el.addEventListener('click', ev => {
-      ev.preventDefault();
-      readHomePosition();
-    });
-  });
-
   const homingSwitch = $('#homing');
   if (homingSwitch) {
     homingSwitch.addEventListener('change', updateHomingInputs);
     updateHomingInputs();
   }
-
-  const stepsPanInput = $('#steps_pan');
-  const stepsTiltInput = $('#steps_tilt');
-  if (stepsPanInput) stepsPanInput.addEventListener('input', updateCenterLimits);
-  if (stepsTiltInput) stepsTiltInput.addEventListener('input', updateCenterLimits);
 
   ['btn-start', 'btn-stop', 'btn-restart'].forEach(id => {
     const b = $(`#${id}`);
