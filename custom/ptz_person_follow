@@ -28,17 +28,13 @@ MOTORS_JSON=${MOTORS_JSON:-/etc/motors.json}       # 行程/速度配置
 PARAM_JSON=${PARAM_JSON:-/tmp/motors_param.json}   # motors -i 输出快照
 PTZ_STATE=${PTZ_STATE:-/tmp/ptz_person_follow.state}
 PTZ_LOG=${PTZ_LOG:-/tmp/ptz_person_follow.log}
-SENSOR_DIR=${SENSOR_DIR:-/proc/jz/sensor}          # 主码流分辨率来源（需与 OSD 绘制分辨率一致，本设备 3982x1100）
+SENSOR_DIR=${SENSOR_DIR:-/proc/jz/sensor}          # 主码流分辨率来源（需与 OSD 绘制分辨率一致）
 
-# P 控制比例系数，以百分数表示：50 即 Kp=0.5
-KP_X=${KP_X:-50}
-KP_Y=${KP_Y:-50}
-# 死区：与 C++ 侧 kPtzToleranceRatioPct 采用同一 definition —— 以画面中心为原点，
-# 允许偏离 = 画面半宽/半高 × DEADZONE_PCT%。取 50% 即 ±W/4、±H/4（容差区面积占画面 1/4）。
-# 本设备 3982×1100 → 半宽 995、半高 275。
-# ⚠️ 两端必须用同一比例：C++ 据此决定是否下发 update，脚本据此决定是否真的转动，
-#    语义不一致会导致"该动不动"或"频繁微调"。
-DEADZONE_PCT=${DEADZONE_PCT:-50}
+# P 控制比例系数，以百分数表示：100 即 Kp=1.0（单次转动即把人形拉到中心附近）。
+# 注：Kp>=1.0 时不再"分步收敛"；若镜头 FOV 标定偏大，单次转动可能冲过中心到另一侧。
+#     本设备 FOV 为估算值（85°/29°），上机实测校正后再决定是否长期用 100；临时降压可在此改回 50。
+KP_X=${KP_X:-100}
+KP_Y=${KP_Y:-100}
 # 方向修正：上机核 direction 后若反向，把对应值改为 -1（亦可用 motors -I x / -I y）
 DIR_X=${DIR_X:-1}
 DIR_Y=${DIR_Y:-1}
@@ -166,31 +162,26 @@ read_env() {
 #   target = 当前位置 + (cx - W/2) * XMAX * KP / 100 / W
 # 结果写入 target_x / target_y
 px_to_target() {
+	# cx,cy 是人形中心像素坐标
 	cx=$1
 	cy=$2
 
+	# 不做死区判定：始终按偏差向画面中心修正。自然停止点由整数步数截断决定
+	# ——当单次修正步数不足 1 步（本设备 pan |dx|≲8px / tilt |dy|≲25px）时
+	# target 与当前位置相同，do_track 走"no move"分支，不会无限微调。
+	# ⚠️ 是否真正持续下发，由 C++ 侧 kPtzToleranceRatioPctX / kPtzToleranceRatioPctY 门控决定；脚本本身不拦。
+	# WIDTH 和 HEIGHT 是分辨率
+	# dx_px 是人形中心像素坐标与画面中心像素坐标的横向偏差
+	# dy_px 是人形中心像素坐标与画面中心像素坐标的纵向偏差
 	dx_px=$((cx - WIDTH / 2))
 	dy_px=$((cy - HEIGHT / 2))
-
-	# 死区：落在中央容差区内则不动作。比例为画面半宽/半高的 DEADZONE_PCT%，
-	# 与 C++ kPtzToleranceRatioPct 保持一致（本设备 → ±995 / ±275）。
-	# ⚠️ 必须用 -ge/-le（含边界）：算法侧"越界"判定是 |d| > tol，即"区内"含边界；
-	#    若写成 -gt/-lt，则 |d| == tol 时脚本会动、算法却不认为是越界，两端相反。
-	tol_x=$((WIDTH / 2 * DEADZONE_PCT / 100))
-	tol_y=$((HEIGHT / 2 * DEADZONE_PCT / 100))
-	if [ "$dx_px" -ge "-$tol_x" ] && [ "$dx_px" -le "$tol_x" ]; then
-		dx_px=0
-	fi
-	if [ "$dy_px" -ge "-$tol_y" ] && [ "$dy_px" -le "$tol_y" ]; then
-		dy_px=0
-	fi
 
 	# 限幅必须在加成之后做，否则可能下发越界目标撞限位
 	# 增益修正：圆周云台 pan=360° / tilt=90°，画面整宽只对应一个 FOV 视角，
 	# 故步数/像素必须按 FOV/行程 缩放（否则按"整幅=整程"会高估数倍导致发散）。
 	# 先 /WIDTH 再乘 KP*FOV/360/100，避免中间值溢出。
 	target_x=$(clamp $((XPOS + DIR_X * dx_px * XMAX / WIDTH * KP_X * FOV_H_DEG / 360 / 100)) 0 "$XMAX")
-	target_y=$(clamp $((YPOS + DIR_Y * dy_px * YMAX / HEIGHT * KP_Y * FOV_V_DEG / 360 / 100)) 0 "$YMAX")
+	target_y=$(clamp $((YPOS + DIR_Y * dy_px * YMAX / HEIGHT * KP_Y * FOV_V_DEG / 90 / 100)) 0 "$YMAX")
 }
 
 # 绝对定位下发。不带 -s：速度沿用守护进程的 last_known_speed（会话级），
@@ -214,7 +205,7 @@ do_track() {
 	px_to_target "$1" "$2"
 
 	if [ "$target_x" -eq "$XPOS" ] && [ "$target_y" -eq "$YPOS" ]; then
-		log "track cx=$1 cy=$2 no move (deadzone), pos=$XPOS,$YPOS"
+		log "track cx=$1 cy=$2 no move (negligible), pos=$XPOS,$YPOS"
 		return 0
 	fi
 
