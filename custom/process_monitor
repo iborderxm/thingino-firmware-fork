@@ -139,6 +139,7 @@ check_prudynt_save_path() {
     esac
 }
 
+echo "" > "$LOG_FILE"
 check_and_start_prudynt
 check_prudynt_save_path
 check_and_start_send2email_persondetection
