@@ -145,6 +145,9 @@
     "recording_detection_interval": 1,
     "ptz_follow_enabled": false,
     "ptz_script_path": "/usr/sbin/ptz_person_follow",
+    "notice_script_path": "/mnt/mmcblk0p1/notice.sh",
+    "ptz_tolerance_ratio_x": 30,
+    "ptz_tolerance_ratio_y": 50,
     "enable_move": true,
     "enable_perm": true,
     "permcnt": 1,
@@ -385,7 +388,7 @@
     "jpeg_quality": 75
   },
   "stream3": {
-    "enabled": true,
+    "enabled": false,
     "fps": 5,
     "jpeg_channel": 1,
     "jpeg_idle_fps": 1,
