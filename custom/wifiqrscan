@@ -65,7 +65,7 @@ ssid=""
 password=""
 attempt=1
 # 提示音：请将二维码对准摄像头
-play /usr/share/sounds/other/qrcode2camera.opus
+play -A /usr/share/sounds/other/qrcode2camera.opus
 while [ "$attempt" -le "$max_attempts" ]; do
     echo "[$attempt/$max_attempts] 抓取截图并识别二维码 ..."
     # 先删除旧截图，保证识别的是本次抓取的图像
@@ -88,8 +88,8 @@ while [ "$attempt" -le "$max_attempts" ]; do
     # 最后一次失败后不再等待
     if [ "$attempt" -lt "$max_attempts" ]; then
         # 每连续 5 次识别失败播放一次提示音：请将二维码对准摄像头
-        if [ $((attempt % 5)) -eq 0 ]; then
-            play /usr/share/sounds/other/qrcode2camera.opus
+        if [ $((attempt % 3)) -eq 0 ]; then
+            play -A /usr/share/sounds/other/qrcode2camera.opus
         fi
         sleep "$retry_interval"
     fi
@@ -99,7 +99,7 @@ done
 if [ -z "$ssid" ]; then
     echo "失败: 连续 $max_attempts 次未能识别 Wi-Fi 二维码" >&2
     # 提示音：识别超时，停止扫码
-    play /usr/share/sounds/other/qrcodestop.opus
+    play -A /usr/share/sounds/other/qrcodestop.opus
     # rm -f "$qr_file"
     exit 1
 fi
@@ -112,5 +112,6 @@ if [ -z "$password" ]; then
 fi
 
 echo "识别成功: SSID=\"$ssid\"，开始切换 Wi-Fi ..."
+play -A /usr/share/sounds/other/qrcode2conn.opus
 # rm -f "$qr_file"
 wifichange "$ssid" "$password"
