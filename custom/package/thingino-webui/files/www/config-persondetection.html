@@ -275,6 +275,31 @@
 
         <div class="card mb-3">
           <div class="card-header">
+            <h2 class="card-title">人形语音警告</h2>
+            <small>配置检测到人形时播放的语音警告</small>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <div class="col-12 col-lg-12">
+                <p class="form-switch mb-0">
+                  <input type="hidden" id="persondetection_person_warn_enabled-false" name="persondetection_person_warn_enabled" value="false">
+                  <input type="checkbox" id="persondetection_person_warn_enabled" name="persondetection_person_warn_enabled" value="true" role="switch" class="form-check-input">
+                  <label for="persondetection_person_warn_enabled" class="form-check-label">开启人形语音警告</label>
+                </p>
+              </div>
+              <div class="col-12 col-lg-12">
+                <p class="form-text">
+                  <label for="persondetection_person_warn_voice">人形语音警告音频文件全路径</label>
+                  <input type="text" id="persondetection_person_warn_voice" name="persondetection_person_warn_voice" class="form-control" value="" placeholder="/usr/share/sounds/other/monitoringarea.opus">
+                  <small class="form-text text-secondary">检测到人形时通过扬声器播放的音频文件绝对路径</small>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-header">
             <h2 class="card-title">保存路径</h2>
             <small>保存检测录制的目录路径</small>
           </div>

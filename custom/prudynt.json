@@ -148,6 +148,8 @@
     "notice_script_path": "/mnt/mmcblk0p1/notice.sh",
     "ptz_tolerance_ratio_x": 30,
     "ptz_tolerance_ratio_y": 50,
+    "person_warn_enabled": false,
+    "person_warn_voice": "/usr/share/sounds/other/monitoringarea.mp3",
     "enable_move": true,
     "enable_perm": true,
     "permcnt": 1,

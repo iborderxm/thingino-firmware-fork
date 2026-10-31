@@ -25,6 +25,7 @@
 
 MOTORS_BIN=${MOTORS_BIN:-/bin/motors}              # 电机客户端
 MOTORS_JSON=${MOTORS_JSON:-/etc/motors.json}       # 行程/速度配置
+PRUDYNT_JSON=${PRUDYNT_JSON:-/etc/prudynt.json}    # prudynt配置
 PARAM_JSON=${PARAM_JSON:-/tmp/motors_param.json}   # motors -i 输出快照
 PTZ_STATE=${PTZ_STATE:-/tmp/ptz_person_follow.state}
 PTZ_LOG=${PTZ_LOG:-/tmp/ptz_person_follow.log}
@@ -81,6 +82,35 @@ clamp() {
 	[ "$v" -lt "$2" ] && v=$2
 	[ "$v" -gt "$3" ] && v=$3
 	echo "$v"
+}
+
+# 读取 prudynt 配置中的人形语音警告开关与音频路径，并在启用时播放。
+# 播放在后台进行，前台必须快速返回，不得阻塞 C++ 录制主流程（脚本头约定 #1）。
+play_warn_voice() {
+	if ! command_present jct; then
+		log "WARN: jct not found, skip warn voice"
+		return 0
+	fi
+
+	local enabled
+	enabled=$(jct "$PRUDYNT_JSON" get persondetection.person_warn_enabled 2>/dev/null)
+	case "$enabled" in
+		true | 1) ;;
+		*) return 0 ;;
+	esac
+
+	local voice
+	voice=$(jct "$PRUDYNT_JSON" get persondetection.person_warn_voice 2>/dev/null)
+	[ -n "$voice" ] || { log "WARN: warn voice path empty"; return 0; }
+	[ -e "$voice" ] || { log "WARN: warn voice file not found: $voice"; return 0; }
+
+	if ! command_present play; then
+		log "WARN: play not found, skip warn voice"
+		return 0
+	fi
+
+	log "warn voice enabled, play: $voice"
+	play -l 2 -d 5000 "$voice" >/dev/null 2>&1 &
 }
 
 save_state() {
@@ -232,6 +262,7 @@ case "$1" in
 		save_state
 		log "start cx=${2:--1} cy=${3:--1} home=$home_x,$home_y res=${WIDTH}x${HEIGHT} max=$XMAX,$YMAX"
 
+		play_warn_voice
 		do_track "$2" "$3"
 		;;
 

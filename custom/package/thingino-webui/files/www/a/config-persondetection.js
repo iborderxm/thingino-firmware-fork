@@ -23,9 +23,10 @@
     'recording_stream',
     'frame_width',
     'frame_height',
-    'ivs_polling_timeout'
+    'ivs_polling_timeout',
+    'person_warn_enabled'
   ];
-  const personDetectionStringParams = ['save_path'];
+  const personDetectionStringParams = ['save_path', 'person_warn_voice'];
 
   const alertArea = $('#persondetection-alerts');
   const reloadButton = $('#persondetection-reload');
