@@ -76,9 +76,16 @@ else
 fi
 
 echo "3/4 重置 wlan0 接口 ..."
-# 先停掉接口上的 DHCP，再重新拉起以按新网络获取 IP
+# 释放旧 DHCP lease 并重新拉起以按新网络获取 IP。busybox ifup 在接口仍被
+# 标记为已配置时可能判定 "already configured" 而不重启 DHCP，因此最后再确认
+# udhcpc 确实在运行，否则再次触发（不再用 || exit 1，避免静默中止）。
 ifdown wlan0 2>/dev/null
-ifup wlan0 || exit 1
+ifup wlan0 2>/dev/null
+sleep 1
+if ! pgrep -f "udhcpc.*wlan0" >/dev/null 2>&1; then
+    echo "      警告: udhcpc 未运行，重新拉起 DHCP"
+    ifup wlan0 2>/dev/null
+fi
 
 echo "4/4 等待认证与获取 IP ..."
 # 第一阶段：等 wpa_supplicant 认证完成
@@ -104,6 +111,8 @@ if [ "$authed" -eq 0 ]; then
     fi
     echo "提示: 旧配置已被覆盖，可用正确参数重新执行 $0 或原 SSID/密码恢复" >&2
     play /usr/share/sounds/wificonnectionfailed.opus
+    play /usr/share/sounds/other/reboot.opus
+    reboot
     exit 2
 fi
 

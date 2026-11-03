@@ -11,7 +11,7 @@
 
 qr_file=/tmp/qr-code.jpg
 max_attempts=15
-retry_interval=3
+retry_interval=2
 
 # 依赖命令检查
 for cmd in prudyntctl quirc-scan wifichange; do
