@@ -65,15 +65,10 @@ fi
 echo "1/4 重写 /etc/wpa_supplicant.conf ..."
 # 生成客户端（STA）模式配置，network 块写入新 ssid/psk
 wlan configure "$ssid" "$password" || exit 1
+wpa_cli -i wlan0 reconfigure || exit 1
 
-echo "2/4 重启 wpa_supplicant ..."
-# 停止旧进程并按新配置重新启动；若 init 脚本不存在则中止
-if [ -x /etc/init.d/S38wpa_supplicant ]; then
-    /etc/init.d/S38wpa_supplicant restart || exit 1
-else
-    echo "错误: 未找到 /etc/init.d/S38wpa_supplicant" >&2
-    exit 1
-fi
+echo "2/4 发起重连wifi ..."
+wpa_cli -i wlan0 reconnect
 
 echo "3/4 重置 wlan0 接口 ..."
 # 释放旧 DHCP lease 并重新拉起以按新网络获取 IP。busybox ifup 在接口仍被

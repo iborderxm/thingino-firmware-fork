@@ -3,7 +3,7 @@
 # This file is executed by ifupdown in pre-up, post-up, pre-down and
 # post-down phases of network interface configuration.
 
-WPA_SUP_BIN="$(command -v wpa_supplicant)“
+WPA_SUP_BIN="$(command -v wpa_supplicant)"
 
 # run this script only for interfaces which have wpa-conf option
 [ -z "$IF_WPA_CONF" ] && exit 0
