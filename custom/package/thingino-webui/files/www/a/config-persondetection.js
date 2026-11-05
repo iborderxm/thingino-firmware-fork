@@ -37,6 +37,105 @@
   let frameWidth = 640;
   let frameHeight = 360;
 
+  // ---- 保存路径 = 挂载点 + 子目录；挂载点来自 /x/json-config-persondetection.cgi 的 mounts ----
+  const savePathSelect = $('#persondetection_save_path');
+  const saveSubDirInput = $('#persondetection_save_subdir');
+  const DEFAULT_MOUNT = '/tmp';
+  const DEFAULT_SUBDIR = 'persondetection';
+  let availableMounts = null;   // null=尚未获取，之后为挂载点字符串数组
+  let currentSavePath = null;   // 后端已保存的完整路径
+  let mountSignature = null;
+  let savePathDirty = false;    // 用户编辑中，避免轮询/回显覆盖输入
+  let mountsApplied = false;    // 挂载点列表是否已首次到达
+
+  function normalizeDir(value) {
+    const v = (value || '').trim();
+    return v.length > 1 ? v.replace(/\/+$/, '') : v;
+  }
+
+  // /tmp 恒为第一项（默认内存盘），其余来自 /etc/mtab
+  function getMountOptions() {
+    const list = [DEFAULT_MOUNT];
+    (Array.isArray(availableMounts) ? availableMounts : []).forEach(m => {
+      const value = normalizeDir(m);
+      if (value && !list.includes(value)) list.push(value);
+    });
+    return list;
+  }
+
+  // 仅重建下拉选项，不改动子目录输入；轮询时列表未变化则跳过，避免打断用户操作
+  function renderMountOptions(selectedMount) {
+    if (!savePathSelect) return;
+    const mounts = getMountOptions();
+    const source = selectedMount === undefined ? savePathSelect.value : selectedMount;
+    const chosen = normalizeDir(source) || DEFAULT_MOUNT;
+    const extra = mounts.includes(chosen) ? [] : [chosen];
+    const signature = JSON.stringify(mounts) + '|' + JSON.stringify(extra);
+    if (signature === mountSignature) return;
+    mountSignature = signature;
+
+    savePathSelect.innerHTML = '';
+    mounts.concat(extra).forEach(value => {
+      const opt = document.createElement('option');
+      opt.value = value;
+      if (value === DEFAULT_MOUNT) opt.textContent = `${value}（默认内存盘）`;
+      else if (extra.includes(value)) opt.textContent = `${value}（当前配置）`;
+      else opt.textContent = value;
+      savePathSelect.appendChild(opt);
+    });
+    savePathSelect.value = chosen;
+    savePathSelect.disabled = false;
+    if (saveSubDirInput) saveSubDirInput.disabled = false;
+  }
+
+  // 把后端读到的完整路径拆成「最长匹配的挂载点 + 剩余子目录」；
+  // 与挂载点列表谁先返回都能正确显示，未匹配的历史路径整体保留为「当前配置」
+  function applyConfiguredSavePath(value) {
+    if (savePathDirty) return;
+    const path = normalizeDir(value);
+    currentSavePath = path;
+    if (!savePathSelect || !saveSubDirInput) return;
+    let mount = '';
+    let sub = '';
+    if (!path) {
+      mount = DEFAULT_MOUNT;
+      sub = DEFAULT_SUBDIR;
+    } else {
+      getMountOptions().forEach(m => {
+        if ((path === m || path.startsWith(m + '/')) && m.length > mount.length) mount = m;
+      });
+      if (mount) sub = path.slice(mount.length).replace(/^\/+/, '');
+      else { mount = path; sub = ''; }
+    }
+    renderMountOptions(mount);
+    savePathSelect.value = mount;
+    saveSubDirInput.value = sub;
+  }
+
+  function composeSavePath() {
+    const mount = savePathSelect ? normalizeDir(savePathSelect.value) : '';
+    if (!mount) return '';
+    const sub = saveSubDirInput ? normalizeDir(saveSubDirInput.value).replace(/^\/+/, '') : '';
+    return sub ? `${mount}/${sub}` : mount;
+  }
+
+  async function saveSavePath() {
+    const value = composeSavePath();
+    if (!value) {
+      showAlert('warning', '请选择挂载点');
+      return;
+    }
+    if (value === currentSavePath) return;
+    savePathDirty = true;
+    try {
+      await sendPersonDetectionUpdate({ persondetection: { save_path: value } });
+      currentSavePath = value;
+      savePathDirty = false;
+    } catch (err) {
+      showAlert('danger', `更新保存路径失败：${err.message || err}`);
+    }
+  }
+
   // 生成默认八边形检测区域（覆盖整帧）
   function getDefaultPolygonPoints() {
     const w = frameWidth - 1;
@@ -169,6 +268,11 @@
         if (Object.prototype.hasOwnProperty.call(persondetection, param)) {
           const el = $('#persondetection_' + param);
           if (!el) return;
+          if (param === 'save_path') {
+            // 完整路径需拆成挂载点 + 子目录
+            applyConfiguredSavePath(persondetection[param]);
+            return;
+          }
           el.value = persondetection[param] || '';
           el.disabled = false;
         }
@@ -341,9 +445,14 @@
     });
 
     personDetectionStringParams.forEach(param => {
+      // save_path 由「挂载点 + 子目录」组合保存，不走单字段保存
+      if (param === 'save_path') return;
       const el = document.getElementById('persondetection_' + param);
       if (el) el.addEventListener('change', () => savePersonDetectionStringParam(param));
     });
+
+    if (savePathSelect) savePathSelect.addEventListener('change', saveSavePath);
+    if (saveSubDirInput) saveSubDirInput.addEventListener('change', saveSavePath);
 
     if (enablePermCheckbox) {
       enablePermCheckbox.addEventListener('change', () => savePersonDetectionParam('enable_perm'));
@@ -757,6 +866,15 @@
     try {
       const data = await requestNotification({ action: 'get' });
       applyNotificationConfig(data);
+      // GET 响应同时携带可用挂载点，用于填充保存路径下拉
+      if (Array.isArray(data.mounts)) {
+        const firstMounts = !mountsApplied;
+        mountsApplied = true;
+        availableMounts = data.mounts;
+        // 挂载点首次到达且晚于配置时重新拆分一次；之后轮询只更新选项，不覆盖用户输入
+        if (firstMounts && currentSavePath !== null && !savePathDirty) applyConfiguredSavePath(currentSavePath);
+        else renderMountOptions();
+      }
       // GET 响应同时携带 prudynt 主进程的运行状态，顺带刷新徽章
       if (data.status) {
         svcStatus = data.status;
@@ -896,10 +1014,19 @@
     }
   }
 
-  // 仅刷新服务状态，不覆盖表单输入（GET 响应同时带配置与 status，配置部分忽略）
+  // 轮询刷新服务状态与可用挂载点，不覆盖通知表单输入（GET 响应中的配置部分忽略）
   async function refreshServiceStatus() {
     try {
       const data = await requestNotification({ action: 'get' });
+      // 挂载点热插拔后同步下拉；列表未变化时 renderMountOptions 会跳过重建
+      if (data && Array.isArray(data.mounts)) {
+        const firstMounts = !mountsApplied;
+        mountsApplied = true;
+        availableMounts = data.mounts;
+        // 挂载点首次到达且晚于配置时重新拆分一次；之后轮询只更新选项，不覆盖用户输入
+        if (firstMounts && currentSavePath !== null && !savePathDirty) applyConfiguredSavePath(currentSavePath);
+        else renderMountOptions();
+      }
       if (data && data.status) {
         svcStatus = data.status;
         renderServiceStatus();

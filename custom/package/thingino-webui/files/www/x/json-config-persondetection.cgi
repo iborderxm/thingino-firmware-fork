@@ -2,7 +2,8 @@
 # json-config-persondetection.cgi - 人形检测配置
 #
 # GET  ：返回 /etc/persondetection.json 邮件通知配置，并附加 status 字段
-#        （prudynt 主进程的运行状态、PID、init 脚本是否存在）。
+#        （prudynt 主进程的运行状态、PID、init 脚本是否存在）与 mounts 字段
+#        （/etc/mtab 中 cifs/fat/nfs/smb 类文件系统的可用挂载点）。
 # POST ：action=get|set 读写通知配置；
 #        action=start|stop|restart 经 /etc/init.d/S31prudynt 控制 prudynt
 #        主进程（人形检测所属的相机核心服务）。
@@ -19,6 +20,8 @@ SERVICE_NAME="prudynt"
 SERVICE_INIT="/etc/init.d/S31prudynt"
 SERVICE_PIDFILE="/run/prudynt.pid"
 REQ_FILE=""
+# 挂载点数据源；环境变量仅用于测试时替换，生产默认 /etc/mtab
+MTAB_FILE="${MTAB_FILE:-/etc/mtab}"
 
 emit_json() {
   local status="$1"
@@ -81,6 +84,20 @@ ensure_persondetection_file() {
 load_persondetection_config() {
   ensure_persondetection_file
   cat "$PERSONDETECTION_CONFIG"
+}
+
+# 可用挂载点：过滤 cif(cifs)/fat(vfat)/nfs/smb 类文件系统，取挂载路径（第 2 列）。
+# 输出 JSON 字符串数组，如 ["/sdcard","/mnt/nfs"]；无匹配时为 []。
+# 路径需经 json_escape 转义，避免反斜杠/引号破坏 JSON。
+collect_mounts() {
+  local sep="" entry
+  printf '['
+  awk '/cif|fat|nfs|smb/{print $2}' "$MTAB_FILE" 2>/dev/null | while IFS= read -r entry; do
+    [ -z "$entry" ] && continue
+    printf '%s"%s"' "$sep" "$(json_escape "$entry")"
+    sep=','
+  done
+  printf ']'
 }
 
 # prudynt 运行状态：优先检查 PID 文件（/run 与 /var/run 兼容），
@@ -300,12 +317,14 @@ handle_get() {
     svc_raw=false
   fi
 
-  # 将 status 合并进配置“副本”后输出，避免把易变的状态写回真实配置文件
-  local status_file resp_file
+  # 将 status 与 mounts 合并进配置“副本”后输出，
+  # 避免把易变的状态/挂载点写回真实配置文件
+  local status_file resp_file mounts
+  mounts=$(collect_mounts)
   status_file=$(mktemp /tmp/persondetection-status.XXXXXX)
   resp_file=$(mktemp /tmp/persondetection-get.XXXXXX)
-  printf '{"status":{"running":%s,"pid":"%s","service":%s}}' \
-    "$run_raw" "$pid" "$svc_raw" > "$status_file"
+  printf '{"status":{"running":%s,"pid":"%s","service":%s},"mounts":%s}' \
+    "$run_raw" "$pid" "$svc_raw" "$mounts" > "$status_file"
   cp "$PERSONDETECTION_CONFIG" "$resp_file"
   jct "$resp_file" import "$status_file" >/dev/null 2>&1
   rm -f "$status_file"

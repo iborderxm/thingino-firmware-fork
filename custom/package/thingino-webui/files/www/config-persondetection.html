@@ -156,13 +156,13 @@
             <div class="row g-4">
               <div class="col-12 col-lg-6">
                 <h4>通道配置</h4>
-                <p class="form-select">
+                <p class="select">
                   <label for="persondetection_monitor_stream">检测通道</label>
                   <select id="persondetection_monitor_stream" name="persondetection_monitor_stream" class="form-select" disabled>
                     <option value="1">通道 1</option>
                   </select>
                 </p>
-                <p class="form-select">
+                <p class="select">
                   <label for="persondetection_recording_stream">录制通道</label>
                   <select id="persondetection_recording_stream" name="persondetection_recording_stream" class="form-select">
                     <option value="0">通道 0(高清)</option>
@@ -304,10 +304,18 @@
             <small>保存检测录制的目录路径</small>
           </div>
           <div class="card-body">
-            <p class="form-text">
-              <label for="persondetection_save_path">保存路径</label>
-              <input type="text" id="persondetection_save_path" name="persondetection_save_path" class="form-control" value="" placeholder="/mnt/mmc/persondetection">
-            </p>
+            <div class="mb-3">
+              <label for="persondetection_save_path" class="form-label">保存路径</label>
+              <!-- 完整 save_path 由 config-persondetection.js 组合后写入，故两个控件不设 name，避免通用表单收集把挂载点当作完整路径 -->
+              <div class="input-group">
+                <select id="persondetection_save_path" class="form-select" disabled>
+                  <option value="/tmp">/tmp</option>
+                </select>
+                <span class="input-group-text">/</span>
+                <input type="text" id="persondetection_save_subdir" class="form-control" value="persondetection" placeholder="persondetection" aria-label="子目录" disabled>
+              </div>
+              <small class="form-text text-secondary">最终路径为「挂载点/子目录」,默认 /tmp/persondetection; /tmp是内存盘,可用空间有限,空间不足会自动清理。选择挂载点或修改子目录后立即保存。</small>
+            </div>
           </div>
         </div>
 
@@ -338,7 +346,7 @@
                       <input type="checkbox" class="form-check-input" id="email_enable" name="email_enable">
                       <label class="form-check-label" for="email_enable">启用邮件通知</label>
                     </p>
-                    <p class="form-select">
+                    <p class="select">
                       <label for="video_file_type">视频文件处理方式</label>
                       <select id="video_file_type" name="video_file_type" class="form-select">
                         <option value="rename">重命名</option>
