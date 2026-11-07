@@ -1,0 +1,60 @@
+#!/bin/sh
+# checknfs - 探测 NFS 服务端 2049 端口，结果写入 /tmp/nfs：0 正常，1 异常
+# 由 /etc/cron/crontabs/root 每分钟调用。
+# 只做网络层探测，绝不访问 /mnt/nfs：服务端宕机时任何 NFS I/O 都会挂起。
+# 探测失败时后台播放 /usr/share/sounds/other/nfsdown.mp3 提示音。
+
+# cron 环境已有可用 PATH，仅在为空时兜底
+PATH="${PATH:-/usr/sbin:/usr/bin:/sbin:/bin}"
+export PATH
+
+CONFIG_FILE="${NAS_CONFIG_FILE:-/etc/thingino.json}"
+RESULT_FILE="${NFS_PROBE_RESULT:-/tmp/nfs}"
+NFS_PORT="${NFS_PROBE_PORT:-2049}"
+PROBE_TIMEOUT="${NFS_PROBE_TIMEOUT:-2}"
+
+write_result() {
+	# 原子替换，避免读方读到半截内容
+	tmp="${RESULT_FILE}.$$"
+	printf '%s\n' "$1" > "$tmp" || { rm -f "$tmp"; return 1; }
+	mv -f "$tmp" "$RESULT_FILE" || { rm -f "$tmp"; return 1; }
+}
+
+# jct 只读本地配置，不触发 NFS I/O
+share=$(jct "$CONFIG_FILE" get nfs_share 2>/dev/null || :)
+# jct 可能返回带引号的 JSON 字符串或 null
+share=$(printf '%s' "$share" | sed -e 's/^"//' -e 's/"$//' -e 's/^\\"//' -e 's/\\"$//')
+case "$share" in
+	""|null|NULL)
+		write_result 1
+		exit 0
+		;;
+esac
+
+# nfs_share 形如 <server>:<remote_path>，兼容 [IPv6]:/path
+case "$share" in
+	\[*\]:*)
+		ip=${share#\[}
+		ip=${ip%%\]:*}
+		;;
+	*:*)
+		ip=${share%%:*}
+		;;
+	*)
+		ip=""
+		;;
+esac
+if [ -z "$ip" ]; then
+	write_result 1
+	exit 0
+fi
+
+# nc -w 1 限制连接等待，外层 timeout 兜底；连接成功后 </dev/null 立即关闭
+if timeout "$PROBE_TIMEOUT" nc -w 1 "$ip" "$NFS_PORT" </dev/null >/dev/null 2>&1; then
+	write_result 0
+else
+	write_result 1
+	# 服务端不可达时后台播报提示音；未配置/格式错误同样写 1 但不播报
+	play -l 2 -d 10000 /usr/share/sounds/other/nfsdown.mp3 >/dev/null 2>&1 &
+fi
+exit 0

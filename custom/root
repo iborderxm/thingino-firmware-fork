@@ -8,3 +8,6 @@
 
 # auto clean email @ 1:00
 0 1 * * * /usr/sbin/imapautoclean start
+
+# probe NFS server 2049 every minute; write 0(ok)/1(fail) to /tmp/nfs
+*/1 * * * * /usr/sbin/checknfs

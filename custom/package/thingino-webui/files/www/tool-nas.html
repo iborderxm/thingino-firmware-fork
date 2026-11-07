@@ -26,14 +26,15 @@
       <div class="card">
         <div class="card-header">
           <h2 class="card-title">NFS 挂载状态</h2>
-          <small>来自 /proc/mounts 与 df -h，显示摄像机上实际挂载的参数</small>
-          <button type="button" class="btn btn-outline-secondary" id="nas-status-reload" title="刷新挂载状态">
+          <small>来自 /proc/mounts、df -h，以及后台每分钟对 NFS 服务端 2049 端口的探测结果</small>
+          <button type="button" class="btn btn-outline-secondary" id="nas-status-reload" title="刷新状态">
             <i class="bi bi-arrow-clockwise"></i> 刷新
           </button>
         </div><!-- .card-header -->
         <div class="card-body">
           <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <span id="nas-mount-badge" class="badge text-bg-secondary">读取中...</span>
+            <span id="nas-server-badge" class="badge text-bg-secondary">服务端状态读取中...</span>
             <small id="nas-mount-note" class="text-muted"></small>
           </div>
           <dl id="nas-mount-details" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 mb-0"></dl>

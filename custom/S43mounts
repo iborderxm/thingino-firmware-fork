@@ -1,0 +1,109 @@
+#!/bin/sh
+
+. /usr/share/common
+
+NFS_MOUNT="/mnt/nfs"
+# soft + 有限重试：服务端宕机时 NFS 操作在有限时间返回 EIO，而不是无限等待。
+# timeo 单位为 0.1 秒，retrans 为重传次数；100/3 比 30/2 更耐受 WiFi 抖动，避免误判 EIO。
+NFS_OPTS="nolock,soft,timeo=100,retrans=3"
+# 开机挂载最多等待的秒数；超时即返回，挂载留在后台，不阻塞 rcS 串行链。
+MOUNT_TIMEOUT="${MOUNT_TIMEOUT:-10}"
+# PROC_MOUNTS 仅用于测试时替换，生产默认 /proc/mounts
+PROC_MOUNTS="${PROC_MOUNTS:-/proc/mounts}"
+# CHECKNFS_BIN 仅用于测试时替换，生产默认 /usr/sbin/checknfs
+CHECKNFS_BIN="${CHECKNFS_BIN:-/usr/sbin/checknfs}"
+
+nfs_share="$(jct /etc/thingino.json get nfs_share 2>/dev/null)"
+
+# 只读 /proc/mounts 判断挂载状态：mountpoint -q 会对 NFS 路径做 stat，
+# 服务端宕机时同样会卡在不可中断等待。
+is_mounted() {
+	awk -v mp="$NFS_MOUNT" '$2 == mp {found = 1; exit} END {exit !found}' "$PROC_MOUNTS"
+}
+
+mount_start() {
+	echo_title "Mount $NFS_MOUNT"
+
+	if [ -z "$nfs_share" ]; then
+		echo_info "Mount share is not set"
+		return 0
+	fi
+
+	if is_mounted; then
+		echo_info "$NFS_MOUNT already mounted"
+		return 0
+	fi
+
+	# 后台挂载并限时等待：服务端不可达时 mount 可能陷入不可中断等待，
+	# 主流程不 wait 它，超时即返回，让 rcS 后续服务继续启动。
+	# 三个重定向必须保留，否则后台进程持有 stdout 会让 CGI 的命令替换一直等待。
+	mount -o "$NFS_OPTS" "$nfs_share" "$NFS_MOUNT" </dev/null >/dev/null 2>&1 &
+	mount_pid=$!
+
+	waited=0
+	while [ "$waited" -lt "$MOUNT_TIMEOUT" ]; do
+		if is_mounted; then break; fi
+		if ! kill -0 "$mount_pid" 2>/dev/null; then break; fi
+		sleep 1
+		waited=$((waited + 1))
+	done
+
+	if is_mounted; then
+		echo_info "Mounted $nfs_share on $NFS_MOUNT"
+	elif kill -0 "$mount_pid" 2>/dev/null; then
+		echo_error "Mount $nfs_share timed out after ${MOUNT_TIMEOUT}s (NFS server unreachable), boot continues"
+	else
+		echo_error "Failed to mount $nfs_share on $NFS_MOUNT"
+	fi
+
+	# 失败或超时也不以非零退出，避免中断开机链与 restart 调用方
+	return 0
+}
+
+# 包装 start：无论挂载成功、失败、超时或提前返回，都刷新一次探测结果，
+# 避免开机后必须等下一次 cron 才有 /tmp/nfs。
+start() {
+	mount_start
+	# 后台执行 + 三个重定向：不阻塞 rcS，也不让 CGI 的命令替换等待
+	if [ -x "$CHECKNFS_BIN" ]; then
+		"$CHECKNFS_BIN" </dev/null >/dev/null 2>&1 &
+	fi
+	return 0
+}
+
+stop() {
+	echo_title "Unmount $NFS_MOUNT"
+
+	if ! is_mounted; then
+		echo_info "$NFS_MOUNT is not mounted"
+		return 0
+	fi
+
+	if umount -l "$NFS_MOUNT"; then
+		echo_info "$NFS_MOUNT unmounted"
+	else
+		echo_error "Failed to unmount $nfs_share"
+		return 1
+	fi
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		sleep 2
+		start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+		;;
+esac
+
+exit 0
+

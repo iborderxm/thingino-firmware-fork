@@ -15,6 +15,7 @@
   const submitBtn = document.getElementById('nas-submit');
   const reloadBtn = document.getElementById('nas-reload');
   const mountBadge = document.getElementById('nas-mount-badge');
+  const serverBadge = document.getElementById('nas-server-badge');
   const mountNote = document.getElementById('nas-mount-note');
   const mountDetails = document.getElementById('nas-mount-details');
   const statusReloadBtn = document.getElementById('nas-status-reload');
@@ -56,6 +57,23 @@
       note = state.nfs_share ? '已配置 nfs_share，保存配置后将尝试挂载' : '尚未配置 nfs_share';
     }
 
+    // 后台 checknfs 每分钟探测 2049 端口：true 可达 / false 不可达 / null 未探测
+    let serverBadgeClass = 'badge text-bg-secondary';
+    let serverBadgeText = '服务端状态未知';
+    let serverAliveText = '未探测';
+    if (state.server_alive === true) {
+      serverBadgeClass = 'badge text-bg-success';
+      serverBadgeText = '服务端可达';
+      serverAliveText = '正常（2049 端口可达）';
+    } else if (state.server_alive === false) {
+      serverBadgeClass = 'badge text-bg-danger';
+      serverBadgeText = '服务端不可达';
+      serverAliveText = '异常（2049 端口不可达）';
+      note = (note ? note + '；' : '') + '服务端 2049 端口不可达，录像写入可能失败';
+    }
+    serverBadge.className = serverBadgeClass;
+    serverBadge.textContent = serverBadgeText;
+
     mountBadge.className = badgeClass;
     mountBadge.textContent = badgeText;
     mountNote.textContent = note;
@@ -64,6 +82,7 @@
       ['配置 nfs_share', state.nfs_share],
       ['实际挂载源', state.source],
       ['服务端 IP', state.server_ip],
+      ['服务端 2049 探测', serverAliveText],
       ['远程共享目录', state.remote_path],
       ['挂载点', state.mount_point],
       ['容量', state.size],

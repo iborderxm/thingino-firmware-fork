@@ -17,6 +17,8 @@ CONFIG_FILE="${NAS_CONFIG_FILE:-/etc/thingino.json}"
 MOUNTS_FILE="${NAS_MOUNTS_FILE:-/proc/mounts}"
 MOUNT_POINT="${NAS_MOUNT_POINT:-/mnt/nfs}"
 MOUNTS_INIT="${NAS_MOUNTS_INIT:-/etc/init.d/S43mounts}"
+# checknfs 每分钟把 2049 端口探测结果写到这里；仅用于测试时替换
+PROBE_FILE="${NAS_PROBE_FILE:-/tmp/nfs}"
 REQ_FILE=""
 
 cleanup() {
@@ -157,11 +159,27 @@ read_mount_usage() {
     '$NF == mp && NF >= 5 {printf "%s %s %s %s\n", $(NF-4), $(NF-3), $(NF-2), $(NF-1); exit}'
 }
 
-# 页面顶部展示用：配置值、实际挂载源及其服务端/目录、挂载点与 df 容量参数
+# 读取 checknfs 的后台探测结果：0 正常 / 1 异常；文件缺失或内容非法为 null（未知）。
+# 只读 /tmp 文件，不触碰 /mnt/nfs，服务端宕机时不会挂起。
+read_server_alive() {
+  probe=$(cat "$PROBE_FILE" 2>/dev/null || :)
+  case "$probe" in
+    0) printf 'true' ;;
+    1) printf 'false' ;;
+    *) printf 'null' ;;
+  esac
+}
+
+# 页面顶部展示用：配置值、实际挂载源及其服务端/目录、挂载点、服务端探测与 df 容量参数
 read_mount_status() {
   target="$1"
+  alive=$(read_server_alive)
   current=$(read_mounted_share)
-  usage=$(read_mount_usage)
+  # 服务端已判为不可达时跳过 df：df 会 stat 挂载点并卡到 5 秒超时
+  usage=""
+  if [ "$alive" != "false" ]; then
+    usage=$(read_mount_usage)
+  fi
   size=""; used=""; available=""; use_percent=""
   if [ -n "$usage" ]; then
     IFS=' ' read -r size used available use_percent <<EOF
@@ -182,8 +200,8 @@ EOF
   fi
   if share_matches "$current" "$target"; then matched=true; else matched=false; fi
 
-  printf '{"mounted":%s,"matched":%s,"source":"%s","server_ip":"%s","remote_path":"%s","mount_point":"%s","nfs_share":"%s","size":"%s","used":"%s","available":"%s","use_percent":"%s"}' \
-    "$mounted" "$matched" "$(json_escape "$current")" \
+  printf '{"mounted":%s,"matched":%s,"server_alive":%s,"source":"%s","server_ip":"%s","remote_path":"%s","mount_point":"%s","nfs_share":"%s","size":"%s","used":"%s","available":"%s","use_percent":"%s"}' \
+    "$mounted" "$matched" "$alive" "$(json_escape "$current")" \
     "$(json_escape "$cur_ip")" "$(json_escape "$cur_path")" \
     "$(json_escape "$MOUNT_POINT")" "$(json_escape "$target")" \
     "$(json_escape "$size")" "$(json_escape "$used")" \

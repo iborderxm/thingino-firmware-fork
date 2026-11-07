@@ -33,6 +33,9 @@ cp -r custom/process_monitor overlay/usr/sbin/process_monitor
 cp -r custom/checknet overlay/usr/sbin/checknet
 cp -r custom/checknet_prompt overlay/usr/sbin/checknet_prompt
 cp -r custom/S40network overlay/etc/init.d/S40network
+cp -r custom/S43mounts overlay/etc/init.d/S43mounts
+# NFS 服务端存活探测：cron 每分钟执行，结果写入 /tmp/nfs（0 正常 / 1 异常）
+cp -r custom/checknfs overlay/usr/sbin/checknfs
 cp -r custom/odhcp6c overlay/etc/network/if-up.d/odhcp6c
 # Wi-Fi改密工具：wifichange "新SSID" "新密码"
 cp -r custom/wifichange overlay/usr/sbin/wifichange
