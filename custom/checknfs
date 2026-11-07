@@ -54,7 +54,5 @@ if timeout "$PROBE_TIMEOUT" nc -w 1 "$ip" "$NFS_PORT" </dev/null >/dev/null 2>&1
 	write_result 0
 else
 	write_result 1
-	# 服务端不可达时后台播报提示音；未配置/格式错误同样写 1 但不播报
-	play -l 2 -d 10000 /usr/share/sounds/other/nfsdown.mp3 >/dev/null 2>&1 &
 fi
 exit 0
