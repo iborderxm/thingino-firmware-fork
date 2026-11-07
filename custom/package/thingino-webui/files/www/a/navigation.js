@@ -86,6 +86,7 @@
           { label: '文件管理器', href: '/tool-file-manager.html' },
           { label: '人形检测视频', href: '/tool-persondetection-videos.html' },
           { label: '网络测试', href: '/tool-ping-trace.html' },
+          { label: 'NAS 挂载', href: '/tool-nas.html' },
           { label: 'SD 卡', href: '/tool-sdcard.html' },
           { label: '发送到服务', href: '/tool-send2.html' },
           { label: '固件操作', href: '/tool-upgrade.html' },

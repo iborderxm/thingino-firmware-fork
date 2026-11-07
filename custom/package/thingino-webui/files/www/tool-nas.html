@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>thingino · NAS 挂载</title>
+  <script src="/a/theme-init.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/a/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/a/main.css">
+</head>
+
+<body id="page-tool-nas">
+<nav data-app-nav></nav>
+
+<main class="pb-4">
+  <div class="container" style="min-height:80vh">
+    <div data-app-controls></div>
+
+    <section class="mb-3">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">NFS 挂载状态</h2>
+          <small>来自 /proc/mounts 与 df -h，显示摄像机上实际挂载的参数</small>
+          <button type="button" class="btn btn-outline-secondary" id="nas-status-reload" title="刷新挂载状态">
+            <i class="bi bi-arrow-clockwise"></i> 刷新
+          </button>
+        </div><!-- .card-header -->
+        <div class="card-body">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <span id="nas-mount-badge" class="badge text-bg-secondary">读取中...</span>
+            <small id="nas-mount-note" class="text-muted"></small>
+          </div>
+          <dl id="nas-mount-details" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 mb-0"></dl>
+        </div><!-- .card-body -->
+      </div><!-- .card -->
+    </section>
+
+    <section>
+      <form id="nas-form" class="needs-validation" novalidate autocomplete="off">
+        <div class="card mb-3">
+          <div class="card-header">
+            <h2 class="card-title">NAS 挂载（NFS）</h2>
+            <small>填写 NFS 服务端 IP 与远程共享目录，保存后写入 /etc/thingino.json 的 nfs_share</small>
+            <button type="button" class="btn btn-outline-secondary" id="nas-reload" title="从相机重新加载值">
+              <i class="bi bi-arrow-clockwise"></i> 重新加载
+            </button>
+          </div><!-- .card-header -->
+          <div class="card-body">
+            <div id="nas-message" class="alert d-none" role="alert"></div>
+            <div class="row g-4">
+              <div class="col-12 col-lg-6">
+                <h4>NFS 服务端</h4>
+                <small>保存格式为 &lt;server_ip&gt;:&lt;remote_path&gt;</small>
+                <p>
+                  <label for="nas-server-ip">server_ip（NFS 服务端 IP）</label>
+                  <input type="text" id="nas-server-ip" name="server_ip" class="form-control"
+                    placeholder="192.168.1.10" required maxlength="253" pattern="[A-Za-z0-9._-]+">
+                  <small class="form-text text-secondary">支持 IPv4 地址或域名，仅允许字母、数字、点、下划线和连字符</small>
+                </p>
+                <p>
+                  <label for="nas-remote-path">remote_path（NFS 服务端远程共享目录）</label>
+                  <input type="text" id="nas-remote-path" name="remote_path" class="form-control"
+                    placeholder="/volume1/video" required maxlength="256" pattern="/[A-Za-z0-9._/-]*">
+                  <small class="form-text text-secondary">须以 / 开头，仅允许字母、数字、点、下划线、连字符和斜杠</small>
+                </p>
+              </div><!-- .col -->
+              <div class="col-12 col-lg-6">
+                <h4>当前配置</h4>
+                <small>/etc/thingino.json 中的 nfs_share</small>
+                <p class="mt-3"><code id="nas-current-share">读取中...</code></p>
+                <div class="alert alert-secondary mb-0">
+                  <i class="bi bi-info-circle me-1"></i> 保存后会检查 /mnt/nfs 是否已挂载、服务端与共享目录是否与配置一致；若未挂载或不一致，将自动执行 /etc/init.d/S43mounts restart。
+                </div>
+              </div><!-- .col -->
+            </div><!-- .row -->
+          </div><!-- .card-body -->
+        </div><!-- .card -->
+        <button type="submit" id="nas-submit" class="btn btn-primary">
+          <i class="bi bi-floppy me-1"></i> 保存配置
+        </button>
+      </form>
+    </section>
+  </div>
+</main>
+
+<footer data-app-footer></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script src="/a/main.js"></script>
+<script src="/a/runtime-config.js"></script>
+<script src="/a/navigation.js"></script>
+<script src="/a/footer.js"></script>
+<script src="/a/tool-nas.js"></script>
+</body>
+</html>

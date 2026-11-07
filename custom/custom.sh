@@ -89,9 +89,6 @@ cat Config.in | grep imapautoclean -A 3
 rm -rf package/thingino-button
 cp -r custom/package/thingino-button package/thingino-button
 
-# 配置CIFS(SMB)
-sed -i '$a BR2_PACKAGE_THINGINO_KOPT_CIFS=y' configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
-
 echo "iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig 配置完成"
 cat configs/cameras/iflytek_xfp301m_t31x_jxq03_rtl8188ftv/iflytek_xfp301m_t31x_jxq03_rtl8188ftv_defconfig
 

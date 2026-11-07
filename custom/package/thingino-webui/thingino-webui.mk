@@ -124,6 +124,8 @@ define THINGINO_WEBUI_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/var/www/streamer-substream.html
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/tool-file-manager.html \
 		$(TARGET_DIR)/var/www/tool-file-manager.html
+	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/tool-nas.html \
+		$(TARGET_DIR)/var/www/tool-nas.html
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/tool-persondetection-videos.html \
 		$(TARGET_DIR)/var/www/tool-persondetection-videos.html
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/tool-ping-trace.html \
@@ -228,6 +230,8 @@ define THINGINO_WEBUI_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/var/www/a/theme-init.js
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/tool-file-manager.js \
 		$(TARGET_DIR)/var/www/a/tool-file-manager.js
+	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/tool-nas.js \
+		$(TARGET_DIR)/var/www/a/tool-nas.js
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/tool-persondetection-videos.js \
 		$(TARGET_DIR)/var/www/a/tool-persondetection-videos.js
 	$(INSTALL) -D -m 0644 $(THINGINO_WEBUI_PKGDIR)/files/www/a/tool-ping-trace.js \
@@ -321,6 +325,8 @@ define THINGINO_WEBUI_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/var/www/x/json-config-admin.cgi
 	$(INSTALL) -D -m 0755 $(THINGINO_WEBUI_PKGDIR)/files/www/x/json-config-gpio.cgi \
 		$(TARGET_DIR)/var/www/x/json-config-gpio.cgi
+	$(INSTALL) -D -m 0755 $(THINGINO_WEBUI_PKGDIR)/files/www/x/json-config-nas.cgi \
+		$(TARGET_DIR)/var/www/x/json-config-nas.cgi
 	$(INSTALL) -D -m 0755 $(THINGINO_WEBUI_PKGDIR)/files/www/x/json-config-network.cgi \
 		$(TARGET_DIR)/var/www/x/json-config-network.cgi
 	$(INSTALL) -D -m 0755 $(THINGINO_WEBUI_PKGDIR)/files/www/x/json-config-rtsp.cgi \
