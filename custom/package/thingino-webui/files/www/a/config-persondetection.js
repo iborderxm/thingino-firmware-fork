@@ -33,6 +33,26 @@
   const permConfig = $('#persondetection-perm-config');
   const permContainer = $('#persondetection-perms-container');
   const enablePermCheckbox = $('#persondetection_enable_perm');
+  const ptzFollowCheckbox = $('#persondetection_ptz_follow_enabled');
+  const personWarnCheckbox = $('#persondetection_person_warn_enabled');
+  const personWarnVoiceInput = $('#persondetection_person_warn_voice');
+  const personWarnSettings = $('#persondetection-person-warn-settings');
+
+  // 人形语音警告由 ptz_person_follow start 播放，只有智能跟随开启时才会被调用。
+  // 跟随关闭时禁用警告设置，clearWarn=true 还会清掉勾选，避免"已开启却不生效"。
+  function updatePersonWarnAvailability(clearWarn = true) {
+    const enabled = !!(ptzFollowCheckbox && ptzFollowCheckbox.checked);
+    if (personWarnCheckbox) {
+      if (!enabled && clearWarn) personWarnCheckbox.checked = false;
+      personWarnCheckbox.disabled = !enabled;
+    }
+    if (personWarnVoiceInput) personWarnVoiceInput.disabled = !enabled;
+    if (personWarnSettings) {
+      personWarnSettings.style.opacity = enabled ? '' : '0.5';
+      personWarnSettings.title = enabled ? '' : '请先开启智能跟随 / AI人形追踪';
+    }
+  }
+
   let initialLoadComplete = false;
   let frameWidth = 640;
   let frameHeight = 360;
@@ -287,6 +307,9 @@
           window.loadPolygonsFromForm();
         }
       }, 100);
+
+      // setValue 会重新启用控件，回显后需按智能跟随状态恢复警告的可用性与勾选
+      updatePersonWarnAvailability();
     } finally {
       updatingFromBackend = false;
     }
@@ -333,6 +356,12 @@
         throw new Error('Missing persondetection payload');
       }
       applyPersonDetectionConfig(data.persondetection);
+      // 兼容旧配置：跟随已关但警告仍为 true 时警告不会播放，纠正后端以免重开跟随时意外响起
+      if (data.persondetection.ptz_follow_enabled === false &&
+          data.persondetection.person_warn_enabled === true) {
+        sendPersonDetectionUpdate({ persondetection: { person_warn_enabled: false } })
+          .catch(err => console.warn('清理无效的人形语音警告配置失败', err));
+      }
       if (!initialLoadComplete) {
         if (typeof window.attachSliderButtons === 'function') {
           window.attachSliderButtons();
@@ -379,11 +408,20 @@
       value = Number.isNaN(numeric) ? 0 : numeric;
     }
 
+    const values = { [param]: value };
+    // 关闭智能跟随后警告不会再触发，同步关闭，避免后端残留"已开启却不生效"的配置
+    if (param === 'ptz_follow_enabled' && value === false &&
+        personWarnCheckbox && personWarnCheckbox.checked) {
+      values.person_warn_enabled = false;
+    }
+
     try {
-      await sendPersonDetectionUpdate({ persondetection: { [param]: value } });
+      await sendPersonDetectionUpdate({ persondetection: values });
       if (param === 'enable_perm') updatePermConfigVisibility();
     } catch (err) {
       showAlert('danger', `更新 ${param.replace(/_/g, ' ')} 失败：${err.message || err}`);
+    } finally {
+      if (param === 'ptz_follow_enabled') updatePersonWarnAvailability();
     }
   }
 
@@ -431,7 +469,11 @@
   function bindPersonDetectionControls() {
     personDetectionParams.forEach(param => {
       const el = document.getElementById('persondetection_' + param);
-      if (el) el.addEventListener('change', () => savePersonDetectionParam(param));
+      if (el) el.addEventListener('change', () => {
+        // 立即反映前置条件；勾选由保存完成后统一纠正，以便同步写回后端
+        if (param === 'ptz_follow_enabled') updatePersonWarnAvailability(false);
+        savePersonDetectionParam(param);
+      });
 
       const slider = document.getElementById('persondetection_' + param + '-slider');
       if (slider) {
