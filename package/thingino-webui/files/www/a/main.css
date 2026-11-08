@@ -800,8 +800,3 @@ table.send2services td:first-child a {
 .spinning {
 	animation: spin 1s linear infinite;
 }
-
-/* play-fill 三角形左宽右尖，视觉重心偏左；微调使其在播放按钮中居中 */
-.bi-play-fill::before {
-	transform: translateX(0.3em);
-}
