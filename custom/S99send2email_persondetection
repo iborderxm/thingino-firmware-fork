@@ -1,7 +1,8 @@
 #!/bin/sh
 
+. /usr/share/common
+
 DAEMON="/usr/sbin/send2email_persondetection"
-PIDFILE="/var/run/send2email_persondetection.pid"
 
 start() {
 	if [ ! -x "$DAEMON" ]; then
@@ -27,7 +28,7 @@ case "$1" in
 		;;
 	restart)
 		stopping "send2email_persondetection"
-		stop
+		stop || exit $?
 		sleep 1
 		starting "send2email_persondetection"
 		start
@@ -37,4 +38,4 @@ case "$1" in
 		;;
 esac
 
-exit 0
+exit $?
