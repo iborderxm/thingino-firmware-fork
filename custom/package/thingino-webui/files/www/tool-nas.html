@@ -26,7 +26,7 @@
       <div class="card">
         <div class="card-header">
           <h2 class="card-title">NFS 挂载状态</h2>
-          <small>来自 /proc/mounts、df -h，以及后台每分钟对 NFS 服务端 2049 端口的探测结果</small>
+          <small>来自 /proc/mounts、df -h，以及后台每分钟对 NFS 服务端 2049 端口的探测结果；页面每 5 秒自动刷新一次状态</small>
           <button type="button" class="btn btn-outline-secondary" id="nas-status-reload" title="刷新状态">
             <i class="bi bi-arrow-clockwise"></i> 刷新
           </button>
@@ -36,6 +36,11 @@
             <span id="nas-mount-badge" class="badge text-bg-secondary">读取中...</span>
             <span id="nas-server-badge" class="badge text-bg-secondary">服务端状态读取中...</span>
             <small id="nas-mount-note" class="text-muted"></small>
+            <small id="nas-status-updated" class="text-muted ms-sm-auto">状态更新中...</small>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" role="switch" id="nas-auto-refresh" checked>
+              <label class="form-check-label small" for="nas-auto-refresh" title="每 5 秒刷新一次挂载状态">自动刷新</label>
+            </div>
           </div>
           <dl id="nas-mount-details" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 mb-0"></dl>
         </div><!-- .card-body -->
@@ -46,8 +51,8 @@
       <form id="nas-form" class="needs-validation" novalidate autocomplete="off">
         <div class="card mb-3">
           <div class="card-header">
-            <h2 class="card-title">NAS 挂载（NFS）</h2>
-            <small>填写 NFS 服务端 IP 与远程共享目录，保存后写入 /etc/thingino.json 的 nfs_share</small>
+            <h2 class="card-title">NAS 挂载(NFS)</h2>
+            <small>填写 NFS 服务端 IP 与远程共享目录</small>
             <button type="button" class="btn btn-outline-secondary" id="nas-reload" title="从相机重新加载值">
               <i class="bi bi-arrow-clockwise"></i> 重新加载
             </button>
@@ -57,15 +62,14 @@
             <div class="row g-4">
               <div class="col-12 col-lg-6">
                 <h4>NFS 服务端</h4>
-                <small>保存格式为 &lt;server_ip&gt;:&lt;remote_path&gt;</small>
                 <p>
-                  <label for="nas-server-ip">server_ip（NFS 服务端 IP）</label>
+                  <label for="nas-server-ip">server_ip(NFS 服务端 IP)</label>
                   <input type="text" id="nas-server-ip" name="server_ip" class="form-control"
                     placeholder="192.168.1.10" required maxlength="253" pattern="[A-Za-z0-9._-]+">
                   <small class="form-text text-secondary">支持 IPv4 地址或域名，仅允许字母、数字、点、下划线和连字符</small>
                 </p>
                 <p>
-                  <label for="nas-remote-path">remote_path（NFS 服务端远程共享目录）</label>
+                  <label for="nas-remote-path">remote_path(NFS 服务端远程共享目录)</label>
                   <input type="text" id="nas-remote-path" name="remote_path" class="form-control"
                     placeholder="/volume1/video" required maxlength="256" pattern="/[A-Za-z0-9._/-]*">
                   <small class="form-text text-secondary">须以 / 开头，仅允许字母、数字、点、下划线、连字符和斜杠</small>
@@ -73,7 +77,6 @@
               </div><!-- .col -->
               <div class="col-12 col-lg-6">
                 <h4>当前配置</h4>
-                <small>/etc/thingino.json 中的 nfs_share</small>
                 <p class="mt-3"><code id="nas-current-share">读取中...</code></p>
                 <div class="alert alert-secondary mb-0">
                   <i class="bi bi-info-circle me-1"></i> 保存后会检查 /mnt/nfs 是否已挂载、服务端与共享目录是否与配置一致；若未挂载或不一致，将自动执行 /etc/init.d/S43mounts restart。

@@ -2,7 +2,7 @@
 # json-config-nas.cgi - NAS(NFS) 共享配置
 #
 # GET  ：返回 /etc/thingino.json 的 nfs_share，以及 /proc/mounts、df -h 中的
-#        挂载状态与容量参数（{"nfs_share":"...","mount":{...}}）
+#        挂载状态与容量参数({"nfs_share":"...","mount":{...}})
 # POST ：按 {"server_ip":"...","remote_path":"..."} 拼成 <server_ip>:<remote_path>
 #        并执行 jct /etc/thingino.json set nfs_share "<server_ip>:<remote_path>"；
 #        保存后检查 /mnt/nfs 的挂载源是否与配置一致，否则重启 S43mounts。
@@ -59,7 +59,7 @@ command -v jct >/dev/null 2>&1 || \
 strip_json_string() {
   local value
   value="$1"
-  # 先去掉 JSON 字符串的首尾引号（含被转义的 \" 形式），再判断是否为 null
+  # 先去掉 JSON 字符串的首尾引号(含被转义的 \" 形式)，再判断是否为 null
   value=$(printf '%s' "$value" | sed -e 's/^"//' -e 's/"$//' -e 's/^\\"//' -e 's/\\"$//')
   case "$value" in
     ""|null|NULL)
@@ -128,7 +128,7 @@ valid_remote_path() {
   printf '%s' "$1" | grep -qE '^/[A-Za-z0-9._/-]*$'
 }
 
-# /proc/mounts 中挂载点对应的源（形如 192.168.1.10:/volume1/video），未挂载则为空
+# /proc/mounts 中挂载点对应的源(形如 192.168.1.10:/volume1/video)，未挂载则为空
 read_mounted_share() {
   awk -v mp="$MOUNT_POINT" '$2 == mp {print $1; exit}' "$MOUNTS_FILE" 2>/dev/null
 }
@@ -159,7 +159,7 @@ read_mount_usage() {
     '$NF == mp && NF >= 5 {printf "%s %s %s %s\n", $(NF-4), $(NF-3), $(NF-2), $(NF-1); exit}'
 }
 
-# 读取 checknfs 的后台探测结果：0 正常 / 1 异常；文件缺失或内容非法为 null（未知）。
+# 读取 checknfs 的后台探测结果：0 正常 / 1 异常；文件缺失或内容非法为 null(未知)。
 # 只读 /tmp 文件，不触碰 /mnt/nfs，服务端宕机时不会挂起。
 read_server_alive() {
   probe=$(cat "$PROBE_FILE" 2>/dev/null || :)
@@ -173,6 +173,11 @@ read_server_alive() {
 # 页面顶部展示用：配置值、实际挂载源及其服务端/目录、挂载点、服务端探测与 df 容量参数
 read_mount_status() {
   target="$1"
+  # 如果server_ip为空，则不进行挂载，直接返回
+  if [ -z "$target" ]; then
+    printf '{"mounted":false,"matched":false,"server_alive":null,"source":"","server_ip":"","remote_path":"","mount_point":"","nfs_share":"","size":"","used":"","available":"","use_percent":""}'
+    return
+  fi
   alive=$(read_server_alive)
   current=$(read_mounted_share)
   # 服务端已判为不可达时跳过 df：df 会 stat 挂载点并卡到 5 秒超时
@@ -297,7 +302,7 @@ handle_post() {
   ensure_config
   nfs_share="${server_ip}:${remote_path}"
   if ! jct "$CONFIG_FILE" set nfs_share "$nfs_share" >/dev/null 2>&1; then
-    json_error 500 "写入 nfs_share 失败（配置可能不可写）" "500 Internal Server Error"
+    json_error 500 "写入 nfs_share 失败(配置可能不可写)" "500 Internal Server Error"
   fi
 
   # 回读确认，避免 jct 写入未落地却向前端报告成功

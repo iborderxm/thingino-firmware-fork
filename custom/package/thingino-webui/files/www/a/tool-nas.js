@@ -1,4 +1,4 @@
-// tool-nas.js - NAS 挂载（NFS）配置页面
+// tool-nas.js - NAS 挂载(NFS)配置页面
 // GET/POST /x/json-config-nas.cgi，后端把 <server_ip>:<remote_path> 写入 nfs_share。
 (function () {
   'use strict';
@@ -6,6 +6,10 @@
   const API_URL = '/x/json-config-nas.cgi';
   const SERVER_IP_RE = /^[A-Za-z0-9._-]+$/;
   const REMOTE_PATH_RE = /^\/[A-Za-z0-9._/-]*$/;
+  // 与 tool-nas.html 的文案保持一致；后台 2049 端口探测本身每分钟才更新一次
+  const STATUS_POLL_MS = 5000;
+  // 后端 df 在 NFS 卡住时最多耗时 5 秒，超时放弃本次轮询以免请求堆积
+  const STATUS_POLL_TIMEOUT_MS = 8000;
 
   const form = document.getElementById('nas-form');
   const serverIpInput = document.getElementById('nas-server-ip');
@@ -19,6 +23,14 @@
   const mountNote = document.getElementById('nas-mount-note');
   const mountDetails = document.getElementById('nas-mount-details');
   const statusReloadBtn = document.getElementById('nas-status-reload');
+  const autoRefreshToggle = document.getElementById('nas-auto-refresh');
+  const statusUpdated = document.getElementById('nas-status-updated');
+
+  // 轮询防重入；保存/手动刷新期间跳过轮询，避免旧状态覆盖新结果
+  let statusPollInFlight = false;
+  let actionPending = false;
+  // 状态未变化时跳过 DOM 重建，避免打断页面上的文本选择
+  let lastMountSnapshot = null;
 
   function showMessage(text, variant) {
     messageBox.textContent = text;
@@ -38,6 +50,9 @@
   }
 
   function renderMount(mount) {
+    const snapshot = JSON.stringify(mount || {});
+    if (snapshot === lastMountSnapshot) return;
+    lastMountSnapshot = snapshot;
     const state = mount || {};
     let badgeClass = 'badge text-bg-secondary';
     let badgeText = '状态未知';
@@ -64,11 +79,11 @@
     if (state.server_alive === true) {
       serverBadgeClass = 'badge text-bg-success';
       serverBadgeText = '服务端可达';
-      serverAliveText = '正常（2049 端口可达）';
+      serverAliveText = '正常(2049 端口可达)';
     } else if (state.server_alive === false) {
       serverBadgeClass = 'badge text-bg-danger';
       serverBadgeText = '服务端不可达';
-      serverAliveText = '异常（2049 端口不可达）';
+      serverAliveText = '异常(2049 端口不可达)';
       note = (note ? note + '；' : '') + '服务端 2049 端口不可达，录像写入可能失败';
     }
     serverBadge.className = serverBadgeClass;
@@ -118,7 +133,7 @@
       throw new Error(data.error.message || '请求失败');
     }
     if (!response.ok) {
-      throw new Error(data.message || `请求失败（HTTP ${response.status}）`);
+      throw new Error(data.message || `请求失败(HTTP ${response.status})`);
     }
     return data;
   }
@@ -132,6 +147,7 @@
       remotePathInput.value = parts.remotePath;
       renderShare(share);
       renderMount(data.mount);
+      renderStatusUpdateTime(true);
       if (announce) {
         showMessage('已从相机重新加载配置', 'info');
       } else if (share && !parts.remotePath) {
@@ -139,6 +155,7 @@
       }
     } catch (error) {
       showMessage('加载配置失败：' + error.message, 'danger');
+      renderStatusUpdateTime(false);
     }
   }
 
@@ -158,6 +175,7 @@
       return;
     }
 
+    actionPending = true;
     submitBtn.disabled = true;
     if (typeof window.showBusy === 'function') window.showBusy('保存并检查挂载状态...');
     try {
@@ -168,6 +186,7 @@
       });
       renderShare(data.nfs_share || '');
       renderMount(data.mount);
+      renderStatusUpdateTime(true);
       const check = data.check || {};
       const detail = check.message ? '。' + check.message : '';
       const repaired = data.config_repaired === true
@@ -178,20 +197,54 @@
     } catch (error) {
       showMessage('保存配置失败：' + error.message, 'danger');
     } finally {
+      actionPending = false;
       submitBtn.disabled = false;
       if (typeof window.hideBusy === 'function') window.hideBusy();
     }
   }
 
+  function renderStatusUpdateTime(ok) {
+    statusUpdated.textContent = ok
+      ? '最近更新 ' + new Date().toLocaleTimeString()
+      : '状态更新失败，保留上次结果';
+  }
+
+  // 定时轮询：只刷新状态区，不覆盖表单输入、不弹提示；失败时静默保留上次状态
+  async function pollMountStatus() {
+    if (!autoRefreshToggle.checked || document.hidden || actionPending || statusPollInFlight) return;
+    statusPollInFlight = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), STATUS_POLL_TIMEOUT_MS);
+    try {
+      const data = await fetchJson({ cache: 'no-store', signal: controller.signal });
+      // 期间若用户已保存或手动刷新，丢弃这次可能过期的状态
+      if (actionPending) return;
+      renderMount(data.mount);
+      renderStatusUpdateTime(true);
+    } catch (error) {
+      // 轮询失败不打断页面操作
+      console.debug('定时刷新挂载状态失败', error);
+      renderStatusUpdateTime(false);
+    } finally {
+      clearTimeout(timeoutId);
+      statusPollInFlight = false;
+    }
+  }
+
   async function refreshMountStatus() {
+    if (actionPending) return;
+    actionPending = true;
     statusReloadBtn.disabled = true;
     try {
       const data = await fetchJson({ cache: 'no-store' });
       renderMount(data.mount);
+      renderStatusUpdateTime(true);
       showMessage('已刷新挂载状态', 'info');
     } catch (error) {
       showMessage('刷新挂载状态失败：' + error.message, 'danger');
+      renderStatusUpdateTime(false);
     } finally {
+      actionPending = false;
       statusReloadBtn.disabled = false;
     }
   }
@@ -200,6 +253,14 @@
     form.addEventListener('submit', saveConfig);
     reloadBtn.addEventListener('click', () => loadConfig(true));
     statusReloadBtn.addEventListener('click', refreshMountStatus);
+    autoRefreshToggle.addEventListener('change', () => {
+      if (autoRefreshToggle.checked) pollMountStatus();
+    });
+    // 页面重新可见时立即刷新一次，不必等下一个轮询周期
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) pollMountStatus();
+    });
+    setInterval(pollMountStatus, STATUS_POLL_MS);
     loadConfig(false);
   });
 })();
