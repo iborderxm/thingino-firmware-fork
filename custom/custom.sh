@@ -104,8 +104,9 @@ cat custom/package/wifi/files/index.html | grep "<title>"
 echo "更新覆盖thingino-webui和wifi 配置完成:"
 cat package/wifi/files/index.html | grep "<title>"
 
-# 替换bootstrap国内cdn
-echo "替换bootstrap国内cdn 配置:"
+# 替换前端资源为本地资源 /a/vendor（thingino-webui.mk 会将其安装到 /var/www/a/vendor）
+# 换成本地文件后原 CDN 的 integrity 校验不再适用，下面把该属性改名为无效属性
+echo "替换前端资源为本地资源 配置:"
 cd package/thingino-webui/files/www
 sed -i "s|integrity=|integrity1=|g" *.html
 target_key="bootstrap.min.css"
@@ -116,7 +117,7 @@ sort | uniq)
 for item in $result
 do
     echo "$item"
-    sed -i "s|$item|https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.8/css/bootstrap.min.css|g" *.html
+    sed -i "s|$item|/a/vendor/bootstrap.min.css|g" *.html
 done
 
 target_key="bootstrap-icons.min.css"
@@ -127,7 +128,7 @@ sort | uniq)
 for item in $result
 do
     echo "$item"
-    sed -i "s|$item|https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.13.1/font/bootstrap-icons.min.css|g" *.html
+    sed -i "s|$item|/a/vendor/bootstrap-icons.min.css|g" *.html
 done
 
 target_key="bootstrap.bundle.min.js"
@@ -138,8 +139,18 @@ sort | uniq)
 for item in $result
 do
     echo "$item"
-    sed -i "s|$item|https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js|g" *.html
+    sed -i "s|$item|/a/vendor/bootstrap.bundle.min.js|g" *.html
 done
+
+# 替换字体为本地资源并移除 Google Fonts 的 preconnect
+echo "替换字体为本地资源并移除preconnect 配置:"
+sed -i '/rel="preconnect" href="https:.*fonts\.googleapis\.com"/d' *.html
+sed -i '/rel="preconnect" href="https:.*fonts\.gstatic\.com"/d' *.html
+sed -i 's|href="https://fonts.googleapis.com/css2?[^"]*"|href="/a/vendor/montserrat.css"|g' *.html
+
+# 压缩package/thingino-webui/files/www目录下的全部html和js文件
+echo "压缩html和js 配置:"
+python3 ../../scripts/minify_www.py .
 
 # 替换时区
 echo "替换时区 配置:"
