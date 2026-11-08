@@ -8,15 +8,59 @@ const endpoint = '/x/json-prudynt.cgi';
   const preview = $('#preview');
   if (!preview) return;
 
-  // Create modal HTML
+  // Keep the modal styling here so every page loading preview.js gets the
+  // same fullscreen layout without an extra stylesheet.
+  if (!$('#mdPreviewStyle')) {
+    const style = document.createElement('style');
+    style.id = 'mdPreviewStyle';
+    style.textContent = `
+      #mdPreview .modal-content {
+        background-color: #000;
+      }
+      #mdPreview .btn-close {
+        position: absolute;
+        top: .75rem;
+        right: .75rem;
+        z-index: 2;
+        box-sizing: border-box;
+        width: 2.25rem;
+        height: 2.25rem;
+        margin: 0;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, .35);
+        border-radius: 50%;
+        background: rgba(0, 0, 0, .55) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round'%3e%3cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9'/%3e%3c/svg%3e") center / 1rem no-repeat;
+        filter: none;
+        opacity: .85;
+      }
+      #mdPreview .btn-close:hover {
+        background-color: rgba(0, 0, 0, .8);
+        opacity: 1;
+      }
+      #mdPreview .btn-close:focus-visible {
+        box-shadow: 0 0 0 .25rem rgba(255, 255, 255, .5);
+      }
+      #mdPreview .modal-body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        overflow: hidden;
+      }
+      #mdPreview .modal-body img {
+        max-height: 100vh;
+        object-fit: contain;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // No header banner: the close button floats over the top right of the picture
   const modalHTML = `
-    <div class="modal fade" id="mdPreview" tabindex="-1" aria-labelledby="mdlPreview" aria-hidden="true">
+    <div class="modal fade" id="mdPreview" tabindex="-1" aria-label="Full screen preview" aria-hidden="true">
       <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-4" id="mdlPreview">Full screen preview</h1>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           <div class="modal-body text-center">
             <img id="preview_fullsize" src="/a/nostream.svg" alt="Image: Stream Preview" class="img-fluid">
           </div>
