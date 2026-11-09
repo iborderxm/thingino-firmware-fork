@@ -1,0 +1,133 @@
+#!/bin/sh
+
+# Heartbeat daemon - runs in background and updates cache continuously
+# Start with: /etc/init.d/S99heartbeat start
+
+CACHE_FILE="/tmp/heartbeat_cache.json"
+# 心跳缓存改为 5 秒刷新：原 1 秒间隔会每秒 fork 数十个进程，单核 T31 上 sys 态开销过高
+UPDATE_INTERVAL=5
+PIDFILE="/var/run/heartbeat-daemon.pid"
+
+start() {
+  if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
+    echo "Heartbeat daemon already running"
+    return 0
+  fi
+
+  echo "Starting heartbeat daemon..."
+  heartbeat_loop &
+  echo $! > "$PIDFILE"
+}
+
+stop() {
+  if [ -f "$PIDFILE" ]; then
+    echo "Stopping heartbeat daemon..."
+    kill $(cat "$PIDFILE") 2>/dev/null
+    rm -f "$PIDFILE"
+  fi
+}
+
+heartbeat_loop() {
+  while true; do
+    ch0_rec="false"; [ -f "/run/prudynt/mp4ctl-ch0.active" ] && ch0_rec="true"
+    ch1_rec="false"; [ -f "/run/prudynt/mp4ctl-ch1.active" ] && ch1_rec="true"
+    motion_enabled="false"; [ -f "/run/prudynt/motion.active" ] && motion_enabled="true"
+    privacy_enabled="false"; [ -f "/run/prudynt/privacy.active" ] && privacy_enabled="true"
+
+    # Single prudyntctl call
+    prudynt_data=$(prudyntctl json - 2>/dev/null <<'EOF'
+{
+  "image": {"running_mode": null},
+  "audio": {"mic_enabled": null, "spk_enabled": null},
+  "daynight": {"status": null, "enabled": null}
+}
+EOF
+)
+
+    # 一次 awk 解析取代 5 组 echo|grep|cut 管道（每轮少约 14 次 fork）。
+    # 各字段仍只取首次匹配，与原 grep -o | head -1 | cut -d: -f2 结果一致；
+    # daynight.enabled 取首个 "enabled"（不取 schedule.enabled）。
+    eval "$(printf '%s\n' "$prudynt_data" | awk '
+      function q(s,   sq, out, i, ch) {
+        sq = sprintf("%c", 39)
+        out = sq
+        for (i = 1; i <= length(s); i++) {
+          ch = substr(s, i, 1)
+          if (ch == sq) out = out sq "\\" sq sq
+          else out = out ch
+        }
+        return out sq
+      }
+      function grab(line, key, pattern,   re, val) {
+        re = "\"" key "\":" pattern
+        if (match(line, re)) {
+          val = substr(line, RSTART, RLENGTH)
+          sub(/^[^:]*:/, "", val)
+          sub(/:.*/, "", val)
+          return val
+        }
+        return ""
+      }
+      {
+        if (!got_color && (v = grab($0, "running_mode", "[^,}]*")) != "") { color = v; got_color = 1 }
+        if (!got_mic   && (v = grab($0, "mic_enabled",   "[^,}]*")) != "") { mic = v;   got_mic = 1 }
+        if (!got_spk   && (v = grab($0, "spk_enabled",   "[^,}]*")) != "") { spk = v;   got_spk = 1 }
+        if (!got_gain  && (v = grab($0, "total_gain",    "[0-9-]*")) != "") { gain = v;  got_gain = 1 }
+        if (!got_day   && (v = grab($0, "enabled",       "[^,}]*")) != "") { day = v;   got_day = 1 }
+      }
+      END {
+        printf "color_mode=%s\nmic_enabled=%s\nspk_enabled=%s\ntotal_gain=%s\ndaynight_enabled=%s\n", q(color), q(mic), q(spk), q(gain), q(day)
+      }')"
+    total_gain="${total_gain:-0}"
+
+    ircut_state=$(ircut read 2>/dev/null || echo "null")
+    ir850_state=$(light ir850 read 2>/dev/null || echo "null")
+    ir940_state=$(light ir940 read 2>/dev/null || echo "null")
+    white_state=$(light white read 2>/dev/null || echo "null")
+
+    wg_status=0
+    if command -v wg >/dev/null 2>&1; then
+      wg show wg0 2>/dev/null | grep -q "latest handshake" && wg_status=1
+    fi
+
+    printf '{"time_now":%s,"daynight_brightness":"%s","total_gain":%s,"daynight_mode":"%s","rec_ch0":%s,"rec_ch1":%s,"motion_enabled":%s,"privacy_enabled":%s,"color_mode":%s,"ircut_state":%s,"ir850_state":%s,"ir940_state":%s,"white_state":%s,"mic_enabled":%s,"spk_enabled":%s,"daynight_enabled":%s,"wg_status":%s}' \
+      "$(date +%s)" \
+      "$(awk '{print $1}' /run/prudynt/daynight_brightness 2>/dev/null || echo "unknown")" \
+      "$total_gain" \
+      "$(awk 'NR==1 {print $1}' /run/prudynt/daynight_mode 2>/dev/null || echo "unknown")" \
+      "$ch0_rec" \
+      "$ch1_rec" \
+      "$motion_enabled" \
+      "$privacy_enabled" \
+      "${color_mode:-null}" \
+      "${ircut_state}" \
+      "${ir850_state}" \
+      "${ir940_state}" \
+      "${white_state}" \
+      "${mic_enabled:-false}" \
+      "${spk_enabled:-false}" \
+      "${daynight_enabled:-false}" \
+      "$wg_status" > "$CACHE_FILE.tmp"
+
+    mv "$CACHE_FILE.tmp" "$CACHE_FILE"
+    sleep "$UPDATE_INTERVAL"
+  done
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    stop
+    sleep 1
+    start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
